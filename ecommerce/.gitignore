@@ -1,0 +1,26 @@
+# Environment
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+.venv/
+venv/
+
+# Node
+node_modules/
+dist/
+
+# IDE
+.vscode/
+.idea/
+
+# Docker
+docker/nginx/ssl/*.pem
+docker/nginx/ssl/*.key
+
+# OS
+.DS_Store
+Thumbs.db
