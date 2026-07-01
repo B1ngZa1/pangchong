@@ -1,3 +1,8 @@
+# 本地开发 Compose 文件。
+# 新克隆项目后无需创建 .env；下方 ${VAR:-default} 已提供本地默认值。
+# 如果 ecommerce/.env 存在，Docker Compose 会自动读取并覆盖这些默认值。
+# 修改数据库账号/密码后如需重新初始化本地数据库，请执行 docker compose down -v。
+
 services:
   postgres:
     image: postgres:16-alpine
@@ -43,7 +48,7 @@ services:
     container_name: pangchong-backend
     restart: unless-stopped
     environment:
-      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-pangchong}:${POSTGRES_PASSWORD:-pangchong_dev_password}@postgres:5432/${POSTGRES_DB:-pangchong_ecommerce}
+      - DATABASE_URL=${DATABASE_URL:-postgresql+asyncpg://${POSTGRES_USER:-pangchong}:${POSTGRES_PASSWORD:-pangchong_dev_password}@postgres:5432/${POSTGRES_DB:-pangchong_ecommerce}}
       - REDIS_URL=redis://:${REDIS_PASSWORD:-pangchong_dev_redis}@redis:6379/0
       - SECRET_KEY=${SECRET_KEY:-change-me-local-dev-secret}
       - DEBUG=${DEBUG:-true}
@@ -54,6 +59,10 @@ services:
       - ALIPAY_SANDBOX=${ALIPAY_SANDBOX:-true}
       - SMTP_USER=${SMTP_USER:-}
       - SMTP_PASSWORD=${SMTP_PASSWORD:-}
+      - SUPABASE_URL=${SUPABASE_URL:-}
+      - SUPABASE_SECRET_KEY=${SUPABASE_SECRET_KEY:-}
+      - SUPABASE_IMAGE_BUCKET=${SUPABASE_IMAGE_BUCKET:-catalog-images}
+      - SUPABASE_MODEL_BUCKET=${SUPABASE_MODEL_BUCKET:-catalog-models}
     volumes:
       - ./backend/app:/app/app
       - ./backend/uploads:/app/uploads

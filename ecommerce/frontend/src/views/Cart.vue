@@ -88,7 +88,7 @@
                         <p v-if="item.brand || item.model" class="text-[#AAAAAA] text-xs mt-1">
                           {{ item.brand }} {{ item.model }}
                         </p>
-                        <div class="flex flex-wrap gap-1.5 mt-2" v-if="item.specs && Object.keys(item.specs).length > 0">
+                        <div class="flex flex-wrap gap-1.5 mt-2" v-if="!hasCustomSnapshotDisplay(item) && item.specs && Object.keys(item.specs).length > 0">
                           <span v-for="(val, key) in firstSpecs(item.specs)" :key="key"
                             class="text-[12px] text-[#AAAAAA] bg-[#1A1A1A] px-2 py-0.5 rounded">
                             {{ val }}
@@ -112,6 +112,8 @@
                       <span v-else-if="item.stock <= 5"
                         class="text-[10px] bg-yellow-500/15 text-yellow-400 px-2 py-0.5 rounded font-medium">仅剩 {{ item.stock }} 件</span>
                     </div>
+
+                    <OrderDiySnapshot v-if="hasCustomSnapshotDisplay(item)" :item="item" />
                   </div>
 
                   <div class="flex items-center justify-between mt-3">
@@ -372,6 +374,8 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCartStore } from '@/store/cart'
+import OrderDiySnapshot from '@/components/OrderDiySnapshot.vue'
+import { hasCustomSnapshotDisplay } from '@/utils/orderSpecs'
 
 const router = useRouter()
 const cart = useCartStore()

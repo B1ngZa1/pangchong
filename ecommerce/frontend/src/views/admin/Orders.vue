@@ -41,10 +41,22 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="order in orders" :key="order.id"
+          <tr v-for="order in ordersWithPreview" :key="order.id"
             class="border-b border-dark-800 last:border-0 hover:bg-dark-800/50 transition-colors">
             <td class="py-3 px-4">
               <span class="font-mono text-xs">{{ order.order_no }}</span>
+              <div v-if="order.customPreview" class="mt-1 max-w-[260px]">
+                <p class="truncate text-[11px] text-dark-300">
+                  <span class="font-medium text-primary-500">{{ order.customPreview.title }}</span>
+                  <span class="text-dark-600"> · </span>{{ order.customPreview.summary }}
+                </p>
+                <div v-if="order.customPreview.badges.length" class="mt-1 flex flex-wrap gap-1">
+                  <span v-for="badge in order.customPreview.badges.slice(0, 3)" :key="badge.key"
+                    class="rounded border border-white/5 bg-dark-800 px-1.5 py-0.5 text-[10px] text-dark-500">
+                    {{ badge.label }}：{{ badge.value }}
+                  </span>
+                </div>
+              </div>
             </td>
             <td class="py-3 px-4">
               <p class="font-medium">{{ order.recipient_name }}</p>
@@ -134,8 +146,9 @@
                       </span>
                     </div>
                     <p class="text-dark-500 text-xs">x{{ item.quantity }} · ¥{{ Number(item.price).toLocaleString() }}</p>
-                    <div v-if="formatSpecs(item.product_specs).length" class="mt-1 flex flex-wrap gap-1">
-                      <span v-for="spec in formatSpecs(item.product_specs)" :key="spec.label"
+                    <OrderDiySnapshot v-if="hasCustomSnapshotDisplay(item)" :item="item" />
+                    <div v-else-if="displaySpecs(item).length" class="mt-1 flex flex-wrap gap-1">
+                      <span v-for="spec in displaySpecs(item)" :key="spec.label"
                         class="text-[10px] text-dark-400 bg-dark-700 px-1.5 py-0.5 rounded">
                         {{ spec.label }}: {{ spec.value }}
                       </span>
@@ -213,6 +226,14 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { adminApi } from '@/api'
+import OrderDiySnapshot from '@/components/OrderDiySnapshot.vue'
+import {
+  buildOrderCustomPreview,
+  formatCustomSpecs,
+  formatSpecs,
+  hasCustomSnapshotDisplay,
+  isCustomOrderItem,
+} from '@/utils/orderSpecs'
 
 const orders = ref([])
 const loading = ref(true)
@@ -222,6 +243,10 @@ const pageSize = 20
 const filters = ref({ keyword: '', status: '' })
 
 const totalPages = computed(() => Math.ceil(total.value / pageSize))
+const ordersWithPreview = computed(() => orders.value.map(order => ({
+  ...order,
+  customPreview: buildOrderCustomPreview(order),
+})))
 const visiblePages = computed(() => {
   const pages = []
   const start = Math.max(1, currentPage.value - 2)
@@ -249,19 +274,11 @@ const statusClass = (s) => ({
 }[s] || 'bg-dark-700 text-dark-400')
 
 const formatDate = (d) => d ? new Date(d).toLocaleString('zh-CN') : ''
-const isCustomItem = (item) => item?.item_type === 'custom'
+const isCustomItem = isCustomOrderItem
 const hasCustomItems = (order) => (order.items || []).some(isCustomItem)
-const formatSpecs = (specs) => {
-  if (!specs || typeof specs !== 'object') return []
-  return Object.entries(specs).map(([label, value]) => ({
-    label,
-    value: Array.isArray(value)
-      ? value.join(', ')
-      : value && typeof value === 'object'
-        ? JSON.stringify(value)
-        : String(value),
-  }))
-}
+const displaySpecs = (item) => isCustomItem(item)
+  ? formatCustomSpecs(item.product_specs)
+  : formatSpecs(item.product_specs)
 
 async function fetchOrders() {
   loading.value = true

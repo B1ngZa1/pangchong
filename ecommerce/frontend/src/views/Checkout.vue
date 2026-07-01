@@ -143,16 +143,31 @@
               <!-- 商品列表 -->
               <div class="space-y-3 mb-4">
                 <div v-for="item in cart.selectedItems" :key="item.id"
-                  class="flex items-center gap-3 py-3 border-b border-dark-800 last:border-0">
-                  <div class="w-12 h-12 bg-dark-800 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
-                    <img v-if="item.image_url" :src="item.image_url" :alt="item.name" class="w-full h-full object-cover" />
-                    <span v-else class="text-xl opacity-40">📦</span>
+                  class="py-3 border-b border-dark-800 last:border-0">
+                  <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 bg-dark-800 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+                      <img v-if="item.image_url" :src="item.image_url" :alt="item.name" class="w-full h-full object-cover" />
+                      <span v-else class="text-xl opacity-40">📦</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-2 min-w-0">
+                        <p class="text-sm font-medium truncate">{{ item.name }}</p>
+                        <span v-if="isCustomCartItem(item)"
+                          class="flex-shrink-0 rounded-full border border-primary-500/40 bg-primary-500/10 px-2 py-0.5 text-[10px] font-medium leading-none text-primary-500">
+                          定制
+                        </span>
+                      </div>
+                      <p class="text-dark-500 text-xs">x{{ item.quantity }}</p>
+                      <div v-if="!hasCustomSnapshotDisplay(item) && formatCartSpecs(item.specs, 6).length" class="mt-1 flex flex-wrap gap-1">
+                        <span v-for="spec in formatCartSpecs(item.specs, 6)" :key="spec.label"
+                          class="text-[10px] text-dark-400 bg-dark-800 px-1.5 py-0.5 rounded">
+                          {{ spec.label }}: {{ spec.value }}
+                        </span>
+                      </div>
+                    </div>
+                    <span class="text-sm font-bold">¥{{ (Number(item.price) * item.quantity).toLocaleString() }}</span>
                   </div>
-                  <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium truncate">{{ item.name }}</p>
-                    <p class="text-dark-500 text-xs">x{{ item.quantity }}</p>
-                  </div>
-                  <span class="text-sm font-bold">¥{{ (Number(item.price) * item.quantity).toLocaleString() }}</span>
+                  <OrderDiySnapshot v-if="hasCustomSnapshotDisplay(item)" :item="item" />
                 </div>
               </div>
 
@@ -197,8 +212,14 @@
                     <span v-else class="text-lg opacity-40">📦</span>
                   </div>
                   <div class="flex-1 min-w-0">
-                    <p class="text-xs truncate">{{ item.name }}</p>
+                    <div class="flex items-center gap-1.5 min-w-0">
+                      <p class="text-xs truncate">{{ item.name }}</p>
+                      <span v-if="isCustomCartItem(item)" class="flex-shrink-0 text-[10px] font-medium text-primary-500">定制</span>
+                    </div>
                     <p class="text-dark-500 text-[10px]">x{{ item.quantity }}</p>
+                    <p v-if="cartItemSummary(item)" class="mt-0.5 truncate text-[10px] text-dark-500">
+                      {{ cartItemSummary(item) }}
+                    </p>
                   </div>
                   <span class="text-xs font-medium">¥{{ (Number(item.price) * item.quantity).toLocaleString() }}</span>
                 </div>
@@ -267,6 +288,8 @@ import { useUserStore } from '@/store/user'
 import { orderApi, paymentApi } from '@/api'
 import { redirectToPayment } from '@/utils/payment'
 import AddressForm from '@/components/AddressForm.vue'
+import OrderDiySnapshot from '@/components/OrderDiySnapshot.vue'
+import { buildCustomSnapshotDisplay, hasCustomSnapshotDisplay } from '@/utils/orderSpecs'
 
 const router = useRouter()
 const cart = useCartStore()
@@ -335,6 +358,54 @@ const selectedDelivery = computed(() => deliveryMethods.find(m => m.id === deliv
 const selectedPayment = computed(() => paymentMethods.find(m => m.id === paymentMethod.value))
 const deliveryCost = computed(() => cart.shippingCost)
 const finalAmount = computed(() => cart.totalAmount)
+
+function isCustomCartItem(item) {
+  return cart.isCustomItem(item)
+}
+
+function formatCartSpecs(specs, limit = 4) {
+  if (!specs || typeof specs !== 'object') return []
+  return Object.entries(specs)
+    .filter(([key, value]) => !String(key).startsWith('_') && value !== null && value !== undefined && value !== '')
+    .slice(0, limit)
+    .map(([label, value]) => ({
+      label,
+      value: Array.isArray(value)
+        ? value.join(', ')
+        : value && typeof value === 'object'
+          ? JSON.stringify(value)
+          : String(value),
+    }))
+}
+
+function cartItemSummary(item) {
+  const display = buildCustomSnapshotDisplay(item)
+  if (!display) {
+    return formatCartSpecs(item.specs, 2).map(spec => `${spec.label}: ${spec.value}`).join(' · ')
+  }
+
+  return [
+    display.appearance?.value,
+    ...display.parts.slice(0, 2).map(part => `${part.label}: ${part.name}`),
+  ].filter(Boolean).join(' · ')
+}
+
+function buildCustomOrderSpecs(item) {
+  return item.snapshot && typeof item.snapshot === 'object'
+    ? { ...(item.specs || {}), _snapshot: item.snapshot }
+    : (item.specs || {})
+}
+
+async function promoteSelectedLocalProducts() {
+  const localProducts = cart.selectedItems.filter(item =>
+    cart.isLocalItem(item) && !isCustomCartItem(item)
+  )
+
+  for (const item of localProducts) {
+    await cart.addToCart(item.product_id, item.quantity)
+    cart.removeLocalItems([item.id])
+  }
+}
 
 // 根据选中地址自动设置运费地区
 watch(() => selectedAddress.value?.province, (p) => {
@@ -430,16 +501,18 @@ async function submitOrder() {
 
   submitting.value = true
   try {
-    const backendItems = cart.items.filter(i => !i.id.startsWith('local_'))
-    const selectedBackendItems = cart.selectedItems.filter(i => !i.id.startsWith('local_'))
-    const selectedLocalItems = cart.selectedItems.filter(i => i.id.startsWith('local_'))
+    await promoteSelectedLocalProducts()
+
+    const backendItems = cart.items.filter(i => !cart.isLocalItem(i) && !isCustomCartItem(i))
+    const selectedBackendItems = cart.selectedItems.filter(i => !cart.isLocalItem(i) && !isCustomCartItem(i))
+    const selectedCustomItems = cart.selectedItems.filter(isCustomCartItem)
     const cartItemIds = backendItems.length > 0 && selectedBackendItems.length === backendItems.length
       ? null
       : selectedBackendItems.map(i => i.id)
-    const customItems = selectedLocalItems.map(i => ({
+    const customItems = selectedCustomItems.map(i => ({
       product_name: i.name,
       product_image: i.image_url || null,
-      product_specs: i.specs || {},
+      product_specs: buildCustomOrderSpecs(i),
       price: Number(i.price),
       quantity: i.quantity,
     }))
@@ -454,7 +527,7 @@ async function submitOrder() {
     orderNo.value = data.order_no
     createdOrderId.value = data.id
 
-    cart.removeLocalItems(selectedLocalItems.map(i => i.id))
+    cart.removeLocalItems(selectedCustomItems.filter(i => cart.isLocalItem(i)).map(i => i.id))
     await cart.fetchCart()
     cart.removeCoupon()
 

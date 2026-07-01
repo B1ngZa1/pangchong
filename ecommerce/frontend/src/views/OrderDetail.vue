@@ -87,8 +87,9 @@
                   </span>
                 </div>
                 <p class="text-dark-500 text-xs mt-0.5">x{{ item.quantity }} · ¥{{ Number(item.price).toLocaleString() }}</p>
-                <div v-if="formatSpecs(item.product_specs).length" class="mt-1 flex flex-wrap gap-1">
-                  <span v-for="spec in formatSpecs(item.product_specs)" :key="spec.label"
+                <OrderDiySnapshot v-if="hasCustomSnapshotDisplay(item)" :item="item" />
+                <div v-else-if="displaySpecs(item).length" class="mt-1 flex flex-wrap gap-1">
+                  <span v-for="spec in displaySpecs(item)" :key="spec.label"
                     class="text-[10px] text-dark-400 bg-dark-800 px-1.5 py-0.5 rounded">
                     {{ spec.label }}: {{ spec.value }}
                   </span>
@@ -133,6 +134,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/store/user'
 import { orderApi, paymentApi } from '@/api'
 import { redirectToPayment } from '@/utils/payment'
+import OrderDiySnapshot from '@/components/OrderDiySnapshot.vue'
+import { formatCustomSpecs, formatSpecs, hasCustomSnapshotDisplay, isCustomOrderItem } from '@/utils/orderSpecs'
 
 const route = useRoute()
 const router = useRouter()
@@ -155,18 +158,10 @@ const statusClass = (s) => ({
 }[s] || 'bg-dark-700 text-dark-400')
 
 const formatDate = (d) => d ? new Date(d).toLocaleString('zh-CN') : ''
-const isCustomItem = (item) => item?.item_type === 'custom'
-const formatSpecs = (specs) => {
-  if (!specs || typeof specs !== 'object') return []
-  return Object.entries(specs).map(([label, value]) => ({
-    label,
-    value: Array.isArray(value)
-      ? value.join(', ')
-      : value && typeof value === 'object'
-        ? JSON.stringify(value)
-        : String(value),
-  }))
-}
+const isCustomItem = isCustomOrderItem
+const displaySpecs = (item) => isCustomItem(item)
+  ? formatCustomSpecs(item.product_specs)
+  : formatSpecs(item.product_specs)
 
 async function fetchOrder() {
   loading.value = true

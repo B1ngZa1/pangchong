@@ -12,6 +12,8 @@ class PricePoint(BaseModel):
     """单日价格点"""
     date: date
     price: Decimal
+    source_name: Optional[str] = None
+    source_url: Optional[str] = None
 
 
 class PriceHistoryResponse(BaseModel):

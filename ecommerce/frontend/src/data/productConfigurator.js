@@ -51,14 +51,3 @@ export const cameraPresets = [
   { id: 'side', name: '侧面' },
   { id: 'top', name: '俯视' },
 ]
-
-export const configuratorParts = [
-  {
-    id: 'chassis',
-    name: '机身',
-    type: 'body',
-    modelUrl: '/models/pangchong.glb',
-    materialOptions: materialOptions.map((item) => item.id),
-    visible: true,
-  },
-]

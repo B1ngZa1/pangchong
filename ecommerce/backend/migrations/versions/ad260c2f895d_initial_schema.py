@@ -19,6 +19,7 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade() -> None:
     # Enable UUID extension
     op.execute('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"')
+    op.execute('CREATE EXTENSION IF NOT EXISTS "pg_trgm"')
 
     # Users table
     op.create_table(

@@ -27,7 +27,7 @@
           </button>
         </div>
 
-        <router-link v-for="order in orders" :key="order.id" :to="`/orders/${order.id}`"
+        <router-link v-for="order in ordersWithPreview" :key="order.id" :to="`/orders/${order.id}`"
           class="block bg-dark-900 rounded-2xl border border-dark-800 p-6 hover:border-primary-500/30 transition-colors">
           <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-4">
@@ -54,6 +54,21 @@
             <span v-if="(order.items || []).length > 3" class="text-dark-500 text-xs">
               +{{ order.items.length - 3 }} 件
             </span>
+          </div>
+
+          <div v-if="order.customPreview" class="mb-4 border-t border-dark-800 pt-3">
+            <div class="flex flex-wrap items-center gap-2 text-xs">
+              <span class="rounded border border-primary-500/30 bg-primary-500/10 px-2 py-0.5 font-medium text-primary-500">
+                {{ order.customPreview.title }}
+              </span>
+              <span class="min-w-0 max-w-full truncate text-dark-300 sm:max-w-[420px]">
+                {{ order.customPreview.summary }}
+              </span>
+              <span v-for="badge in order.customPreview.badges" :key="badge.key"
+                class="rounded border border-white/5 bg-dark-800 px-2 py-0.5 text-[10px] text-dark-400">
+                {{ badge.label }}：{{ badge.value }}
+              </span>
+            </div>
           </div>
 
           <div class="flex items-center justify-between pt-3 border-t border-dark-800">
@@ -87,6 +102,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/store/user'
 import { orderApi } from '@/api'
+import { buildOrderCustomPreview, isCustomOrderItem } from '@/utils/orderSpecs'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -99,6 +115,10 @@ const total = ref(0)
 const currentStatus = ref('')
 
 const totalPages = computed(() => Math.ceil(total.value / pageSize))
+const ordersWithPreview = computed(() => orders.value.map(order => ({
+  ...order,
+  customPreview: buildOrderCustomPreview(order),
+})))
 
 const statusFilters = [
   { label: '全部', value: '' },
@@ -121,7 +141,7 @@ const statusClass = (s) => ({
 }[s] || 'bg-dark-700 text-dark-400')
 
 const formatDate = (d) => d ? new Date(d).toLocaleString('zh-CN') : ''
-const isCustomItem = (item) => item?.item_type === 'custom'
+const isCustomItem = isCustomOrderItem
 const hasCustomItems = (order) => (order.items || []).some(isCustomItem)
 
 async function fetchOrders() {

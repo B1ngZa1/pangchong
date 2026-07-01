@@ -1,5 +1,5 @@
 <template>
-  <nav class="sticky top-0 z-50 border-b border-dark-800 bg-dark-950/92 backdrop-blur-xl" @mouseleave="activeMenu = null">
+  <nav class="relative sticky top-0 z-50 border-b border-white/10 bg-dark-950/82 shadow-[0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-2xl" @mouseleave="activeMenu = null">
     <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
       <router-link to="/" class="flex items-center gap-3">
         <span class="inline-flex h-7 w-7 items-center justify-center rounded-md border border-primary-500/60 bg-primary-500/10">
@@ -14,10 +14,12 @@
           :key="item.name"
           class="flex h-full items-center"
           @mouseenter="activeMenu = item.children ? item.name : null"
+          @focusin="activeMenu = item.children ? item.name : null"
         >
           <router-link
             :to="item.to"
-            class="text-sm text-dark-300 transition-colors hover:text-white"
+            :data-qa="item.name === '商店' ? 'nav-shop-link' : null"
+            class="relative flex h-full items-center text-sm text-dark-300 transition-colors after:absolute after:bottom-0 after:left-0 after:h-px after:w-full after:origin-center after:scale-x-0 after:bg-primary-500 after:transition-transform after:duration-200 hover:text-white hover:after:scale-x-100"
             active-class="text-primary-500"
           >
             {{ item.name }}
@@ -26,9 +28,27 @@
       </div>
 
       <div class="flex items-center gap-2 sm:gap-4" @mouseenter="activeMenu = null">
+        <form class="navbar-search" @submit.prevent="handleSearch">
+          <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-5.5-5.5m2.5-5.5a8 8 0 11-16 0 8 8 0 0116 0z" />
+          </svg>
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="搜索产品"
+            aria-label="搜索产品"
+            @keydown.enter.prevent="handleSearch"
+          >
+          <button type="submit" aria-label="提交搜索">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 12h14M13 6l6 6-6 6" />
+            </svg>
+          </button>
+        </form>
+
         <button
           @click="toggleSearch"
-          class="rounded-md p-2 text-dark-300 transition-colors hover:bg-dark-800 hover:text-white"
+          class="rounded-md p-2 text-dark-300 transition-colors hover:bg-dark-800 hover:text-white lg:hidden"
           aria-label="搜索商品"
         >
           <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -95,31 +115,39 @@
       </div>
     </div>
 
+    <transition name="nav-fog">
+      <div
+        v-if="activeNav?.children"
+        data-qa="navbar-fog"
+        class="pointer-events-none fixed inset-x-0 bottom-0 top-16 hidden bg-dark-950/[0.42] backdrop-blur-[6px] md:block"
+      />
+    </transition>
+
     <transition name="mega">
-      <div v-if="activeNav?.children" class="hidden border-t border-dark-800 bg-dark-950/96 shadow-2xl shadow-black/25 backdrop-blur-xl md:block">
-        <div class="mx-auto grid max-w-7xl grid-cols-[1.1fr_1fr_1fr] gap-12 px-4 py-10 sm:px-6 lg:px-8">
-          <div>
+      <div v-if="activeNav?.children" data-qa="navbar-mega" class="absolute left-0 right-0 top-full hidden overflow-hidden border-t border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(2,6,23,0.9))] shadow-[0_28px_80px_rgba(0,0,0,0.46)] backdrop-blur-2xl md:block">
+        <div class="mx-auto grid max-w-7xl grid-cols-[1.08fr_1fr_1fr] gap-8 px-4 py-7 sm:px-6 lg:px-8">
+          <div class="rounded-lg border border-white/10 bg-white/[0.035] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-md">
             <p class="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-dark-500">{{ activeNav.eyebrow }}</p>
-            <div class="space-y-3">
+            <div class="space-y-1">
               <router-link
                 v-for="child in activeNav.children"
                 :key="child.name"
                 :to="child.to"
-                class="block text-3xl font-semibold leading-tight text-white transition-colors hover:text-primary-400"
+                class="block rounded-md px-3 py-2 text-2xl font-semibold leading-tight text-white transition-colors hover:bg-white/[0.06] hover:text-primary-400 hover:backdrop-blur-md"
               >
                 {{ child.name }}
               </router-link>
             </div>
           </div>
 
-          <div v-for="group in activeNav.groups" :key="group.title">
+          <div v-for="group in activeNav.groups" :key="group.title" class="rounded-lg border border-white/[0.07] bg-white/[0.025] p-5">
             <p class="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-dark-500">{{ group.title }}</p>
-            <div class="space-y-3">
+            <div class="space-y-1">
               <router-link
                 v-for="link in group.links"
                 :key="link.name"
                 :to="link.to"
-                class="block text-sm font-medium text-dark-300 transition-colors hover:text-white"
+                class="block rounded-md px-3 py-2 text-sm font-medium text-dark-300 transition-colors hover:bg-white/[0.055] hover:text-white hover:backdrop-blur-md"
               >
                 {{ link.name }}
               </router-link>
@@ -216,7 +244,7 @@ const navItems = [
       {
         title: '购买方式',
         links: [
-          { name: '产品定制', to: '/customize' },
+          { name: '选购商品', to: '/products' },
           { name: 'DIY 装机', to: '/diy' },
           { name: '购物车', to: '/cart' }
         ]
@@ -279,7 +307,7 @@ const navItems = [
         title: '装机工具',
         links: [
           { name: '在线装机', to: '/diy' },
-          { name: '产品定制', to: '/customize' },
+          { name: '配件目录', to: '/products' },
           { name: '兼容性咨询', to: '/services#tech-support' }
         ]
       },
@@ -288,7 +316,7 @@ const navItems = [
         links: [
           { name: '配送说明', to: '/services#delivery' },
           { name: '保修政策', to: '/services#warranty' },
-          { name: '服务协议', to: '/services' }
+          { name: '服务协议', to: '/services#user-agreement' }
         ]
       }
     ]
@@ -380,10 +408,79 @@ onUnmounted(() => {
   @apply block px-4 py-2 text-sm text-dark-300 transition-colors hover:bg-dark-800 hover:text-white;
 }
 
+.navbar-search {
+  display: none;
+  width: 244px;
+  height: 38px;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.48);
+  padding: 0 11px;
+  color: #94a3b8;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+
+.navbar-search:focus-within {
+  border-color: rgba(68, 214, 44, 0.55);
+  color: #44d62c;
+}
+
+.navbar-search input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #f8fafc;
+  font-size: 13px;
+}
+
+.navbar-search input::placeholder {
+  color: #64748b;
+}
+
+.navbar-search button {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #94a3b8;
+  transition: background-color 0.16s ease, color 0.16s ease;
+}
+
+.navbar-search button:hover,
+.navbar-search button:focus-visible {
+  background: rgba(68, 214, 44, 0.14);
+  color: #44d62c;
+  outline: 0;
+}
+
+.navbar-search button svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+@media (min-width: 1024px) {
+  .navbar-search {
+    display: flex;
+  }
+}
+
 .dropdown-enter-active,
 .dropdown-leave-active,
-.mega-enter-active,
-.mega-leave-active,
 .slide-down-enter-active,
 .slide-down-leave-active {
   transition: all 0.2s ease;
@@ -391,11 +488,31 @@ onUnmounted(() => {
 
 .dropdown-enter-from,
 .dropdown-leave-to,
-.mega-enter-from,
-.mega-leave-to,
 .slide-down-enter-from,
 .slide-down-leave-to {
   opacity: 0;
   transform: translateY(-8px);
+}
+
+.mega-enter-active,
+.mega-leave-active {
+  transition: opacity 0.18s ease, filter 0.18s ease;
+}
+
+.mega-enter-from,
+.mega-leave-to {
+  opacity: 0;
+  filter: blur(10px);
+}
+
+.nav-fog-enter-active,
+.nav-fog-leave-active {
+  transition: opacity 0.18s ease, backdrop-filter 0.18s ease;
+}
+
+.nav-fog-enter-from,
+.nav-fog-leave-to {
+  opacity: 0;
+  backdrop-filter: blur(0);
 }
 </style>

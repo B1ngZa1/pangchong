@@ -86,6 +86,14 @@ CREATE TABLE products (
     image_url VARCHAR(500),
     images JSONB,  -- 商品图片数组
     specs JSONB,   -- 商品规格参数
+    model_3d_url VARCHAR(500),
+    model_3d_scale DECIMAL(8, 4) NOT NULL DEFAULT 1,
+    model_3d_position JSONB,
+    model_3d_rotation JSONB,
+    asset_license VARCHAR(100),
+    price_source_name VARCHAR(100),
+    price_source_url VARCHAR(500),
+    price_checked_at TIMESTAMP WITH TIME ZONE,
     is_active BOOLEAN DEFAULT true,
     is_featured BOOLEAN DEFAULT false,  -- 是否推荐
     weight DECIMAL(8, 2),  -- 重量(kg)
@@ -198,6 +206,8 @@ CREATE TABLE price_history (
     product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
     price DECIMAL(10, 2) NOT NULL,
     changed_by UUID REFERENCES users(id),
+    source_name VARCHAR(100),
+    source_url VARCHAR(500),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 

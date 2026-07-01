@@ -139,9 +139,8 @@ const routes = [
   },
   {
     path: '/customize',
-    name: 'Customize',
-    component: () => import('@/views/Customize.vue'),
-    meta: { title: '产品定制' }
+    redirect: to => ({ name: 'DIY', query: to.query, hash: to.hash }),
+    meta: { title: 'DIY装机' }
   },
   {
     path: '/store',

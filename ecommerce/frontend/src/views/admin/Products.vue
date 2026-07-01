@@ -131,6 +131,27 @@
             <div>
               <label class="text-sm text-dark-400 block mb-1">主图URL</label>
               <input v-model="form.image_url" class="input w-full" placeholder="https://..." />
+              <input class="mt-2 block w-full text-xs text-dark-400" type="file" accept=".png,.jpg,.jpeg,.webp" @change="uploadAsset($event, 'image')" />
+            </div>
+            <div>
+              <label class="text-sm text-dark-400 block mb-1">GLB 模型 URL</label>
+              <input v-model="form.model_3d_url" class="input w-full" placeholder="https://.../model.glb" />
+              <input class="mt-2 block w-full text-xs text-dark-400" type="file" accept=".glb" @change="uploadAsset($event, 'model')" />
+              <p v-if="uploading" class="mt-1 text-xs text-primary-500">正在上传 {{ uploading }}...</p>
+            </div>
+            <div>
+              <label class="text-sm text-dark-400 block mb-1">素材许可</label>
+              <input v-model="form.asset_license" class="input w-full" placeholder="例如 Vendor CAD / CC BY 4.0" />
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="text-sm text-dark-400 block mb-1">价格来源</label>
+                <input v-model="form.price_source_name" class="input w-full" placeholder="京东 / 品牌官网" />
+              </div>
+              <div>
+                <label class="text-sm text-dark-400 block mb-1">来源 URL</label>
+                <input v-model="form.price_source_url" class="input w-full" placeholder="https://..." />
+              </div>
             </div>
             <div>
               <label class="text-sm text-dark-400 block mb-1">商品描述</label>
@@ -184,9 +205,12 @@ const visiblePages = computed(() => {
 const showForm = ref(false)
 const editingId = ref(null)
 const saving = ref(false)
+const uploading = ref('')
 const defaultForm = {
   name: '', slug: '', brand: '', model: '', price: null, original_price: null,
   stock: 0, image_url: '', description: '', is_active: true, is_featured: false,
+  model_3d_url: '', model_3d_scale: 1, asset_license: '',
+  price_source_name: '', price_source_url: '', price_checked_at: null,
 }
 const form = ref({ ...defaultForm })
 
@@ -218,6 +242,9 @@ function openEdit(p) {
     name: p.name, slug: p.slug, brand: p.brand || '', model: p.model || '',
     price: p.price, original_price: p.original_price, stock: p.stock,
     image_url: p.image_url || '', description: p.description || '',
+    model_3d_url: p.model_3d_url || '', model_3d_scale: Number(p.model_3d_scale || 1),
+    asset_license: p.asset_license || '', price_source_name: p.price_source_name || '',
+    price_source_url: p.price_source_url || '', price_checked_at: p.price_checked_at || null,
     is_active: p.is_active, is_featured: p.is_featured,
   }
   showForm.value = true
@@ -230,10 +257,14 @@ async function handleSubmit() {
   }
   saving.value = true
   try {
+    const payload = { ...form.value }
+    if (payload.price_source_name || payload.price_source_url) {
+      payload.price_checked_at = new Date().toISOString()
+    }
     if (editingId.value) {
-      await adminApi.updateProduct(editingId.value, form.value)
+      await adminApi.updateProduct(editingId.value, payload)
     } else {
-      await adminApi.createProduct(form.value)
+      await adminApi.createProduct(payload)
     }
     showForm.value = false
     fetchProducts()
@@ -241,6 +272,24 @@ async function handleSubmit() {
     alert('保存失败：' + (e.message || '请重试'))
   } finally {
     saving.value = false
+  }
+}
+
+async function uploadAsset(event, kind) {
+  const input = event.target
+  const file = input.files?.[0]
+  if (!file) return
+  uploading.value = kind === 'model' ? '3D 模型' : '商品图片'
+  try {
+    const bucket = kind === 'model' ? 'catalog-models' : 'catalog-images'
+    const asset = await adminApi.uploadAsset(bucket, file)
+    if (kind === 'model') form.value.model_3d_url = asset.url
+    else form.value.image_url = asset.url
+  } catch (e) {
+    alert('上传失败：' + (e.displayMessage || e.message || '请检查 Supabase 配置'))
+  } finally {
+    uploading.value = ''
+    input.value = ''
   }
 }
 

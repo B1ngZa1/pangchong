@@ -50,6 +50,14 @@ class Product(Base):
     image_url = Column(String(500))
     images = Column(JSONB)  # 商品图片数组
     specs = Column(JSONB)   # 商品规格参数
+    model_3d_url = Column(String(500))
+    model_3d_scale = Column(Numeric(8, 4), default=1)
+    model_3d_position = Column(JSONB)  # [x, y, z]
+    model_3d_rotation = Column(JSONB)  # [x, y, z]，单位为弧度
+    asset_license = Column(String(100))
+    price_source_name = Column(String(100))
+    price_source_url = Column(String(500))
+    price_checked_at = Column(DateTime(timezone=True))
     is_active = Column(Boolean, default=True, index=True)
     is_featured = Column(Boolean, default=False, index=True)
     weight = Column(Numeric(8, 2))  # 重量(kg)
@@ -60,6 +68,7 @@ class Product(Base):
     category = relationship("Category", back_populates="products")
     cart_items = relationship("CartItem", back_populates="product")
     order_items = relationship("OrderItem", back_populates="product")
+    price_history = relationship("PriceHistory", back_populates="product", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Product {self.name}>"
@@ -75,3 +84,18 @@ class Product(Base):
         if self.original_price and self.original_price > 0:
             return round((1 - float(self.price) / float(self.original_price)) * 100, 1)
         return 0.0
+
+
+class PriceHistory(Base):
+    """有来源、可审计的商品历史价格。"""
+    __tablename__ = "price_history"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    product_id = Column(UUID(as_uuid=True), ForeignKey("products.id", ondelete="CASCADE"), nullable=False, index=True)
+    price = Column(Numeric(10, 2), nullable=False)
+    changed_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    source_name = Column(String(100))
+    source_url = Column(String(500))
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, index=True)
+
+    product = relationship("Product", back_populates="price_history")

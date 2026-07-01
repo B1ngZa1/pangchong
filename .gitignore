@@ -18,6 +18,10 @@ dist/
 # Logs
 *.log
 
+# Local runtime data
+*.db
+.playwright-mcp/
+
 # IDE / OS
 .claude/
 .vscode/

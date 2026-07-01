@@ -6,7 +6,7 @@
       <div v-else class="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-12">
         <section class="overflow-hidden rounded-lg border border-dark-800 bg-dark-900">
           <div class="aspect-square overflow-hidden bg-dark-900">
-            <img :src="mainImage" :alt="product.name" class="h-full w-full object-cover">
+            <img :src="mainImage" :alt="product.name" class="h-full w-full object-cover" @error="handleImageError">
           </div>
         </section>
 
@@ -79,6 +79,11 @@ const discount = computed(() => {
 const mainImage = computed(() => {
   return product.value?.image_url || fallbackImage
 })
+
+function handleImageError(event) {
+  if (event.target.src.endsWith(fallbackImage)) return
+  event.target.src = fallbackImage
+}
 
 const addToCart = async () => {
   if (!product.value) return false

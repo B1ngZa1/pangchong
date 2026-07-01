@@ -47,6 +47,38 @@
         </div>
       </div>
 
+      <section class="mb-8 grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px]">
+        <Suspense>
+          <Product3DViewer
+            :model-url="activeModelUrl"
+            :selected-variant="activeVariant"
+            :selected-material="activeMaterial"
+            :auto-rotate="autoRotate"
+            :camera-preset="cameraPreset"
+            :reset-key="viewerResetKey"
+            :parts="viewerParts"
+          />
+          <template #fallback>
+            <div class="flex min-h-[360px] items-center justify-center rounded-lg border border-dark-800 bg-dark-900 sm:min-h-[430px] lg:min-h-[520px]">
+              <div class="text-center">
+                <div class="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-2 border-dark-700 border-t-primary-500"></div>
+                <p class="text-sm text-dark-300">正在准备 3D 装机视图</p>
+              </div>
+            </div>
+          </template>
+        </Suspense>
+        <ProductConfiguratorPanel
+          v-model:selected-variant="selectedVariant"
+          v-model:selected-material="selectedMaterial"
+          v-model:auto-rotate="autoRotate"
+          v-model:camera-preset="cameraPreset"
+          :variants="colorOptions"
+          :materials="materialOptions"
+          :camera-presets="cameraPresets"
+          @reset-camera="resetViewerCamera"
+        />
+      </section>
+
       <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
         <div class="lg:col-span-2">
           <div class="rounded-lg border border-dark-800 bg-dark-900 p-5 md:p-6">
@@ -219,6 +251,10 @@
                   <span>已选 {{ selectedCount }} / {{ steps.length }} 件</span>
                   <span v-if="savedAmount > 0">节省 ¥{{ money(savedAmount) }}</span>
                 </div>
+                <div v-if="appearancePriceDiff > 0" class="mb-2 flex justify-between text-sm text-dark-400">
+                  <span>3D 外观升级</span>
+                  <span>¥{{ money(appearancePriceDiff) }}</span>
+                </div>
                 <div class="flex justify-between text-xl font-bold text-white">
                   <span>总计</span>
                   <span class="text-primary-500">¥{{ money(totalPrice) }}</span>
@@ -286,7 +322,10 @@
               </div>
               <p class="mt-2 text-xs text-dark-500">{{ priceHistoryHint }}</p>
               <div class="mt-4 h-28 rounded-lg border border-dark-800 bg-dark-950 p-3">
-                <svg viewBox="0 0 280 96" class="h-full w-full" role="img" aria-label="价格走势图">
+                <div v-if="!chartPoints" class="flex h-full items-center justify-center text-xs text-dark-500">
+                  暂无可验证的历史价格
+                </div>
+                <svg v-else viewBox="0 0 280 96" class="h-full w-full" role="img" aria-label="价格走势图">
                   <polyline v-if="chartPoints" :points="chartPoints" fill="none" stroke="#44D62C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
                   <line x1="0" y1="82" x2="280" y2="82" stroke="rgba(255,255,255,0.12)" />
                 </svg>
@@ -304,16 +343,24 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, defineAsyncComponent, onMounted, reactive, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import api, { marketApi } from '@/api'
 import { useCartStore } from '@/store/cart'
 import { useNotifyStore } from '@/store/notify'
+import ProductConfiguratorPanel from '@/components/ProductConfiguratorPanel.vue'
+import {
+  cameraPresets,
+  materialOptions,
+  productVariants as colorOptions,
+} from '@/data/productConfigurator'
 
 const router = useRouter()
+const route = useRoute()
 const cartStore = useCartStore()
 const notify = useNotifyStore()
 const fallbackImage = '/assets/pangchong-product-fallback.png'
+const Product3DViewer = defineAsyncComponent(() => import('@/components/Product3DViewer.vue'))
 
 const steps = [
   { key: 'cpu', label: '处理器 CPU', desc: '选择适合你需求的处理器', catId: 'd1000000-0000-0000-0000-000000000001', specKey: 'socket', specLabel: '插槽' },
@@ -325,6 +372,10 @@ const steps = [
   { key: 'psu', label: '电源 PSU', desc: '稳定供电的基石', catId: 'd1000000-0000-0000-0000-000000000007', specKey: 'wattage', specLabel: '功率' },
   { key: 'case', label: '机箱', desc: '颜值与空间的载体', catId: 'd1000000-0000-0000-0000-000000000008', specKey: 'type', specLabel: '机箱类型' }
 ]
+const partAliases = {
+  memory: 'ram',
+  cooling: 'cooler',
+}
 
 const specLabels = {
   cores: '核心',
@@ -357,18 +408,23 @@ const specLabels = {
   cooler_height: '散热限高'
 }
 
-const currentStep = ref(0)
+const currentStep = ref(stepIndexFromPart(route.query.part))
 const selected = ref({})
 const allProducts = ref({})
 const loading = ref(true)
 const priceHistory = ref([])
-const priceHistorySource = ref('local-estimate')
+const priceHistorySource = ref('unavailable')
 const filters = reactive({
   keyword: '',
   brand: '',
   specValue: '',
   sort: 'default'
 })
+const selectedVariant = ref('black')
+const selectedMaterial = ref('matte')
+const autoRotate = ref(true)
+const cameraPreset = ref('front')
+const viewerResetKey = ref(0)
 
 const currentSpecFilter = computed(() => ({
   key: steps[currentStep.value].specKey,
@@ -378,8 +434,30 @@ const currentSpecFilter = computed(() => ({
 const stepProducts = computed(() => allProducts.value[steps[currentStep.value].catId] || [])
 const selectedCount = computed(() => Object.keys(selected.value).length)
 const isComplete = computed(() => selectedCount.value === steps.length)
-const totalPrice = computed(() => Object.values(selected.value).reduce((sum, item) => sum + Number(item.price), 0))
+const selectedPartsTotal = computed(() => Object.values(selected.value).reduce((sum, item) => sum + Number(item.price), 0))
+const activeVariant = computed(() => colorOptions.find(option => option.id === selectedVariant.value) || colorOptions[0])
+const activeMaterial = computed(() => materialOptions.find(option => option.id === selectedMaterial.value) || materialOptions[0])
+const activeModelUrl = computed(() => selected.value[7]?.model_3d_url || '')
+const appearancePriceDiff = computed(() => activeVariant.value?.priceDiff || 0)
+const totalPrice = computed(() => selectedPartsTotal.value + appearancePriceDiff.value)
 const savedAmount = computed(() => Object.values(selected.value).reduce((sum, item) => sum + Math.max(Number(item.original_price || item.price) - Number(item.price), 0), 0))
+
+const viewerParts = computed(() => steps.map((step, index) => {
+  const product = selected.value[index]
+  return {
+    id: step.key,
+    type: step.key,
+    name: step.label,
+    shortName: step.label.replace(/\s.+$/, ''),
+    selected: Boolean(product),
+    productId: product?.id || null,
+    productName: product?.name || '',
+    brand: product?.brand || '',
+    specs: product?.specs || {},
+    modelUrl: product?.model_3d_url || '',
+    visible: true,
+  }
+}))
 
 const availableBrands = computed(() => uniqueValues(stepProducts.value.map(product => product.brand).filter(Boolean)))
 const availableSpecValues = computed(() => uniqueValues(stepProducts.value.map(product => product.specs?.[currentSpecFilter.value.key]).filter(Boolean)))
@@ -507,9 +585,9 @@ const compatibilityChecks = computed(() => {
 const selectedPriceTarget = computed(() => selected.value[currentStep.value] || Object.values(selected.value)[0])
 const priceHistoryHint = computed(() => {
   if (!selectedPriceTarget.value) return '选择一个配件后显示走势。'
-  return priceHistorySource.value === 'tmapi'
-    ? '数据来自 TMAPI 历史价格接口。'
-    : '未配置外部 API token，当前展示本地估算曲线。'
+  if (priceHistorySource.value === 'database') return '数据来自平台核价记录，可追溯来源。'
+  if (priceHistorySource.value === 'external-provider') return '数据来自已配置的外部行情提供商。'
+  return '暂无可靠历史价格，不使用模拟曲线。'
 })
 const chartPoints = computed(() => {
   if (priceHistory.value.length === 0) return ''
@@ -531,6 +609,14 @@ const priceRange = computed(() => {
 
 function uniqueValues(values) {
   return [...new Set(values.map(value => String(value)))].sort((a, b) => a.localeCompare(b, 'zh-CN'))
+}
+
+function stepIndexFromPart(part) {
+  const raw = Array.isArray(part) ? part[0] : part
+  const key = String(raw || '').trim().toLowerCase()
+  const normalized = partAliases[key] || key
+  const index = steps.findIndex(step => step.key === normalized)
+  return index >= 0 ? index : 0
 }
 
 function money(value) {
@@ -657,6 +743,117 @@ function clearAll() {
   currentStep.value = 0
 }
 
+function resetViewerCamera() {
+  viewerResetKey.value += 1
+}
+
+function buildConfigName() {
+  const cpu = selected.value[0]?.model || selected.value[0]?.name || 'CPU 待定'
+  const gpu = selected.value[1]?.model || selected.value[1]?.name || 'GPU 待定'
+  return clipText(`胖虫 DIY 整机配置 · ${cpu} / ${gpu}`, 180)
+}
+
+function buildDiySnapshot() {
+  const parts = steps.map((step, index) => {
+    const product = selected.value[index]
+    return {
+      key: step.key,
+      label: step.label,
+      category_id: step.catId,
+      product_id: product?.id || null,
+      name: product?.name || '',
+      brand: product?.brand || '',
+      model: product?.model || '',
+      price: Number(product?.price || 0),
+      original_price: product?.original_price != null ? Number(product.original_price) : null,
+      image_url: product?.image_url || '',
+      model_3d_url: product?.model_3d_url || '',
+      model_3d_scale: Number(product?.model_3d_scale || 1),
+      model_3d_position: product?.model_3d_position || null,
+      model_3d_rotation: product?.model_3d_rotation || null,
+      specs: product?.specs || {},
+    }
+  })
+
+  return {
+    type: 'diy_pc',
+    version: 1,
+    created_at: new Date().toISOString(),
+    parts,
+    appearance: {
+      variant_id: selectedVariant.value,
+      variant_name: activeVariant.value?.name || '',
+      material_id: selectedMaterial.value,
+      material_name: activeMaterial.value?.name || '',
+      camera_preset: cameraPreset.value,
+      auto_rotate: autoRotate.value,
+      price_diff: appearancePriceDiff.value,
+      model_url: activeModelUrl.value,
+    },
+    metrics: {
+      total_power_w: totalPower.value,
+      psu_headroom_w: psuHeadroom.value,
+      gpu_space_headroom_mm: gpuSpaceHeadroom.value,
+      estimated_3dmark: estimated3DMark.value,
+      compatibility: compatibilityChecks.value.map(check => ({
+        key: check.key,
+        title: check.title,
+        level: check.level,
+        message: check.message,
+      })),
+    },
+    pricing: {
+      parts_total: selectedPartsTotal.value,
+      appearance_price_diff: appearancePriceDiff.value,
+      saved_amount: savedAmount.value,
+      total: totalPrice.value,
+    },
+  }
+}
+
+function buildOrderSpecs(snapshot) {
+  const specs = {
+    '配置类型': 'DIY 装机整机',
+    '3D 外观': `${snapshot.appearance.variant_name} / ${snapshot.appearance.material_name}`,
+  }
+
+  snapshot.parts.forEach((part) => {
+    specs[part.label] = part.brand ? `${part.brand} ${part.name}` : part.name
+  })
+
+  specs['估算功耗'] = `${snapshot.metrics.total_power_w}W`
+  specs['电源冗余'] = psuHeadroomLabel.value
+  specs['显卡空间'] = gpuSpaceLabel.value
+  specs['3DMark'] = snapshot.metrics.estimated_3dmark.toLocaleString()
+  if (snapshot.pricing.appearance_price_diff > 0) {
+    specs['外观差价'] = `¥${money(snapshot.pricing.appearance_price_diff)}`
+  }
+  return specs
+}
+
+function buildConfigId(snapshot) {
+  const raw = [
+    snapshot.type,
+    ...snapshot.parts.map(part => part.product_id || 'none'),
+    snapshot.appearance.variant_id,
+    snapshot.appearance.material_id,
+  ].join('|')
+  return `diy_${stableHash(raw)}`
+}
+
+function stableHash(text) {
+  let hash = 0
+  for (let i = 0; i < text.length; i += 1) {
+    hash = ((hash << 5) - hash) + text.charCodeAt(i)
+    hash |= 0
+  }
+  return Math.abs(hash).toString(36)
+}
+
+function clipText(text, limit) {
+  return text.length > limit ? `${text.slice(0, limit - 1)}…` : text
+}
+
 async function addToCart() {
   if (!isComplete.value) return
   const blocking = compatibilityChecks.value.filter(check => check.level === 'warn')
@@ -665,18 +862,24 @@ async function addToCart() {
     return
   }
 
-  const items = Object.values(selected.value)
-  const results = await Promise.allSettled(items.map(item => cartStore.addToCart(item.id, 1)))
-  const failed = results.map((result, index) => result.status === 'rejected' ? items[index].name : null).filter(Boolean)
-  if (failed.length === 0) {
-    notify.show('所有配件已加入购物车', 'success')
-    router.push('/cart')
-  } else if (failed.length < items.length) {
-    notify.show(`部分配件添加失败：${failed.join('、')}`, 'warning')
-    router.push('/cart')
-  } else {
-    notify.show('添加失败，请重试', 'error')
-  }
+  const snapshot = buildDiySnapshot()
+  cartStore.addCustomItem({
+    id: buildConfigId(snapshot),
+    name: buildConfigName(),
+    brand: '胖虫',
+    model: 'DIY 装机整机',
+    description: '基于 DIY 装机配置器生成的整机定制快照',
+    specs: buildOrderSpecs(snapshot),
+    snapshot,
+    custom_type: 'diy_pc',
+    price: totalPrice.value,
+    original_price: savedAmount.value > 0 ? totalPrice.value + savedAmount.value : null,
+    image_url: selected.value[7]?.image_url || selected.value[1]?.image_url || fallbackImage,
+    stock: 99,
+  })
+
+  notify.show('DIY 整机配置已作为一件定制商品加入购物车', 'success')
+  router.push('/cart')
 }
 
 async function loadCategoryProducts(catId) {
@@ -696,23 +899,12 @@ async function refreshPriceHistory() {
   try {
     const res = await marketApi.getPriceHistory(target.id, 30)
     priceHistory.value = res.points || []
-    priceHistorySource.value = res.source || 'local-estimate'
+    priceHistorySource.value = res.source || 'unavailable'
   } catch (e) {
     console.error('Failed to load price history:', e)
-    priceHistory.value = buildLocalPriceHistory(target)
-    priceHistorySource.value = 'local-estimate'
+    priceHistory.value = []
+    priceHistorySource.value = 'unavailable'
   }
-}
-
-function buildLocalPriceHistory(product) {
-  const current = Number(product.price || 0)
-  const start = Number(product.original_price || current * 1.08)
-  return Array.from({ length: 30 }, (_, index) => {
-    const date = new Date()
-    date.setDate(date.getDate() - (29 - index))
-    const price = start - ((start - current) * index / 29) + ((index % 5) - 2) * start * 0.006
-    return { date: date.toISOString().slice(0, 10), price: Math.max(price, 0).toFixed(2) }
-  })
 }
 
 watch(currentStep, async (step) => {
@@ -727,6 +919,13 @@ watch(currentStep, async (step) => {
     loading.value = false
   }
   refreshPriceHistory()
+})
+
+watch(() => route.query.part, (part) => {
+  const nextStep = stepIndexFromPart(part)
+  if (nextStep !== currentStep.value) {
+    currentStep.value = nextStep
+  }
 })
 
 onMounted(async () => {

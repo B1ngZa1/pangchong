@@ -4,11 +4,19 @@ Supports async SQLAlchemy with autogenerate.
 """
 import asyncio
 from logging.config import fileConfig
+from pathlib import Path
+import sys
 
 from sqlalchemy import pool
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
+
+# The Alembic console script is installed outside the project in Docker, so
+# explicitly make the backend root importable before loading application code.
+backend_root = str(Path(__file__).resolve().parents[1])
+if backend_root not in sys.path:
+    sys.path.insert(0, backend_root)
 
 # Alembic Config object
 config = context.config
@@ -18,10 +26,12 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 # Import all models so autogenerate can detect them
+from app.core.config import settings
 from app.core.database import Base
 from app.models import user, product, cart, order  # noqa: F401
 
 target_metadata = Base.metadata
+config.set_main_option("sqlalchemy.url", settings.DATABASE_URL.replace("%", "%%"))
 
 
 def run_migrations_offline() -> None:

@@ -1,181 +1,260 @@
-# 胖虫电商系统 - 开发环境搭建指南
+# 胖虫电商系统 - 本地启动指南
+
+这份指南面向第一次从 GitHub 克隆项目的开发者。推荐使用 Docker Compose 启动完整栈；如果你要调试后端或前端，也可以按后面的手动开发流程运行。
+
+## 你会启动哪些服务
+
+| 服务 | 容器名 | 本地地址 |
+| --- | --- | --- |
+| 前端 Vite 服务 | `pangchong-frontend` | http://localhost:3000 |
+| 后端 FastAPI 服务 | `pangchong-backend` | http://localhost:8000 |
+| API 文档 | `pangchong-backend` | http://localhost:8000/docs |
+| PostgreSQL | `pangchong-postgres` | localhost:5432 |
+| Redis | `pangchong-redis` | localhost:6379 |
+
+PostgreSQL 容器第一次创建数据卷时，会自动导入：
+
+- `database/init.sql`
+- `database/seed.sql`
+- `database/components.sql`
 
 ## 前置要求
+
+Docker 启动方式只需要：
+
+- Git
+- Docker Desktop 或可用的 Docker Engine
+- Docker Compose v2（`docker compose`）或旧版 `docker-compose`
+
+手动开发方式还需要：
 
 - Python 3.11+
 - Node.js 18+
 - PostgreSQL 14+
-- Redis 7+ (可选，用于缓存)
-- Git
+- Redis 7（当前代码基本不依赖 Redis，但 Docker 栈会一起启动）
 
-## 快速开始
+## 推荐方式：Docker Compose
 
-### 1. 克隆项目
+### 1. 克隆并进入项目
 
 ```bash
-cd c:/University/Code_total/pangchong
-git clone <repository-url> ecommerce
+git clone <repository-url> pangchong
+cd pangchong/ecommerce
+```
+
+如果你已经在仓库根目录：
+
+```bash
 cd ecommerce
 ```
 
-### 2. 后端设置
+### 2. 直接启动
 
-#### 2.1 创建 Python 虚拟环境
+Windows：
+
+```bat
+.\start.bat
+```
+
+macOS/Linux：
 
 ```bash
-cd backend
+./start.sh
+```
 
-# 创建虚拟环境
+也可以不使用脚本，直接运行：
+
+```bash
+docker compose up -d --build
+```
+
+旧版 Compose：
+
+```bash
+docker-compose up -d --build
+```
+
+### 3. 打开页面
+
+| 内容 | 地址 |
+| --- | --- |
+| 前端应用 | http://localhost:3000 |
+| 后端 API | http://localhost:8000 |
+| Swagger UI | http://localhost:8000/docs |
+| ReDoc | http://localhost:8000/redoc |
+
+### 4. 登录测试账号
+
+| 用户名 | 密码 | 角色 |
+| --- | --- | --- |
+| `testuser` | `test123456` | 普通用户 |
+| `admin` | `test123456` | 管理员 |
+
+## `.env` 行为说明
+
+新克隆项目后不需要创建 `.env`。`docker-compose.yml` 已经写入本地开发默认值：
+
+| 变量 | 默认值 |
+| --- | --- |
+| `POSTGRES_DB` | `pangchong_ecommerce` |
+| `POSTGRES_USER` | `pangchong` |
+| `POSTGRES_PASSWORD` | `pangchong_dev_password` |
+| `REDIS_PASSWORD` | `pangchong_dev_redis` |
+| `SECRET_KEY` | `change-me-local-dev-secret` |
+| `DEBUG` | `true` |
+| `ALLOWED_ORIGINS` | `["http://localhost:3000","http://localhost","http://localhost:80"]` |
+
+只有在你要修改默认密码、JWT 密钥、CORS 来源、支付宝或邮件配置时，才复制模板：
+
+```bat
+copy .env.example .env
+```
+
+macOS/Linux：
+
+```bash
+cp .env.example .env
+```
+
+注意：
+
+- Docker Compose 会自动读取 `ecommerce/.env`，并用其中的变量覆盖 `docker-compose.yml` 的默认值。
+- `.env` 已在 `.gitignore` 中忽略，不要提交。
+- `ecommerce/.env` 只服务于 Docker Compose。
+- 手动运行后端时，请在 `backend/.env` 中配置 `DATABASE_URL` 等变量。
+- 如果已经启动过数据库容器，再修改 `POSTGRES_DB`、`POSTGRES_USER` 或 `POSTGRES_PASSWORD`，旧数据卷仍保留第一次初始化的数据库。需要重建时运行 `docker compose down -v`。
+
+## 常用 Docker 命令
+
+```bash
+# 查看容器状态
+docker compose ps
+
+# 查看全部日志
+docker compose logs -f
+
+# 只看后端日志
+docker compose logs -f backend
+
+# 只看前端日志
+docker compose logs -f frontend
+
+# 重启所有服务
+docker compose restart
+
+# 停止服务，保留数据库和 Redis 数据
+docker compose down
+
+# 停止服务并删除本地数据卷
+docker compose down -v
+```
+
+## 手动开发：后端
+
+手动运行后端时，建议从 `ecommerce/backend` 目录启动。`app/core/config.py` 会从当前工作目录读取 `.env`。
+
+### 1. 创建虚拟环境并安装依赖
+
+```bash
+cd ecommerce/backend
+
 python -m venv venv
 
-# 激活虚拟环境
 # Windows
 venv\Scripts\activate
+
 # macOS/Linux
 source venv/bin/activate
 
-# 安装依赖
 pip install -r requirements.txt
 ```
 
-#### 2.2 配置环境变量
+### 2. 准备本地 PostgreSQL
 
-For local non-Docker backend runs, create `backend/.env`. Docker Compose uses `ecommerce/.env` as an optional override and otherwise falls back to the local defaults in `docker-compose.yml`.
+下面的账号和密码与 Docker Compose 默认值保持一致。
+
+```sql
+CREATE USER pangchong WITH PASSWORD 'pangchong_dev_password';
+CREATE DATABASE pangchong_ecommerce OWNER pangchong;
+```
+
+从 `ecommerce` 目录导入表结构和测试数据：
+
+```bash
+cd ecommerce
+
+psql -U pangchong -d pangchong_ecommerce -f database/init.sql
+psql -U pangchong -d pangchong_ecommerce -f database/seed.sql
+psql -U pangchong -d pangchong_ecommerce -f database/components.sql
+```
+
+### 3. 创建 `backend/.env`
 
 ```env
-# 数据库配置
-DATABASE_URL=postgresql+asyncpg://pangchong:060120@localhost:5432/pangchong_ecommerce
-
-# Redis 配置（可选）
-REDIS_URL=redis://localhost:6379/0
-
-# JWT 配置
-SECRET_KEY=your-secret-key-change-in-production
+DATABASE_URL=postgresql+asyncpg://pangchong:pangchong_dev_password@localhost:5432/pangchong_ecommerce
+REDIS_URL=redis://:pangchong_dev_redis@localhost:6379/0
+SECRET_KEY=change-me-local-dev-secret
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 REFRESH_TOKEN_EXPIRE_DAYS=7
-
-# 应用配置
 DEBUG=true
 APP_NAME=胖虫电商系统
+ALLOWED_ORIGINS=["http://localhost:3000","http://localhost","http://localhost:80"]
 
-# CORS 配置
-ALLOWED_ORIGINS=["http://localhost:3000","http://localhost:5173"]
-
-# 支付宝配置（沙箱）
-ALIPAY_APP_ID=your_app_id
-ALIPAY_PRIVATE_KEY=your_private_key
-ALIPAY_PUBLIC_KEY=your_public_key
+ALIPAY_APP_ID=
+ALIPAY_PRIVATE_KEY=
+ALIPAY_PUBLIC_KEY=
 ALIPAY_SANDBOX=true
 
-# 邮件配置（可选）
-SMTP_HOST=smtp.qq.com
-SMTP_PORT=465
-SMTP_USER=your_email@qq.com
-SMTP_PASSWORD=your_smtp_password
-SMTP_FROM_EMAIL=noreply@pangchong.com
-SMTP_FROM_NAME=胖虫科技
-
-# 快递鸟配置（可选）
-KDNIAO_APP_KEY=your_app_key
-KDNIAO_APP_SECRET=your_app_secret
+SMTP_USER=
+SMTP_PASSWORD=
 ```
 
-#### 2.3 初始化数据库
+### 4. 启动后端
 
 ```bash
-# 创建数据库
-psql -U postgres
-CREATE DATABASE pangchong_ecommerce;
-CREATE USER pangchong WITH PASSWORD '060120';
-GRANT ALL PRIVILEGES ON DATABASE pangchong_ecommerce TO pangchong;
-\q
-
-# 导入数据库结构
-psql -U pangchong -d pangchong_ecommerce -f ../database/init.sql
-
-# 导入测试数据（可选）
-psql -U pangchong -d pangchong_ecommerce -f ../database/seed.sql
-```
-
-#### 2.4 启动后端服务
-
-```bash
-# 开发模式启动
+cd ecommerce/backend
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-
-# 访问 API 文档
-# Swagger UI: http://localhost:8000/docs
-# ReDoc: http://localhost:8000/redoc
 ```
 
-### 3. 前端设置
+访问：
 
-#### 3.1 安装依赖
+- http://localhost:8000/docs
+- http://localhost:8000/redoc
+
+## 手动开发：前端
 
 ```bash
-cd frontend
-
-# 安装依赖
+cd ecommerce/frontend
 npm install
-```
-
-#### 3.2 启动前端服务
-
-```bash
-# 开发模式启动
 npm run dev
-
-# 访问前端应用
-# http://localhost:3000
 ```
 
-### 4. 使用 Docker Compose（推荐）
+Vite 默认监听 http://localhost:3000，并把 `/api` 请求代理到 `http://localhost:8000`。如需覆盖代理目标：
+
+PowerShell：
+
+```powershell
+$env:VITE_API_TARGET="http://localhost:8001"
+npm run dev
+```
+
+CMD：
 
 ```bash
-# 在项目根目录
-cd ecommerce
-
-# Optional: create ecommerce/.env to override the built-in Docker defaults.
-# Windows: copy .env.example .env
-# macOS/Linux: cp .env.example .env
-
-# Start all services from a fresh checkout
-docker compose up -d --build
-
-# 查看日志
-docker compose logs -f
-
-# 停止服务
-docker compose down
+set VITE_API_TARGET=http://localhost:8001
+npm run dev
 ```
 
-## 测试账号
-
-测试数据中的用户账号：
-
-| 用户名 | 密码 | 角色 |
-|--------|------|------|
-| testuser | test123456 | 普通用户 |
-| admin | test123456 | 管理员 |
-
-## API 测试
-
-### 使用 curl 测试
-
-#### 用户注册
+macOS/Linux：
 
 ```bash
-curl -X POST "http://localhost:8000/api/auth/register" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "username": "newuser",
-    "email": "new@example.com",
-    "password": "password123"
-  }'
+VITE_API_TARGET=http://localhost:8001 npm run dev
 ```
 
-#### 用户登录
+## API 快速测试
+
+登录：
 
 ```bash
 curl -X POST "http://localhost:8000/api/auth/login" \
@@ -186,13 +265,13 @@ curl -X POST "http://localhost:8000/api/auth/login" \
   }'
 ```
 
-#### 获取商品列表
+商品列表：
 
 ```bash
 curl "http://localhost:8000/api/products?page=1&page_size=10"
 ```
 
-#### 添加购物车（需要 Token）
+添加购物车需要登录后的 Token：
 
 ```bash
 curl -X POST "http://localhost:8000/api/cart/items" \
@@ -204,88 +283,93 @@ curl -X POST "http://localhost:8000/api/cart/items" \
   }'
 ```
 
-### 使用 Swagger UI
-
-1. 访问 http://localhost:8000/docs
-2. 点击 "Authorize" 按钮
-3. 输入 Token（格式：`Bearer <token>`）
-4. 测试各个 API 接口
-
 ## 常见问题
 
-### 1. 数据库连接失败
+### 端口被占用
 
-检查 PostgreSQL 服务是否启动，以及 `.env` 文件中的数据库配置是否正确。
+检查 3000、8000、5432、6379：
 
-```bash
-# Windows
-net start postgresql-x64-14
-
-# macOS
-brew services start postgresql@14
-
-# Linux
-sudo systemctl start postgresql
+```bat
+netstat -ano | findstr :8000
 ```
 
-### 2. 端口被占用
+macOS/Linux：
 
 ```bash
-# 查看端口占用
-netstat -ano | findstr :8000  # Windows
-lsof -i :8000                 # macOS/Linux
-
-# 修改端口
-uvicorn app.main:app --port 8001
+lsof -i :8000
 ```
 
-### 3. 依赖安装失败
+### 修改数据库密码后连接失败
+
+PostgreSQL 官方镜像只在首次创建数据卷时初始化数据库。修改 `.env` 后，如果旧数据卷还在，容器内数据库不会自动改密码。开发环境可直接重建：
 
 ```bash
-# 升级 pip
-pip install --upgrade pip
+docker compose down -v
+docker compose up -d --build
+```
 
-# 使用国内镜像
+### 依赖安装慢
+
+后端：
+
+```bash
 pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 ```
+
+前端：
+
+```bash
+npm config set registry https://registry.npmmirror.com
+npm install
+```
+
+### Docker Compose 命令不一致
+
+新版本使用：
+
+```bash
+docker compose ps
+```
+
+旧版本使用：
+
+```bash
+docker-compose ps
+```
+
+`start.bat` 和 `start.sh` 会自动选择可用命令。
 
 ## 项目结构
 
 ```
 ecommerce/
-├── backend/                    # 后端服务
+├── backend/                    # FastAPI 后端
 │   ├── app/
-│   │   ├── api/               # API 路由
-│   │   ├── core/              # 核心配置
-│   │   ├── models/            # 数据模型
-│   │   ├── schemas/           # Pydantic 模式
-│   │   ├── services/          # 业务逻辑
-│   │   ├── utils/             # 工具函数
-│   │   └── main.py            # 应用入口
-│   ├── migrations/            # 数据库迁移
-│   ├── tests/                 # 测试
-│   ├── requirements.txt
+│   │   ├── api/                # API 路由
+│   │   ├── core/               # 配置、数据库、安全工具
+│   │   ├── models/             # SQLAlchemy 模型
+│   │   ├── schemas/            # Pydantic Schema
+│   │   ├── services/           # 业务服务
+│   │   └── utils/              # 工具函数
+│   ├── migrations/             # Alembic 迁移
+│   ├── tests/                  # 测试
 │   └── Dockerfile
-├── frontend/                  # 前端应用
+├── frontend/                   # Vue 3 前端
 │   ├── src/
-│   │   ├── components/        # 组件
-│   │   ├── views/             # 页面
-│   │   ├── store/             # Pinia 状态
-│   │   ├── api/               # API 调用
-│   │   ├── router/            # 路由
-│   │   └── assets/            # 静态资源
-│   ├── package.json
+│   │   ├── api/                # API 客户端
+│   │   ├── components/         # 通用组件
+│   │   ├── router/             # 路由
+│   │   ├── store/              # Pinia 状态
+│   │   └── views/              # 页面
 │   └── Dockerfile
-├── database/                  # 数据库脚本
+├── database/                   # 数据库初始化脚本
 │   ├── init.sql
-│   └── seed.sql
-├── docker/                    # Docker 配置
-├── docker-compose.yml
-└── docs/                      # 文档
+│   ├── seed.sql
+│   └── components.sql
+├── docker/                     # Nginx 等容器配置
+├── docs/                       # 项目文档
+├── docker-compose.yml          # 本地开发 Compose 文件
+├── .env.example                # 可选 Compose 环境变量模板
+├── start.bat                   # Windows 一键启动
+└── start.sh                    # macOS/Linux 一键启动
 ```
-
-## 下一步
-
-1. 查看 [架构文档](architecture.md) 了解系统设计
-2. 查看 API 文档了解接口详情
-3. 开始开发你的功能！

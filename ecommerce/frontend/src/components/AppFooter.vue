@@ -24,8 +24,7 @@
           <h3 class="mb-4 text-sm font-semibold text-white">产品</h3>
           <ul class="space-y-2 text-sm text-dark-400">
             <li><router-link to="/products" class="transition-colors hover:text-white">全部产品</router-link></li>
-            <li><router-link to="/customize" class="transition-colors hover:text-white">产品定制</router-link></li>
-            <li><router-link to="/diy" class="transition-colors hover:text-white">DIY 配件</router-link></li>
+            <li><router-link to="/diy" class="transition-colors hover:text-white">DIY 装机</router-link></li>
             <li><router-link to="/cart" class="transition-colors hover:text-white">购物车</router-link></li>
           </ul>
         </div>

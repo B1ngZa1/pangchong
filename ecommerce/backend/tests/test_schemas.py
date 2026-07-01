@@ -127,3 +127,32 @@ class TestCustomOrderItem:
     def test_rejects_zero_price(self):
         with pytest.raises(ValidationError):
             CustomOrderItemCreate(product_name="Custom PC Build", price=0, quantity=1)
+
+
+class TestProductAssetMetadata:
+    def test_accepts_model_transform_and_price_source(self):
+        from app.schemas.product import ProductCreate
+
+        product = ProductCreate(
+            name="Demo Case",
+            slug="demo-case",
+            price=999,
+            model_3d_url="https://example.com/demo.glb",
+            model_3d_scale=1.25,
+            model_3d_position=[0, 1, 0],
+            model_3d_rotation=[0, 0, 0],
+            price_source_name="Vendor",
+            price_source_url="https://example.com/product",
+        )
+        assert product.model_3d_position == [0.0, 1.0, 0.0]
+
+    def test_rejects_incomplete_model_transform(self):
+        from app.schemas.product import ProductCreate
+
+        with pytest.raises(ValidationError):
+            ProductCreate(
+                name="Demo Case",
+                slug="demo-case",
+                price=999,
+                model_3d_position=[0, 1],
+            )

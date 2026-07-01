@@ -37,6 +37,7 @@ class CategoryResponse(CategoryBase):
 
 class ProductBase(BaseModel):
     """商品基本信息"""
+    model_config = ConfigDict(protected_namespaces=())
     name: str = Field(..., max_length=200, description="商品名称")
     slug: str = Field(..., max_length=200, description="商品标识")
     description: Optional[str] = Field(None, description="商品描述")
@@ -50,6 +51,14 @@ class ProductBase(BaseModel):
     image_url: Optional[str] = Field(None, max_length=500, description="主图URL")
     images: Optional[List[str]] = Field(None, description="图片列表")
     specs: Optional[Dict[str, Any]] = Field(None, description="规格参数")
+    model_3d_url: Optional[str] = Field(None, max_length=500, description="GLB 模型 URL")
+    model_3d_scale: Decimal = Field(Decimal("1"), gt=0, le=100, description="模型统一缩放")
+    model_3d_position: Optional[List[float]] = Field(None, min_length=3, max_length=3)
+    model_3d_rotation: Optional[List[float]] = Field(None, min_length=3, max_length=3)
+    asset_license: Optional[str] = Field(None, max_length=100, description="3D/图片资产许可")
+    price_source_name: Optional[str] = Field(None, max_length=100, description="价格来源名称")
+    price_source_url: Optional[str] = Field(None, max_length=500, description="价格来源 URL")
+    price_checked_at: Optional[datetime] = Field(None, description="最近核价时间")
     is_active: bool = Field(True, description="是否上架")
     is_featured: bool = Field(False, description="是否推荐")
     weight: Optional[Decimal] = Field(None, ge=0, description="重量(kg)")
@@ -62,6 +71,7 @@ class ProductCreate(ProductBase):
 
 class ProductUpdate(BaseModel):
     """更新商品"""
+    model_config = ConfigDict(protected_namespaces=())
     name: Optional[str] = Field(None, max_length=200)
     description: Optional[str] = None
     price: Optional[Decimal] = Field(None, ge=0)
@@ -74,6 +84,14 @@ class ProductUpdate(BaseModel):
     image_url: Optional[str] = Field(None, max_length=500)
     images: Optional[List[str]] = None
     specs: Optional[Dict[str, Any]] = None
+    model_3d_url: Optional[str] = Field(None, max_length=500)
+    model_3d_scale: Optional[Decimal] = Field(None, gt=0, le=100)
+    model_3d_position: Optional[List[float]] = Field(None, min_length=3, max_length=3)
+    model_3d_rotation: Optional[List[float]] = Field(None, min_length=3, max_length=3)
+    asset_license: Optional[str] = Field(None, max_length=100)
+    price_source_name: Optional[str] = Field(None, max_length=100)
+    price_source_url: Optional[str] = Field(None, max_length=500)
+    price_checked_at: Optional[datetime] = None
     is_active: Optional[bool] = None
     is_featured: Optional[bool] = None
     weight: Optional[Decimal] = Field(None, ge=0)
@@ -86,7 +104,7 @@ class ProductResponse(ProductBase):
     created_at: datetime
     updated_at: datetime
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, protected_namespaces=())
 
 
 class ProductListResponse(BaseModel):

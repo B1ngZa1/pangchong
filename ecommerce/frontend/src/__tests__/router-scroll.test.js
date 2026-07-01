@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { resolveHashScroll } from '@/router'
+import router, { resolveHashScroll } from '@/router'
 
 describe('router hash scrolling', () => {
   afterEach(() => {
@@ -43,5 +43,22 @@ describe('router hash scrolling', () => {
     await vi.advanceTimersByTimeAsync(32)
 
     await expect(scrollPosition).resolves.toEqual({ top: 0 })
+  })
+})
+
+describe('retired customize route', () => {
+  it('redirects to the real DIY shopping flow instead of loading mock product data', () => {
+    const customizeRoute = router.getRoutes().find(route => route.path === '/customize')
+
+    expect(typeof customizeRoute?.redirect).toBe('function')
+    expect(customizeRoute.redirect({
+      query: { part: 'gpu' },
+      hash: '#compatibility',
+    })).toEqual({
+      name: 'DIY',
+      query: { part: 'gpu' },
+      hash: '#compatibility',
+    })
+    expect(customizeRoute?.components).toBeUndefined()
   })
 })

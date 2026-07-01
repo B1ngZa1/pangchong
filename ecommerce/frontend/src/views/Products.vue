@@ -84,6 +84,7 @@
                 :alt="product.name"
                 loading="lazy"
                 class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                @error="handleImageError($event, product.category_id)"
               >
               <span v-if="product.is_featured" class="absolute left-3 top-3 rounded border border-primary-500/60 bg-dark-950/75 px-2 py-1 text-[11px] font-medium text-primary-400">推荐</span>
               <span v-if="isDiscounted(product)" class="absolute right-3 top-3 rounded border border-red-400/45 bg-dark-950/75 px-2 py-1 text-[11px] font-medium text-red-300">特惠</span>
@@ -132,6 +133,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '@/api'
 import { useCartStore, useNotifyStore } from '@/store'
+import { buildProductListParams, getCatalogQueryLabel, resolveCategoryId } from '@/utils/productCatalogFilters'
 
 const route = useRoute()
 const cartStore = useCartStore()
@@ -154,9 +156,12 @@ const FALLBACK_IMAGES = {
 }
 
 const currentCategoryName = computed(() => {
-  if (!currentCatId.value) return '全部商品'
-  const cat = categories.value.find(c => c.id === currentCatId.value)
-  return cat ? cat.name : '全部商品'
+  if (currentCatId.value) {
+    const cat = categories.value.find(c => c.id === currentCatId.value)
+    if (cat) return cat.name
+  }
+
+  return getCatalogQueryLabel(route.query) || '全部商品'
 })
 
 const sortedProducts = computed(() => {
@@ -194,6 +199,12 @@ function getFallbackImage(catId) {
   return FALLBACK_IMAGES[catId] || FALLBACK_IMAGES.default
 }
 
+function handleImageError(event, catId) {
+  const fallback = getFallbackImage(catId)
+  if (event.target.src.endsWith(fallback)) return
+  event.target.src = fallback
+}
+
 function firstSpecs(specs) {
   if (!specs || typeof specs !== 'object') return {}
   const keys = Object.keys(specs).slice(0, 4)
@@ -221,6 +232,10 @@ function switchCategory(catId) {
   fetchProducts()
 }
 
+function syncCategoryFromRoute() {
+  currentCatId.value = resolveCategoryId(route.query.category, categories.value)
+}
+
 async function fetchCategories() {
   try {
     const res = await api.get('/products/categories')
@@ -233,9 +248,11 @@ async function fetchCategories() {
 async function fetchProducts() {
   loading.value = true
   try {
-    const params = { page: page.value, page_size: 20 }
-    if (currentCatId.value) params.category_id = currentCatId.value
-    if (route.query.keyword) params.keyword = route.query.keyword
+    const params = buildProductListParams({
+      page: page.value,
+      currentCatId: currentCatId.value,
+      query: route.query
+    })
     const res = await api.get('/products', { params })
     products.value = res?.items || []
     totalPages.value = res?.pages || 1
@@ -249,13 +266,20 @@ async function fetchProducts() {
   }
 }
 
-watch(() => route.query.keyword, () => {
+watch(() => [
+  route.query.keyword,
+  route.query.tag,
+  route.query.scene,
+  route.query.category
+], () => {
+  syncCategoryFromRoute()
   page.value = 1
   fetchProducts()
 })
 
 onMounted(async () => {
   await fetchCategories()
+  syncCategoryFromRoute()
   await fetchProducts()
 })
 </script>

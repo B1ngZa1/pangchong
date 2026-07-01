@@ -70,6 +70,12 @@ class Settings(BaseSettings):
     PRICE_HISTORY_API_KEY: str = ""
     PRICE_HISTORY_TIMEOUT_SECONDS: float = 6.0
 
+    # Supabase 仅作为托管 Postgres 与 Storage；密钥只能存在于后端。
+    SUPABASE_URL: str = ""
+    SUPABASE_SECRET_KEY: str = ""
+    SUPABASE_IMAGE_BUCKET: str = "catalog-images"
+    SUPABASE_MODEL_BUCKET: str = "catalog-models"
+
     # 文件上传配置
     UPLOAD_DIR: str = "./uploads"
     MAX_FILE_SIZE: int = 10 * 1024 * 1024  # 10MB

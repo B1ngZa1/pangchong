@@ -152,6 +152,12 @@ export const adminApi = {
   toggleProductStatus: (id, isActive) => api.put(`/admin/products/${id}/status`, { is_active: isActive }),
   createProduct: (data) => api.post('/products', data),
   updateProduct: (id, data) => api.put(`/products/${id}`, data),
+  uploadAsset: (bucket, file) => {
+    const data = new FormData()
+    data.append('bucket', bucket)
+    data.append('file', file)
+    return api.post('/admin/assets', data, { headers: { 'Content-Type': 'multipart/form-data' } })
+  },
 
   // 分类管理
   getCategories: () => api.get('/admin/categories'),

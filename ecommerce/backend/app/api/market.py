@@ -1,7 +1,7 @@
 """
 胖虫电商系统 - 外部行情 API
 """
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from typing import Any, Optional
 from uuid import UUID
@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..core.config import settings
 from ..core.database import get_db
-from ..models.product import Product
+from ..models.product import Product, PriceHistory
 from ..schemas.market import PriceHistoryResponse, PricePoint
 
 router = APIRouter(prefix="/market", tags=["行情"])
@@ -57,26 +57,9 @@ def _extract_price_points(payload: dict[str, Any], days: int) -> list[PricePoint
             point_date = date.fromisoformat(str(raw_date)[:10])
         except ValueError:
             continue
-        points.append(PricePoint(date=point_date, price=price))
+        points.append(PricePoint(date=point_date, price=price, source_name="TMAPI"))
 
     return sorted(points, key=lambda point: point.date)[-days:]
-
-
-def _fallback_points(price: Decimal, original_price: Optional[Decimal], days: int) -> list[PricePoint]:
-    baseline = original_price if original_price and original_price > price else price * Decimal("1.08")
-    step = (baseline - price) / max(days - 1, 1)
-    today = date.today()
-    points: list[PricePoint] = []
-    for i in range(days):
-        ripple = Decimal((i % 5) - 2) * Decimal("0.006") * baseline
-        value = baseline - (step * i) + ripple
-        points.append(
-            PricePoint(
-                date=today - timedelta(days=days - i - 1),
-                price=max(value, Decimal("0")).quantize(Decimal("0.01")),
-            )
-        )
-    return points
 
 
 async def _fetch_tmapi_history(product: Product, days: int) -> list[PricePoint]:
@@ -106,7 +89,7 @@ async def get_price_history(
     days: int = Query(30, ge=7, le=360, description="价格走势天数"),
     db: AsyncSession = Depends(get_db),
 ):
-    """获取商品价格走势。未配置外部 API 时返回基于当前价格的展示曲线。"""
+    """获取有来源的真实价格走势；无数据时返回 unavailable。"""
     result = await db.execute(
         select(Product).where(Product.id == product_id, Product.is_active == True)
     )
@@ -119,18 +102,37 @@ async def get_price_history(
 
     provider = settings.PRICE_HISTORY_PROVIDER.lower()
     points: list[PricePoint] = []
-    source = "local-estimate"
+    source = "unavailable"
 
-    if provider == "tmapi":
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    history_result = await db.execute(
+        select(PriceHistory)
+        .where(
+            PriceHistory.product_id == product.id,
+            PriceHistory.created_at >= cutoff,
+        )
+        .order_by(PriceHistory.created_at.asc())
+    )
+    history = history_result.scalars().all()
+    if history:
+        points = [
+            PricePoint(
+                date=item.created_at.date(),
+                price=item.price,
+                source_name=item.source_name,
+                source_url=item.source_url,
+            )
+            for item in history
+        ]
+        source = "database"
+
+    if not points and provider == "tmapi":
         try:
             points = await _fetch_tmapi_history(product, days)
             if points:
-                source = "tmapi"
+                source = "external-provider"
         except httpx.HTTPError:
             points = []
-
-    if not points:
-        points = _fallback_points(product.price, product.original_price, min(days, 60))
 
     return PriceHistoryResponse(
         product_id=str(product.id),
@@ -139,5 +141,9 @@ async def get_price_history(
         days=len(points),
         points=points,
         external_item_id=(product.specs or {}).get("external_item_id"),
-        recommendation="建议生产环境接入 TMAPI 历史价格接口；未配置 apiToken 时使用本地估算曲线作为前端占位。",
+        recommendation=(
+            "历史价格来自可审计记录。"
+            if points
+            else "暂无可靠历史价格；请通过管理员核价或配置外部行情提供商。"
+        ),
     )

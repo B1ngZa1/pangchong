@@ -1,13 +1,14 @@
 """
 胖虫电商系统 - 管理员 API
 """
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_, cast, Date
 from sqlalchemy.orm import selectinload
 from typing import Optional
-from uuid import UUID
+from uuid import UUID, uuid4
+from pathlib import Path
 from datetime import datetime, timedelta
 
 from ..core.database import get_db
@@ -16,6 +17,8 @@ from ..models.user import User, UserAddress
 from ..models.product import Product, Category
 from ..models.order import Order, OrderItem
 from ..models.cart import CartItem
+from ..core.config import settings
+from ..services.storage import StorageNotConfigured, StorageUploadError, storage_service
 
 router = APIRouter(prefix="/admin", tags=["管理员"])
 
@@ -27,6 +30,69 @@ class StatusUpdate(BaseModel):
 class ShipOrderRequest(BaseModel):
     shipping_company: str = Field(..., max_length=50)
     tracking_number: str = Field(..., max_length=50)
+
+
+ASSET_RULES = {
+    ".png": ("image/png", 5 * 1024 * 1024, "image"),
+    ".jpg": ("image/jpeg", 5 * 1024 * 1024, "image"),
+    ".jpeg": ("image/jpeg", 5 * 1024 * 1024, "image"),
+    ".webp": ("image/webp", 5 * 1024 * 1024, "image"),
+    ".glb": ("model/gltf-binary", 20 * 1024 * 1024, "model"),
+}
+
+
+def _has_valid_signature(data: bytes, suffix: str) -> bool:
+    signatures = {
+        ".png": data.startswith(b"\x89PNG\r\n\x1a\n"),
+        ".jpg": data.startswith(b"\xff\xd8\xff"),
+        ".jpeg": data.startswith(b"\xff\xd8\xff"),
+        ".webp": len(data) >= 12 and data[:4] == b"RIFF" and data[8:12] == b"WEBP",
+        ".glb": len(data) >= 12 and data[:4] == b"glTF" and int.from_bytes(data[4:8], "little") == 2,
+    }
+    return signatures.get(suffix, False)
+
+
+@router.post("/assets", status_code=status.HTTP_201_CREATED)
+async def upload_catalog_asset(
+    bucket: str = Form(...),
+    file: UploadFile = File(...),
+    admin=Depends(get_current_admin),
+):
+    """Upload a validated catalog image or GLB through the trusted backend."""
+    del admin
+    suffix = Path(file.filename or "").suffix.lower()
+    rule = ASSET_RULES.get(suffix)
+    if not rule:
+        raise HTTPException(status_code=415, detail="仅支持 PNG、JPEG、WebP 和 GLB")
+
+    expected_mime, max_size, asset_kind = rule
+    expected_bucket = settings.SUPABASE_MODEL_BUCKET if asset_kind == "model" else settings.SUPABASE_IMAGE_BUCKET
+    if bucket != expected_bucket:
+        raise HTTPException(status_code=400, detail="文件类型与目标 Bucket 不匹配")
+    if file.content_type not in {expected_mime, "application/octet-stream"}:
+        raise HTTPException(status_code=415, detail="文件 MIME 类型不匹配")
+
+    data = await file.read(max_size + 1)
+    await file.close()
+    if len(data) > max_size:
+        raise HTTPException(status_code=413, detail=f"文件超过 {max_size // (1024 * 1024)} MB 限制")
+    if not data or not _has_valid_signature(data, suffix):
+        raise HTTPException(status_code=415, detail="文件内容与扩展名不匹配")
+
+    folder = "diy" if asset_kind == "model" else "products"
+    object_path = f"{folder}/{uuid4().hex}{suffix}"
+    try:
+        asset = await storage_service.upload(
+            bucket=bucket,
+            path=object_path,
+            data=data,
+            mime_type=expected_mime,
+        )
+    except StorageNotConfigured as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except StorageUploadError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    return asset.to_dict()
 
 
 # ============ 数据概览 ============

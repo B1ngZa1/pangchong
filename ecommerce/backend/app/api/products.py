@@ -7,10 +7,11 @@ from sqlalchemy import select, func, or_, exc as sa_exc
 from sqlalchemy.orm import selectinload
 from typing import Optional
 from uuid import UUID
+from datetime import datetime, timezone
 
 from ..core.database import get_db
 from ..core.security import get_current_user, get_current_admin
-from ..models.product import Product, Category
+from ..models.product import Product, Category, PriceHistory
 from ..schemas.product import (
     ProductCreate,
     ProductUpdate,
@@ -231,6 +232,16 @@ async def create_product(
     product = Product(**product_data.dict())
     db.add(product)
     await db.flush()
+    if product.price_source_name or product.price_source_url:
+        product.price_checked_at = product.price_checked_at or datetime.now(timezone.utc)
+        db.add(PriceHistory(
+            product_id=product.id,
+            price=product.price,
+            changed_by=admin.id,
+            source_name=product.price_source_name,
+            source_url=product.price_source_url,
+        ))
+        await db.flush()
     return product
 
 
@@ -261,8 +272,20 @@ async def update_product(
             )
 
     # 更新字段
+    previous_price = product.price
     for field, value in update_data.items():
         setattr(product, field, value)
+
+    if "price" in update_data and update_data["price"] != previous_price:
+        if "price_checked_at" not in update_data:
+            product.price_checked_at = datetime.now(timezone.utc)
+        db.add(PriceHistory(
+            product_id=product.id,
+            price=update_data["price"],
+            changed_by=admin.id,
+            source_name=update_data.get("price_source_name") or product.price_source_name,
+            source_url=update_data.get("price_source_url") or product.price_source_url,
+        ))
 
     await db.flush()
     return product

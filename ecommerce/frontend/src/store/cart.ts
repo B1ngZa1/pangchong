@@ -28,11 +28,14 @@ const SHIPPING_RATES: Record<string, number> = {
 export interface CartItem {
   id: string
   product_id: string
+  item_type?: 'product' | 'custom'
+  custom_type?: string
   name: string
   brand: string
   model: string
   description: string
   specs: Record<string, unknown>
+  snapshot?: Record<string, unknown>
   price: number
   original_price: number | null
   image_url: string
@@ -94,7 +97,10 @@ function saveSelectedState(state: Record<string, boolean>) {
 }
 
 function loadLocalCart(): CartItem[] {
-  try { return JSON.parse(localStorage.getItem(LOCAL_CART_KEY) || '[]') }
+  try {
+    const raw = JSON.parse(localStorage.getItem(LOCAL_CART_KEY) || '[]')
+    return Array.isArray(raw) ? raw.map(normalizeLocalItem) : []
+  }
   catch { return [] }
 }
 
@@ -108,6 +114,7 @@ function mapCartItem(backendItem: BackendCartItem): CartItem {
   return {
     id: backendItem.id,
     product_id: backendItem.product_id,
+    item_type: 'product',
     name: backendItem.product_name,
     brand: backendItem.product_brand || '',
     model: backendItem.product_model || '',
@@ -121,6 +128,41 @@ function mapCartItem(backendItem: BackendCartItem): CartItem {
     selected: selectedState[backendItem.id] !== undefined ? selectedState[backendItem.id] : true,
     is_in_stock: backendItem.is_in_stock,
   }
+}
+
+function getLocalItemType(item: Partial<CartItem>): CartItem['item_type'] {
+  if (item.item_type === 'custom' || item.item_type === 'product') return item.item_type
+
+  const hasCustomType = typeof item.custom_type === 'string' && item.custom_type.length > 0
+  const hasSnapshot = item.snapshot !== null && typeof item.snapshot === 'object' && !Array.isArray(item.snapshot)
+  return hasCustomType || hasSnapshot ? 'custom' : 'product'
+}
+
+function normalizeLocalItem(item: Partial<CartItem>): CartItem {
+  const stock = Number(item.stock ?? 99)
+  return {
+    id: item.id || 'local_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+    product_id: item.product_id || item.id || '',
+    item_type: getLocalItemType(item),
+    custom_type: item.custom_type,
+    name: item.name || '本地定制商品',
+    brand: item.brand || '',
+    model: item.model || '',
+    description: item.description || '',
+    specs: item.specs || {},
+    snapshot: item.snapshot,
+    price: Number(item.price || 0),
+    original_price: item.original_price != null ? Number(item.original_price) : null,
+    image_url: item.image_url || '',
+    stock,
+    quantity: Math.max(1, Number(item.quantity || 1)),
+    selected: item.selected !== false,
+    is_in_stock: item.is_in_stock !== false && stock > 0,
+  }
+}
+
+function isLocalOrCustomItem(item: Pick<CartItem, 'id' | 'item_type'>): boolean {
+  return item.id.startsWith('local_') || item.item_type === 'custom'
 }
 
 export const useCartStore = defineStore('cart', () => {
@@ -184,11 +226,18 @@ export const useCartStore = defineStore('cart', () => {
   async function updateQuantity(itemId: string, quantity: number) {
     const item = items.value.find(i => i.id === itemId)
     if (!item) return
-    const userStore = useUserStore()
-    const sid = userStore.isLoggedIn ? undefined : sessionId.value
     const newQty = Math.max(1, Math.min(99, Math.min(quantity, item.stock)))
     if (newQty === item.quantity) return
     item.quantity = newQty
+
+    if (isLocalOrCustomItem(item)) {
+      saveLocalCart(items.value.filter(isLocalOrCustomItem))
+      persistSelectedState()
+      return
+    }
+
+    const userStore = useUserStore()
+    const sid = userStore.isLoggedIn ? undefined : sessionId.value
     try {
       await cartApi.updateCartItem(itemId, { quantity: newQty }, sid)
     } catch {
@@ -221,7 +270,10 @@ export const useCartStore = defineStore('cart', () => {
     const userStore = useUserStore()
     const sid = userStore.isLoggedIn ? undefined : sessionId.value
     items.value = items.value.filter(i => i.id !== itemId)
-    if (!itemId.startsWith('local_')) {
+    if (itemId.startsWith('local_')) {
+      saveLocalCart(items.value.filter(i => i.id.startsWith('local_')))
+      persistSelectedState()
+    } else {
       try {
         await cartApi.removeCartItem(itemId, sid)
       } catch {
@@ -268,6 +320,8 @@ export const useCartStore = defineStore('cart', () => {
     const sid = userStore.isLoggedIn ? undefined : sessionId.value
     items.value = []
     coupon.value = { code: null, discount: 0 }
+    saveLocalCart([])
+    persistSelectedState()
     try { await cartApi.clearCart(sid) }
     catch { console.warn('clearCart failed') }
   }
@@ -275,7 +329,11 @@ export const useCartStore = defineStore('cart', () => {
   async function mergeCart() {
     try {
       const data = await cartApi.mergeCart(sessionId.value) as { items?: BackendCartItem[] }
-      items.value = (data.items || []).map(mapCartItem)
+      const backendItems = (data.items || []).map(mapCartItem)
+      const localItems = loadLocalCart().filter(li =>
+        !backendItems.some(bi => bi.product_id === li.product_id)
+      )
+      items.value = [...backendItems, ...localItems]
     } catch {
       console.warn('mergeCart failed')
       await fetchCart()
@@ -309,19 +367,42 @@ export const useCartStore = defineStore('cart', () => {
     return items.value.some(i => i.product_id === productId)
   }
 
+  function isLocalItem(item: CartItem) {
+    return item.id.startsWith('local_')
+  }
+
+  function isCustomItem(item: CartItem) {
+    return item.item_type === 'custom'
+  }
+
   function addLocalItem(productObj: Record<string, unknown>, quantity = 1) {
     const existing = items.value.find(i => i.product_id === productObj.id)
     if (existing) {
       existing.quantity += quantity
+      existing.selected = true
+      if (productObj.snapshot && typeof productObj.snapshot === 'object') {
+        existing.snapshot = productObj.snapshot as Record<string, unknown>
+      }
+      if (productObj.specs && typeof productObj.specs === 'object') {
+        existing.specs = productObj.specs as Record<string, unknown>
+      }
+      if (productObj.item_type === 'custom' || productObj.custom_type) {
+        existing.item_type = 'custom'
+        existing.custom_type = productObj.custom_type as string
+      }
     } else {
+      const itemType = (productObj.item_type as CartItem['item_type']) || (productObj.custom_type || productObj.snapshot ? 'custom' : 'product')
       const newItem: CartItem = {
         id: 'local_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
         product_id: productObj.id as string,
+        item_type: itemType,
+        custom_type: (productObj.custom_type as string) || undefined,
         name: productObj.name as string,
         brand: (productObj.brand as string) || '',
         model: (productObj.model as string) || '',
         description: (productObj.description as string) || '',
         specs: (productObj.specs as Record<string, unknown>) || {},
+        snapshot: (productObj.snapshot as Record<string, unknown>) || undefined,
         price: Number(productObj.price),
         original_price: productObj.original_price != null ? Number(productObj.original_price) : null,
         image_url: (productObj.image_url as string) || '',
@@ -334,6 +415,11 @@ export const useCartStore = defineStore('cart', () => {
     }
     const localItems = items.value.filter(i => i.id.startsWith('local_'))
     saveLocalCart(localItems)
+    persistSelectedState()
+  }
+
+  function addCustomItem(productObj: Record<string, unknown>, quantity = 1) {
+    addLocalItem({ ...productObj, item_type: 'custom' }, quantity)
   }
 
   function clearOnLogout() {
@@ -351,11 +437,11 @@ export const useCartStore = defineStore('cart', () => {
     items, loading, coupon, shippingRegion, sessionId,
     totalItems, selectedItems, selectedCount, allSelected,
     subtotal, shippingCost, discountAmount, totalAmount, isEmpty,
-    fetchCart, addToCart, addItem, addLocalItem, updateQuantity,
+    fetchCart, addToCart, addItem, addLocalItem, addCustomItem, updateQuantity,
     toggleSelect, toggleSelectAll,
     removeLocalItems,
     removeItem, removeSelected, clearCart,
     mergeCart, applyCoupon, removeCoupon,
-    setShippingRegion, getShippingRates, isInCart, clearOnLogout,
+    setShippingRegion, getShippingRates, isInCart, isLocalItem, isCustomItem, clearOnLogout,
   }
 })

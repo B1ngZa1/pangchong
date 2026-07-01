@@ -1,168 +1,188 @@
 # 胖虫电商系统
 
-> 完整可上线的电商系统，涵盖前端展示、后端逻辑、数据存储、支付安全、三方集成
-
-## 项目概述
-
-本项目是为胖虫科技打造的完整电商系统，采用前后端分离架构，支持商品展示、购物车、订单管理、支付集成等核心功能。
+胖虫电商系统是一个前后端分离的本地开发栈，包含 Vue 3 前端、FastAPI 后端、PostgreSQL 数据库和 Redis。仓库已提供 Docker Compose 默认配置，新克隆后可以直接启动，不需要先猜测或手动创建 `.env`。
 
 ## 技术栈
 
-### 前端
-- **Vue 3** - 渐进式 JavaScript 框架
-- **Pinia** - Vue 状态管理
-- **Vue Router** - 路由管理
-- **TailwindCSS** - 原子化 CSS 框架
-- **Axios** - HTTP 客户端
-
-### 后端
-- **Python 3.11+** - 编程语言
-- **FastAPI** - 高性能异步 Web 框架
-- **SQLAlchemy** - ORM 框架
-- **PostgreSQL** - 关系型数据库
-- **Redis** - 缓存（可选）
-
-### 部署
-- **Docker** - 容器化
-- **Docker Compose** - 多容器编排
-- **Nginx** - 反向代理
+| 层级 | 技术 |
+| --- | --- |
+| 前端 | Vue 3、Vue Router、Pinia、TailwindCSS、Axios、Vite |
+| 后端 | Python 3.11、FastAPI、SQLAlchemy、Pydantic |
+| 数据 | PostgreSQL 16、Redis 7 |
+| 容器 | Docker、Docker Compose |
 
 ## 快速开始
 
-### 方式一：Docker Compose（推荐）
+前置要求：
+
+- Docker Desktop 或可用的 Docker Engine
+- Docker Compose v2（`docker compose`）或旧版 `docker-compose`
+
+从新克隆的仓库进入应用目录：
 
 ```bash
-cd ecommerce
-docker-compose up -d
+git clone <repository-url> pangchong
+cd pangchong/ecommerce
 ```
 
-访问：
-- 前端：http://localhost:3000
-- 后端 API：http://localhost:8000
-- API 文档：http://localhost:8000/docs
+### Windows 一键启动
 
-### 方式二：本地开发
+```bat
+.\start.bat
+```
 
-详见 [开发环境搭建指南](docs/setup.md)
+### macOS/Linux 一键启动
+
+```bash
+./start.sh
+```
+
+### 直接使用 Docker Compose
+
+```bash
+docker compose up -d --build
+```
+
+如果你的环境只支持旧版命令，也可以使用：
+
+```bash
+docker-compose up -d --build
+```
+
+启动后访问：
+
+| 服务 | 地址 |
+| --- | --- |
+| 前端应用 | http://localhost:3000 |
+| 后端 API | http://localhost:8000 |
+| Swagger 文档 | http://localhost:8000/docs |
+| ReDoc 文档 | http://localhost:8000/redoc |
+| PostgreSQL | localhost:5432 |
+| Redis | localhost:6379 |
+
+## `.env` 怎么用
+
+新克隆项目后可以不创建 `.env`。`docker-compose.yml` 使用 `${变量:-默认值}` 写法，已经内置本地开发默认值：
+
+- 数据库：`pangchong_ecommerce`
+- 数据库用户：`pangchong`
+- 数据库密码：`pangchong_dev_password`
+- Redis 密码：`pangchong_dev_redis`
+- JWT 密钥：`change-me-local-dev-secret`
+
+只有在需要覆盖这些默认值、CORS 来源或第三方服务配置时，才复制环境变量模板：
+
+```bat
+copy .env.example .env
+```
+
+macOS/Linux：
+
+```bash
+cp .env.example .env
+```
+
+Docker Compose 会自动读取当前目录下的 `.env`。这个文件只影响 Docker Compose 启动的服务，手动运行后端时请使用 `backend/.env`，详见 [开发环境搭建指南](docs/setup.md)。
+
+如果已经启动过数据库容器，再修改 `POSTGRES_PASSWORD`、`POSTGRES_USER` 或 `POSTGRES_DB`，旧数据卷仍会保留第一次初始化时的配置。要用新配置重建本地数据，请运行：
+
+```bash
+docker compose down -v
+docker compose up -d --build
+```
+
+## 测试账号
+
+数据库首次初始化时会导入 `database/seed.sql` 中的测试账号。
+
+| 用户名 | 密码 | 角色 |
+| --- | --- | --- |
+| `testuser` | `test123456` | 普通用户 |
+| `admin` | `test123456` | 管理员 |
+
+## 常用命令
+
+```bash
+# 查看容器状态
+docker compose ps
+
+# 查看实时日志
+docker compose logs -f
+
+# 只看后端日志
+docker compose logs -f backend
+
+# 重启服务
+docker compose restart
+
+# 停止服务，保留数据库和 Redis 数据
+docker compose down
+
+# 停止服务并清空本地数据卷
+docker compose down -v
+```
+
+## 本地手动开发
+
+如果你不想通过 Docker 跑前后端，可以手动安装 Python、Node.js、PostgreSQL 和 Redis。完整步骤见 [开发环境搭建指南](docs/setup.md)。
+
+简要流程：
+
+```bash
+# 后端
+cd backend
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+# 前端
+cd ../frontend
+npm install
+npm run dev
+```
 
 ## 项目结构
 
 ```
 ecommerce/
-├── backend/                    # 后端服务
+├── backend/                    # FastAPI 后端
 │   ├── app/
-│   │   ├── api/               # API 路由
-│   │   ├── core/              # 核心配置
-│   │   ├── models/            # 数据模型
-│   │   ├── schemas/           # Pydantic 模式
-│   │   ├── services/          # 业务逻辑
-│   │   └── utils/             # 工具函数
-│   ├── requirements.txt
+│   │   ├── api/                # API 路由
+│   │   ├── core/               # 配置、数据库、安全工具
+│   │   ├── models/             # SQLAlchemy 模型
+│   │   ├── schemas/            # Pydantic Schema
+│   │   ├── services/           # 业务服务
+│   │   └── utils/              # 工具函数
+│   ├── migrations/             # Alembic 迁移
+│   ├── tests/                  # 后端测试
 │   └── Dockerfile
-├── frontend/                  # 前端应用
+├── frontend/                   # Vue 3 前端
 │   ├── src/
-│   │   ├── components/        # 组件
-│   │   ├── views/             # 页面
-│   │   ├── store/             # 状态管理
-│   │   ├── api/               # API 调用
-│   │   └── router/            # 路由
-│   ├── package.json
+│   │   ├── api/                # API 客户端
+│   │   ├── components/         # 通用组件
+│   │   ├── router/             # 路由
+│   │   ├── store/              # Pinia 状态
+│   │   └── views/              # 页面
 │   └── Dockerfile
-├── database/                  # 数据库脚本
-│   ├── init.sql              # 初始化脚本
-│   └── seed.sql              # 测试数据
-├── docker/                   # Docker 配置
-├── docker-compose.yml
-└── docs/                     # 文档
+├── database/                   # 数据库初始化脚本
+│   ├── init.sql
+│   ├── seed.sql
+│   └── components.sql
+├── docker/                     # Nginx 等容器配置
+├── docs/                       # 项目文档
+├── docker-compose.yml          # 本地开发 Compose 文件
+├── docker-compose.prod.yml     # 生产部署 Compose 文件
+├── .env.example                # 可选 Compose 环境变量模板
+├── start.bat                   # Windows 一键启动
+└── start.sh                    # macOS/Linux 一键启动
 ```
-
-## 核心功能
-
-### 1. 用户系统
-- 注册/登录（JWT 认证）
-- 个人信息管理
-- 收货地址管理
-
-### 2. 商品系统
-- 商品分类
-- 商品列表（分页、筛选、搜索）
-- 商品详情
-
-### 3. 购物车
-- 添加/删除/修改数量
-- 未登录购物车（Session）
-- 登录后购物车合并
-
-### 4. 订单系统
-- 从购物车创建订单
-- 库存扣减
-- 订单状态管理
-- 运费计算
-
-### 5. 支付系统
-- 支付宝沙箱集成
-- 支付回调处理
-- 防重复支付
-
-### 6. 三方集成
-- 物流查询（快递鸟 API）
-- 邮件通知（订单确认、欢迎邮件）
-- 客服系统（Tawk.to）
-
-## 测试账号
-
-| 用户名 | 密码 | 角色 |
-|--------|------|------|
-| testuser | test123456 | 普通用户 |
-| admin | test123456 | 管理员 |
 
 ## 文档
 
+- [开发环境搭建指南](docs/setup.md)
 - [架构设计](docs/architecture.md)
-- [开发环境搭建](docs/setup.md)
 - [项目检查清单](docs/checklist.md)
-
-## API 文档
-
-启动后端服务后访问：
-- Swagger UI: http://localhost:8000/docs
-- ReDoc: http://localhost:8000/redoc
-
-## 安全特性
-
-- JWT Token 认证
-- bcrypt 密码加密
-- SQL 注入防护（ORM 参数化查询）
-- XSS 防护（模板自动转义）
-- CSRF 防护（SameSite Cookie）
-- HTTPS 支持（Nginx 配置）
-
-## 性能优化
-
-- 数据库索引优化
-- Redis 缓存（可选）
-- Gzip 压缩
-- 静态资源缓存
-- 代码分割（路由懒加载）
-
-## 部署
-
-### 生产环境配置
-
-1. 修改 `.env` 文件中的配置
-2. 配置 SSL 证书
-3. 使用 Docker Compose 部署
-
-```bash
-# 构建并启动
-docker-compose -f docker-compose.yml up -d --build
-
-# 查看日志
-docker-compose logs -f
-
-# 停止服务
-docker-compose down
-```
 
 ## 许可证
 

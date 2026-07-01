@@ -1,12 +1,15 @@
-Place the production product model at:
+Local development may place licensed product models in this directory, for example:
 
 ```text
-public/models/pangchong.glb
+public/models/pangchong-diy.glb
 ```
 
-The configurator attempts to load `/models/pangchong.glb`. If the file is missing
-or fails to load, `Product3DViewer.vue` renders an interactive code-generated
-placeholder model so the page never shows a blank 3D area.
+The DIY storefront passes its model path into `Product3DViewer.vue`. If the file
+is missing, omitted, or fails to load, the viewer renders an interactive
+code-generated placeholder model so the page never shows a blank 3D area.
 
-For production, export a single optimized `.glb` and consider Draco or meshopt
-compression for faster loading.
+Production models should be uploaded through the admin asset API to the
+`catalog-models` Supabase bucket. A DIY model must expose the named nodes
+`case`, `motherboard`, `cpu`, `gpu`, `ram`, `ssd`, `cooler`, and `psu`.
+See `docs/3d-asset-pipeline.md`; do not commit vendor CAD without a verified
+redistribution license.
