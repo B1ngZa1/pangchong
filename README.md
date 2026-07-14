@@ -143,6 +143,7 @@ pangchong/
 │
 ├── docs/                                # 产品文档
 │   ├── 3d-pc-builder-plan.md            # 3D PC Builder 技术方案
+│   ├── team-work-plan.md                 # 五人团队分工与 Git 协作方案
 │   ├── tech-stack-optimization.md       # 技术栈优化方案
 │   ├── products.md                      # 整机产品目录
 │   └── diy-parts.md                     # DIY 配件库

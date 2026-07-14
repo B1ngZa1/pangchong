@@ -62,13 +62,14 @@ docker-compose up -d --build
 
 ## `.env` 怎么用
 
-新克隆项目后可以不创建 `.env`。`docker-compose.yml` 使用 `${变量:-默认值}` 写法，已经内置本地开发默认值：
+新克隆项目后可以不创建 `.env`。`docker-compose.yml` 已经内置本地开发默认值：
 
 - 数据库：`pangchong_ecommerce`
 - 数据库用户：`pangchong`
 - 数据库密码：`pangchong_dev_password`
 - Redis 密码：`pangchong_dev_redis`
 - JWT 密钥：`change-me-local-dev-secret`
+- 资产存储：本地 `backend/uploads`
 
 只有在需要覆盖这些默认值、CORS 来源或第三方服务配置时，才复制环境变量模板：
 
@@ -82,7 +83,7 @@ macOS/Linux：
 cp .env.example .env
 ```
 
-Docker Compose 会自动读取当前目录下的 `.env`。这个文件只影响 Docker Compose 启动的服务，手动运行后端时请使用 `backend/.env`，详见 [开发环境搭建指南](docs/setup.md)。
+Docker Compose 会自动读取当前目录下的 `.env`。为保证离线答辩可用，本地 Compose 不接受外部 `DATABASE_URL`，并固定使用本地资产存储；Supabase 只通过 `docker-compose.prod.yml` 或手动后端配置启用。手动运行后端时请使用 `backend/.env`，详见 [开发环境搭建指南](docs/setup.md)。
 
 如果已经启动过数据库容器，再修改 `POSTGRES_PASSWORD`、`POSTGRES_USER` 或 `POSTGRES_DB`，旧数据卷仍会保留第一次初始化时的配置。要用新配置重建本地数据，请运行：
 

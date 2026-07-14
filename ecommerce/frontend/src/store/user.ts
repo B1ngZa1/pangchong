@@ -53,6 +53,10 @@ export const useUserStore = defineStore('user', () => {
     localStorage.removeItem('refreshToken')
   }
 
+  function clearSession() {
+    clearTokens()
+  }
+
   async function login(credentials: { username: string; password: string }) {
     const data = await authApi.login(credentials)
     setTokens(data.access_token, data.refresh_token)
@@ -81,7 +85,6 @@ export const useUserStore = defineStore('user', () => {
       const data = await authApi.getProfile()
       user.value = data as UserProfile
     } catch {
-      console.error('获取用户信息失败')
       clearTokens()
     }
   }
@@ -135,7 +138,7 @@ export const useUserStore = defineStore('user', () => {
   return {
     token, refreshToken, user, addresses,
     isLoggedIn, isAdmin,
-    login, register, logout, fetchProfile, refreshAccessToken,
+    login, register, logout, clearSession, fetchProfile, refreshAccessToken,
     updateProfile, fetchAddresses, createAddress, updateAddress, deleteAddress,
   }
 })

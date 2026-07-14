@@ -76,11 +76,27 @@ describe('DIY custom-item flow', () => {
       4: part('ssd-1', '4TB NVMe', 1800),
       5: part('cooler-1', '360 AIO', 900, { height: '150mm' }),
       6: part('psu-1', '1200W PSU', 1400, { wattage: '1200W' }),
-      7: part('case-1', 'Full Tower', 1100, { mb_support: 'ATX', gpu_length: '400mm', cooler_height: '180mm' }),
+      7: {
+        ...part('case-1', 'Full Tower', 1100, { mb_support: 'ATX', gpu_length: '400mm', cooler_height: '180mm' }),
+        model_3d_url: 'https://example.supabase.co/storage/v1/object/public/catalog-models/diy/case.glb',
+        model_3d_scale: 0.01,
+        model_3d_position: [0, 0.2, 0],
+        model_3d_rotation: [0, 1.57, 0],
+        asset_license: 'CC BY 4.0',
+        asset_source_url: 'https://example.com/licensed-case',
+      },
     }
     wrapper.vm.selectedVariant = 'green'
     wrapper.vm.selectedMaterial = 'gloss'
     await nextTick()
+
+    expect(wrapper.vm.activeModelUrl).toContain('/catalog-models/diy/case.glb')
+    expect(wrapper.vm.activeCaseModel).toMatchObject({
+      scale: 0.01,
+      position: [0, 0.2, 0],
+      rotation: [0, 1.57, 0],
+      license: 'CC BY 4.0',
+    })
 
     await wrapper.vm.addToCart()
 
@@ -107,6 +123,12 @@ describe('DIY custom-item flow', () => {
       product_id: 'cpu-1',
       name: 'Ryzen 9',
       brand: 'Brand cpu-1',
+    })
+    expect(cart.items[0].snapshot.parts[7]).toMatchObject({
+      key: 'case',
+      model_3d_url: 'https://example.supabase.co/storage/v1/object/public/catalog-models/diy/case.glb',
+      asset_license: 'CC BY 4.0',
+      asset_source_url: 'https://example.com/licensed-case',
     })
     expect(JSON.parse(localStorage.getItem('pangchong_local_cart'))[0].snapshot).toEqual(cart.items[0].snapshot)
     expect(notifyShow).toHaveBeenCalledWith('DIY 整机配置已作为一件定制商品加入购物车', 'success')

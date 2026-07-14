@@ -141,10 +141,24 @@ class TestProductAssetMetadata:
             model_3d_scale=1.25,
             model_3d_position=[0, 1, 0],
             model_3d_rotation=[0, 0, 0],
+            asset_license="CC BY 4.0",
+            asset_source_url="https://example.com/model-source",
             price_source_name="Vendor",
             price_source_url="https://example.com/product",
         )
         assert product.model_3d_position == [0.0, 1.0, 0.0]
+        assert product.asset_source_url == "https://example.com/model-source"
+
+    def test_model_requires_license_and_source_before_catalog_binding(self):
+        from fastapi import HTTPException
+
+        from app.api.products import _validate_asset_provenance
+
+        with pytest.raises(HTTPException) as exc_info:
+            _validate_asset_provenance("https://example.com/demo.glb", "", "")
+        assert exc_info.value.status_code == 422
+        assert "素材许可" in exc_info.value.detail
+        assert "素材来源 URL" in exc_info.value.detail
 
     def test_rejects_incomplete_model_transform(self):
         from app.schemas.product import ProductCreate
@@ -156,3 +170,29 @@ class TestProductAssetMetadata:
                 price=999,
                 model_3d_position=[0, 1],
             )
+
+    def test_product_brief_exposes_price_provenance(self):
+        from datetime import datetime, timezone
+        from uuid import uuid4
+
+        from app.schemas.product import ProductBrief
+
+        checked_at = datetime(2026, 6, 30, tzinfo=timezone.utc)
+        product = ProductBrief(
+            id=uuid4(),
+            name="Demo Case",
+            slug="demo-case",
+            price=999,
+            original_price=None,
+            image_url=None,
+            brand="Pangchong",
+            sold_count=0,
+            is_in_stock=True,
+            price_source_name="Brand site",
+            price_source_url="https://example.com/product",
+            price_checked_at=checked_at,
+        )
+
+        assert product.price_source_name == "Brand site"
+        assert product.price_source_url == "https://example.com/product"
+        assert product.price_checked_at == checked_at

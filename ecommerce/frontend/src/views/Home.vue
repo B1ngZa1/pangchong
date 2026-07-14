@@ -124,6 +124,7 @@
                 <strong>¥{{ Number(product.price).toLocaleString() }}</strong>
                 <span v-if="product.original_price">¥{{ Number(product.original_price).toLocaleString() }}</span>
               </div>
+              <PriceProvenance :product="product" compact class="product-provenance" />
             </div>
           </router-link>
         </div>
@@ -135,6 +136,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { productApi } from '@/api'
+import PriceProvenance from '@/components/PriceProvenance.vue'
 
 const loading = ref(false)
 const hotProducts = ref([])
@@ -659,6 +661,12 @@ onMounted(async () => {
   color: #475569;
   font-size: 12px;
   text-decoration: line-through;
+}
+
+.product-provenance {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
 }
 
 @keyframes spin {

@@ -47,11 +47,16 @@ services:
     env_file:
       - .env
     environment:
-      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-pangchong}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-pangchong_ecommerce}
+      - DATABASE_URL=${DATABASE_URL:-postgresql+asyncpg://${POSTGRES_USER:-pangchong}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-pangchong_ecommerce}}
       - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
       - SECRET_KEY=${SECRET_KEY}
       - DEBUG=false
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-["http://localhost"]}
+      - ASSET_STORAGE_BACKEND=${ASSET_STORAGE_BACKEND:-local}
+      - SUPABASE_URL=${SUPABASE_URL:-}
+      - SUPABASE_SECRET_KEY=${SUPABASE_SECRET_KEY:-}
+      - SUPABASE_IMAGE_BUCKET=${SUPABASE_IMAGE_BUCKET:-catalog-images}
+      - SUPABASE_MODEL_BUCKET=${SUPABASE_MODEL_BUCKET:-catalog-models}
     volumes:
       - ./backend/uploads:/app/uploads
     depends_on:

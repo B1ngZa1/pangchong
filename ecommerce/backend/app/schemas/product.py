@@ -56,6 +56,7 @@ class ProductBase(BaseModel):
     model_3d_position: Optional[List[float]] = Field(None, min_length=3, max_length=3)
     model_3d_rotation: Optional[List[float]] = Field(None, min_length=3, max_length=3)
     asset_license: Optional[str] = Field(None, max_length=100, description="3D/图片资产许可")
+    asset_source_url: Optional[str] = Field(None, max_length=500, description="3D/图片资产来源 URL")
     price_source_name: Optional[str] = Field(None, max_length=100, description="价格来源名称")
     price_source_url: Optional[str] = Field(None, max_length=500, description="价格来源 URL")
     price_checked_at: Optional[datetime] = Field(None, description="最近核价时间")
@@ -89,6 +90,7 @@ class ProductUpdate(BaseModel):
     model_3d_position: Optional[List[float]] = Field(None, min_length=3, max_length=3)
     model_3d_rotation: Optional[List[float]] = Field(None, min_length=3, max_length=3)
     asset_license: Optional[str] = Field(None, max_length=100)
+    asset_source_url: Optional[str] = Field(None, max_length=500)
     price_source_name: Optional[str] = Field(None, max_length=100)
     price_source_url: Optional[str] = Field(None, max_length=500)
     price_checked_at: Optional[datetime] = None
@@ -127,5 +129,8 @@ class ProductBrief(BaseModel):
     brand: Optional[str]
     sold_count: int
     is_in_stock: bool
+    price_source_name: Optional[str] = None
+    price_source_url: Optional[str] = None
+    price_checked_at: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)

@@ -20,6 +20,7 @@ dist/
 # Docker
 docker/nginx/ssl/*.pem
 docker/nginx/ssl/*.key
+backend/uploads/
 
 # OS
 .DS_Store

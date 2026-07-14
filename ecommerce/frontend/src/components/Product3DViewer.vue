@@ -10,8 +10,9 @@
         <p class="text-xs font-semibold uppercase tracking-[0.16em] text-primary-500">Interactive 3D</p>
         <p class="mt-0.5 text-xs text-[#B0B0B0]">拖拽旋转 · 滚轮缩放</p>
       </div>
-      <div class="hidden rounded-lg border border-white/10 bg-black/45 px-3 py-2 text-xs text-[#B0B0B0] backdrop-blur sm:block">
-        {{ selectedVariant?.name || '默认外观' }} / {{ selectedMaterial?.name || '默认材质' }}
+      <div class="hidden rounded-lg border border-white/10 bg-black/45 px-3 py-2 text-right text-xs text-[#B0B0B0] backdrop-blur sm:block">
+        <p>{{ modelStatusLabel }} · {{ selectedVariant?.name || '默认外观' }} / {{ selectedMaterial?.name || '默认材质' }}</p>
+        <p v-if="assetLicense && !placeholderReason" class="mt-1 text-[10px] text-[#888]">许可：{{ assetLicense }}</p>
       </div>
     </div>
 
@@ -23,11 +24,15 @@
       </div>
     </div>
 
-    <div v-if="loadFailed" class="absolute left-4 right-4 top-24 rounded-lg border border-yellow-500/30 bg-yellow-500/10 px-3 py-2 text-xs leading-5 text-yellow-100 backdrop-blur sm:left-auto sm:max-w-sm">
-      模型文件暂未就绪，当前显示代码生成的可交互占位模型。
+    <div v-if="placeholderReason === 'error'" class="absolute left-4 right-4 top-24 rounded-lg border border-yellow-500/30 bg-yellow-500/10 px-3 py-2 text-xs leading-5 text-yellow-100 backdrop-blur sm:left-auto sm:max-w-sm">
+      已绑定的 GLB 加载失败，当前安全回退到代码生成模型。
     </div>
-    <div v-else-if="missingPartNodes.length" class="absolute left-4 right-4 top-24 rounded-lg border border-yellow-500/30 bg-yellow-500/10 px-3 py-2 text-xs leading-5 text-yellow-100 backdrop-blur sm:left-auto sm:max-w-sm">
-      模型缺少装配节点：{{ missingPartNodes.join('、') }}。缺失部件不会参与 3D 状态联动。
+    <div v-else-if="placeholderReason === 'missing'" class="absolute left-4 right-4 top-24 rounded-lg border border-white/10 bg-black/45 px-3 py-2 text-xs leading-5 text-[#B0B0B0] backdrop-blur sm:left-auto sm:max-w-sm">
+      所选机箱尚未绑定 GLB，当前显示代码生成模型。
+    </div>
+    <div v-else-if="missingPartNodes.length || emptyPartNodes.length" class="absolute left-4 right-4 top-24 rounded-lg border border-yellow-500/30 bg-yellow-500/10 px-3 py-2 text-xs leading-5 text-yellow-100 backdrop-blur sm:left-auto sm:max-w-sm">
+      <p v-if="missingPartNodes.length">模型缺少装配节点：{{ missingPartNodes.join('、') }}。</p>
+      <p v-if="emptyPartNodes.length">节点没有可渲染 Mesh：{{ emptyPartNodes.join('、') }}。</p>
     </div>
 
     <div v-if="partTags.length" class="pointer-events-none absolute inset-x-0 bottom-0 p-4">
@@ -55,10 +60,15 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
-import { DIY_MODEL_PART_KEYS, findMissingDiyPartKeys, normalizeDiyPartKey } from '@/utils/modelParts'
+import { collectDiyPartRoots, DIY_MODEL_PART_KEYS, findMissingDiyPartKeys } from '@/utils/modelParts'
 
 const props = defineProps({
   modelUrl: { type: String, default: '' },
+  modelScale: { type: [Number, String], default: 1 },
+  modelPosition: { type: Array, default: () => [0, 0, 0] },
+  modelRotation: { type: Array, default: () => [0, 0, 0] },
+  assetLicense: { type: String, default: '' },
+  assetSourceUrl: { type: String, default: '' },
   selectedVariant: { type: Object, default: null },
   selectedMaterial: { type: Object, default: null },
   autoRotate: { type: Boolean, default: true },
@@ -69,8 +79,9 @@ const props = defineProps({
 
 const viewportRef = ref(null)
 const loading = ref(true)
-const loadFailed = ref(false)
+const placeholderReason = ref('')
 const missingPartNodes = ref([])
+const emptyPartNodes = ref([])
 
 let scene
 let camera
@@ -79,14 +90,19 @@ let controls
 let resizeObserver
 let frameId
 let modelRoot
+let modelAsset
+let floor
 let usingPlaceholder = false
 let reducedMotionQuery
 let reducedMotion = false
 let activeLoadId = 0
+let cameraDistance = 5
+const modelCenter = new THREE.Vector3(0, 0.35, 0)
 
 const baseMaterialNames = new Set(['body', 'screen-lid', 'keyboard-deck', 'trackpad', 'case-shell', 'side-panel'])
 const accentMaterialNames = new Set(['accent', 'logo', 'edge-light'])
 const diyPartKeys = new Set(DIY_MODEL_PART_KEYS)
+const modelStatusLabel = computed(() => placeholderReason.value ? 'Generated fallback' : 'Catalog GLB')
 
 const partTags = computed(() => {
   return (props.parts || [])
@@ -127,6 +143,16 @@ watch(() => props.resetKey, () => resetCamera())
 watch(() => props.modelUrl, () => {
   if (scene) loadModel()
 })
+watch(
+  () => [props.modelScale, props.modelPosition, props.modelRotation],
+  () => {
+    if (!modelRoot || usingPlaceholder) return
+    applyCatalogTransform()
+    frameModel()
+    resetCamera()
+  },
+  { deep: true }
+)
 watch(() => props.parts, () => {
   if (usingPlaceholder && scene) {
     setModelRoot(createPlaceholderModel(), true)
@@ -178,7 +204,7 @@ function initScene() {
   rimLight.position.set(-4, 2.5, -3)
   scene.add(rimLight)
 
-  const floor = new THREE.Mesh(
+  floor = new THREE.Mesh(
     new THREE.CircleGeometry(4.8, 96),
     new THREE.MeshStandardMaterial({ color: '#0f1115', roughness: 0.9, metalness: 0.1 })
   )
@@ -195,11 +221,12 @@ function initScene() {
 async function loadModel() {
   const loadId = ++activeLoadId
   loading.value = true
-  loadFailed.value = false
+  placeholderReason.value = ''
   missingPartNodes.value = []
+  emptyPartNodes.value = []
 
   if (!props.modelUrl) {
-    showPlaceholder()
+    showPlaceholder('missing')
     return
   }
 
@@ -214,14 +241,14 @@ async function loadModel() {
     },
     undefined,
     () => {
-      if (loadId === activeLoadId) showPlaceholder()
+      if (loadId === activeLoadId) showPlaceholder('error')
     }
   )
 }
 
-function showPlaceholder() {
+function showPlaceholder(reason) {
   usingPlaceholder = true
-  loadFailed.value = true
+  placeholderReason.value = reason
   loading.value = false
   setModelRoot(createPlaceholderModel(), true)
 }
@@ -233,8 +260,8 @@ function setModelRoot(nextRoot, placeholder = false) {
   }
 
   usingPlaceholder = placeholder
-  modelRoot = nextRoot
-  modelRoot.traverse((node) => {
+  modelAsset = nextRoot
+  modelAsset.traverse((node) => {
     if (!node.isMesh) return
     node.castShadow = true
     node.receiveShadow = true
@@ -245,13 +272,26 @@ function setModelRoot(nextRoot, placeholder = false) {
     }
   })
 
+  centerAsset(modelAsset)
+  modelRoot = new THREE.Group()
+  modelRoot.name = placeholder ? 'generated-model-root' : 'catalog-model-root'
+  modelRoot.add(modelAsset)
   scene.add(modelRoot)
-  centerAndFrame(modelRoot)
+  applyCatalogTransform()
+  frameModel()
   applyMaterials()
   applyPartStates()
-  missingPartNodes.value = placeholder
-    ? []
-    : findMissingDiyPartKeys(collectNodeNames(modelRoot))
+  if (placeholder) {
+    missingPartNodes.value = []
+    emptyPartNodes.value = []
+  } else {
+    const partRoots = collectDiyPartRoots(modelAsset)
+    missingPartNodes.value = findMissingDiyPartKeys(collectNodeNames(modelAsset))
+    emptyPartNodes.value = DIY_MODEL_PART_KEYS.filter((key) => {
+      const roots = partRoots.get(key) || []
+      return roots.length > 0 && !roots.some(hasRenderableMesh)
+    })
+  }
   resetCamera()
 }
 
@@ -259,6 +299,14 @@ function collectNodeNames(object) {
   const names = []
   object.traverse(node => names.push(node.name || ''))
   return names
+}
+
+function hasRenderableMesh(root) {
+  let found = false
+  root.traverse((node) => {
+    if (node.isMesh) found = true
+  })
+  return found
 }
 
 function createPlaceholderModel() {
@@ -414,84 +462,118 @@ function applyMaterials() {
   const accent = new THREE.Color(variant.accent || '#44D62C')
 
   modelRoot.traverse((node) => {
-    if (!node.isMesh || !node.material) return
-    if (node.userData.keepMaterialColor || node.material.userData?.keepColor) return
-    const materialName = String(node.material.name || node.name || '').toLowerCase()
-    const shouldAccent = [...accentMaterialNames].some((name) => materialName.includes(name))
-    const shouldBody = [...baseMaterialNames].some((name) => materialName.includes(name))
+    if (!node.isMesh || !node.material || node.userData.keepMaterialColor) return
+    const materials = Array.isArray(node.material) ? node.material : [node.material]
+    materials.forEach((material) => {
+      if (material.userData?.keepColor) return
+      const materialName = String(material.name || node.name || '').toLowerCase()
+      const shouldAccent = [...accentMaterialNames].some((name) => materialName.includes(name))
+      const shouldBody = [...baseMaterialNames].some((name) => materialName.includes(name))
 
-    if (shouldAccent) {
-      node.material.color?.copy(accent)
-      if (node.material.emissive) {
-        node.material.emissive.copy(accent)
-        node.material.emissiveIntensity = 0.18
+      if (shouldAccent) {
+        material.color?.copy(accent)
+        if (material.emissive) {
+          material.emissive.copy(accent)
+          material.emissiveIntensity = 0.18
+        }
+      } else if (shouldBody) {
+        material.color?.copy(color)
       }
-    } else if (shouldBody) {
-      node.material.color?.copy(color)
-    }
 
-    if ('roughness' in node.material) node.material.roughness = materialSettings.roughness ?? node.material.roughness
-    if ('metalness' in node.material) node.material.metalness = materialSettings.metalness ?? node.material.metalness
-    node.material.needsUpdate = true
+      if ('roughness' in material) material.roughness = materialSettings.roughness ?? material.roughness
+      if ('metalness' in material) material.metalness = materialSettings.metalness ?? material.metalness
+      material.needsUpdate = true
+    })
   })
 }
 
 function applyPartStates() {
   if (!modelRoot || usingPlaceholder) return
   const selectedByPart = new Map((props.parts || []).map(part => [part.id || part.type, Boolean(part.selected)]))
+  const partRoots = collectDiyPartRoots(modelAsset)
 
-  modelRoot.traverse((node) => {
-    if (!node.isMesh || !node.material) return
-    const partKey = normalizeDiyPartKey(node.name)
-    if (!partKey || partKey === 'case') return
+  partRoots.forEach((roots, partKey) => {
+    if (partKey === 'case') return
     const selected = selectedByPart.get(partKey) === true
-    const materials = Array.isArray(node.material) ? node.material : [node.material]
-    materials.forEach((material) => {
-      if (!material.userData.diyOriginal) {
-        material.userData.diyOriginal = {
-          opacity: material.opacity,
-          transparent: material.transparent,
-          emissiveIntensity: material.emissiveIntensity || 0,
-        }
-      }
-      const original = material.userData.diyOriginal
-      material.transparent = selected ? original.transparent : true
-      material.opacity = selected ? original.opacity : 0.12
-      if (material.emissive) {
-        material.emissive.set(selected ? '#163d12' : '#000000')
-        material.emissiveIntensity = selected ? Math.max(original.emissiveIntensity, 0.16) : 0
-      }
-      material.needsUpdate = true
+    roots.forEach((root) => {
+      root.traverse((node) => {
+        if (!node.isMesh || !node.material) return
+        const materials = Array.isArray(node.material) ? node.material : [node.material]
+        materials.forEach((material) => {
+          if (!material.userData.diyOriginal) {
+            material.userData.diyOriginal = {
+              opacity: material.opacity,
+              transparent: material.transparent,
+              emissiveIntensity: material.emissiveIntensity || 0,
+            }
+          }
+          const original = material.userData.diyOriginal
+          material.transparent = selected ? original.transparent : true
+          material.opacity = selected ? original.opacity : 0.12
+          if (material.emissive) {
+            material.emissive.set(selected ? '#163d12' : '#000000')
+            material.emissiveIntensity = selected ? Math.max(original.emissiveIntensity, 0.16) : 0
+          }
+          material.needsUpdate = true
+        })
+      })
     })
   })
 }
 
-function centerAndFrame(object) {
+function centerAsset(object) {
   const box = new THREE.Box3().setFromObject(object)
-  const size = box.getSize(new THREE.Vector3())
+  if (box.isEmpty()) return
   const center = box.getCenter(new THREE.Vector3())
   object.position.sub(center)
+}
+
+function applyCatalogTransform() {
+  if (!modelRoot) return
+  const scale = Number(props.modelScale)
+  modelRoot.scale.setScalar(!usingPlaceholder && Number.isFinite(scale) && scale > 0 ? scale : 1)
+  modelRoot.position.fromArray(vectorValues(usingPlaceholder ? null : props.modelPosition))
+  modelRoot.rotation.fromArray(vectorValues(usingPlaceholder ? null : props.modelRotation))
+}
+
+function vectorValues(values) {
+  return [0, 1, 2].map(index => {
+    const value = Number(values?.[index])
+    return Number.isFinite(value) ? value : 0
+  })
+}
+
+function frameModel() {
+  if (!modelRoot) return
+  modelRoot.updateMatrixWorld(true)
+  const box = new THREE.Box3().setFromObject(modelRoot)
+  if (box.isEmpty()) return
+  const size = box.getSize(new THREE.Vector3())
+  box.getCenter(modelCenter)
 
   const maxSize = Math.max(size.x, size.y, size.z, 1)
-  const distance = maxSize * 1.55
-  controls.minDistance = Math.max(1.8, distance * 0.55)
-  controls.maxDistance = distance * 2.5
-  camera.near = Math.max(0.01, distance / 100)
-  camera.far = distance * 12
+  cameraDistance = Math.max(maxSize * 1.7, 2.8)
+  controls.minDistance = Math.max(maxSize * 0.65, 1.2)
+  controls.maxDistance = cameraDistance * 3
+  camera.near = Math.max(0.01, cameraDistance / 100)
+  camera.far = cameraDistance * 12
   camera.updateProjectionMatrix()
+  if (floor) floor.position.y = box.min.y - Math.max(size.y * 0.02, 0.03)
 }
 
 function resetCamera() {
   if (!camera || !controls) return
   const preset = props.cameraPreset
-  const positions = {
-    front: [4.5, 2.65, 5],
-    side: [5.8, 2.1, 0.3],
-    top: [0.2, 6.2, 1.1],
+  const directions = {
+    front: [0.86, 0.5, 1],
+    side: [1, 0.38, 0.05],
+    top: [0.04, 1, 0.18],
   }
-  const position = positions[preset] || positions.front
-  camera.position.set(...position)
-  controls.target.set(0, 0.35, 0)
+  const direction = new THREE.Vector3(...(directions[preset] || directions.front))
+    .normalize()
+    .multiplyScalar(cameraDistance)
+  camera.position.copy(modelCenter).add(direction)
+  controls.target.copy(modelCenter)
   controls.update()
 }
 

@@ -146,7 +146,7 @@
                   class="py-3 border-b border-dark-800 last:border-0">
                   <div class="flex items-center gap-3">
                     <div class="w-12 h-12 bg-dark-800 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
-                      <img v-if="item.image_url" :src="item.image_url" :alt="item.name" class="w-full h-full object-cover" />
+                      <img v-if="item.image_url" :src="item.image_url" :alt="item.name" class="w-full h-full object-cover" @error="handleImageError" />
                       <span v-else class="text-xl opacity-40">📦</span>
                     </div>
                     <div class="flex-1 min-w-0">
@@ -208,7 +208,7 @@
               <div class="space-y-2.5 text-sm max-h-60 overflow-y-auto mb-4">
                 <div v-for="item in cart.selectedItems" :key="item.id" class="flex items-center gap-3">
                   <div class="w-10 h-10 bg-dark-800 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
-                    <img v-if="item.image_url" :src="item.image_url" :alt="item.name" class="w-full h-full object-cover" />
+                    <img v-if="item.image_url" :src="item.image_url" :alt="item.name" class="w-full h-full object-cover" @error="handleImageError" />
                     <span v-else class="text-lg opacity-40">📦</span>
                   </div>
                   <div class="flex-1 min-w-0">
@@ -294,6 +294,14 @@ import { buildCustomSnapshotDisplay, hasCustomSnapshotDisplay } from '@/utils/or
 const router = useRouter()
 const cart = useCartStore()
 const userStore = useUserStore()
+const fallbackImage = '/assets/pangchong-product-fallback.png'
+
+function handleImageError(event) {
+  const image = event.target
+  if (image instanceof HTMLImageElement && !image.src.endsWith(fallbackImage)) {
+    image.src = fallbackImage
+  }
+}
 
 // 未登录跳转登录
 onMounted(async () => {

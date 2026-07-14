@@ -1,5 +1,7 @@
-"""Server-only Supabase Storage client for catalog assets."""
+"""Server-only local/Supabase storage for catalog assets."""
+import asyncio
 from dataclasses import asdict, dataclass
+from pathlib import Path, PurePosixPath
 from urllib.parse import quote
 
 import httpx
@@ -27,8 +29,8 @@ class StoredAsset:
         return asdict(self)
 
 
-class SupabaseStorageService:
-    """Uploads with a backend-only secret key; public clients receive URLs only."""
+class CatalogStorageService:
+    """Stores assets locally by default or in Supabase when explicitly enabled."""
 
     @property
     def allowed_buckets(self) -> set[str]:
@@ -36,13 +38,22 @@ class SupabaseStorageService:
 
     @property
     def is_configured(self) -> bool:
+        if settings.ASSET_STORAGE_BACKEND == "local":
+            return True
         return bool(settings.SUPABASE_URL and settings.SUPABASE_SECRET_KEY)
 
     async def upload(self, *, bucket: str, path: str, data: bytes, mime_type: str) -> StoredAsset:
-        if not self.is_configured:
-            raise StorageNotConfigured("Supabase Storage 尚未配置")
         if bucket not in self.allowed_buckets:
             raise StorageUploadError("不允许写入该 Storage Bucket")
+        if settings.ASSET_STORAGE_BACKEND == "local":
+            return await self._upload_local(
+                bucket=bucket,
+                path=path,
+                data=data,
+                mime_type=mime_type,
+            )
+        if not self.is_configured:
+            raise StorageNotConfigured("Supabase Storage 尚未配置")
 
         base_url = settings.SUPABASE_URL.rstrip("/")
         object_path = "/".join(quote(part, safe="") for part in path.split("/"))
@@ -73,5 +84,35 @@ class SupabaseStorageService:
             size=len(data),
         )
 
+    async def _upload_local(
+        self,
+        *,
+        bucket: str,
+        path: str,
+        data: bytes,
+        mime_type: str,
+    ) -> StoredAsset:
+        relative_path = PurePosixPath(path)
+        if relative_path.is_absolute() or not relative_path.parts or ".." in relative_path.parts:
+            raise StorageUploadError("本地存储路径无效")
 
-storage_service = SupabaseStorageService()
+        upload_root = Path(settings.UPLOAD_DIR).resolve()
+        target = upload_root.joinpath(*relative_path.parts).resolve()
+        try:
+            target.relative_to(upload_root)
+        except ValueError as exc:
+            raise StorageUploadError("本地存储路径越界") from exc
+
+        await asyncio.to_thread(target.parent.mkdir, parents=True, exist_ok=True)
+        await asyncio.to_thread(target.write_bytes, data)
+        public_path = "/".join(quote(part, safe="") for part in relative_path.parts)
+        return StoredAsset(
+            bucket=bucket,
+            path=path,
+            url=f"/uploads/{public_path}",
+            mime_type=mime_type,
+            size=len(data),
+        )
+
+
+storage_service = CatalogStorageService()

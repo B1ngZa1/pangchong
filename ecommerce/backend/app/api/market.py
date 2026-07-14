@@ -110,6 +110,10 @@ async def get_price_history(
         .where(
             PriceHistory.product_id == product.id,
             PriceHistory.created_at >= cutoff,
+            PriceHistory.source_name.is_not(None),
+            PriceHistory.source_name != "",
+            PriceHistory.source_url.is_not(None),
+            PriceHistory.source_url != "",
         )
         .order_by(PriceHistory.created_at.asc())
     )

@@ -18,6 +18,7 @@ from ..models.product import Product, Category
 from ..models.order import Order, OrderItem
 from ..models.cart import CartItem
 from ..core.config import settings
+from ..services.glb import DIY_CASE_CONTRACT, InvalidGlb, inspect_glb
 from ..services.storage import StorageNotConfigured, StorageUploadError, storage_service
 
 router = APIRouter(prefix="/admin", tags=["管理员"])
@@ -52,10 +53,44 @@ def _has_valid_signature(data: bytes, suffix: str) -> bool:
     return signatures.get(suffix, False)
 
 
+def _serialize_admin_product(product: Product) -> dict:
+    """Keep editable asset metadata in the admin list response."""
+    return {
+        "id": str(product.id),
+        "name": product.name,
+        "slug": product.slug,
+        "description": product.description,
+        "price": float(product.price),
+        "original_price": float(product.original_price) if product.original_price else None,
+        "cost_price": float(product.cost_price) if product.cost_price else None,
+        "category_id": str(product.category_id) if product.category_id else None,
+        "brand": product.brand,
+        "model": product.model,
+        "stock": product.stock,
+        "sold_count": product.sold_count,
+        "image_url": product.image_url,
+        "images": product.images,
+        "specs": product.specs,
+        "model_3d_url": product.model_3d_url,
+        "model_3d_scale": float(product.model_3d_scale or 1),
+        "model_3d_position": product.model_3d_position,
+        "model_3d_rotation": product.model_3d_rotation,
+        "asset_license": product.asset_license,
+        "asset_source_url": product.asset_source_url,
+        "weight": float(product.weight) if product.weight is not None else None,
+        "is_active": product.is_active,
+        "is_featured": product.is_featured,
+        "created_at": product.created_at.isoformat() if product.created_at else None,
+    }
+
+
 @router.post("/assets", status_code=status.HTTP_201_CREATED)
 async def upload_catalog_asset(
-    bucket: str = Form(...),
+    bucket: Optional[str] = Form(None),
+    model_contract: Optional[str] = Form(None),
+    product_id: Optional[UUID] = Form(None),
     file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
     admin=Depends(get_current_admin),
 ):
     """Upload a validated catalog image or GLB through the trusted backend."""
@@ -67,8 +102,9 @@ async def upload_catalog_asset(
 
     expected_mime, max_size, asset_kind = rule
     expected_bucket = settings.SUPABASE_MODEL_BUCKET if asset_kind == "model" else settings.SUPABASE_IMAGE_BUCKET
-    if bucket != expected_bucket:
+    if bucket and bucket != expected_bucket:
         raise HTTPException(status_code=400, detail="文件类型与目标 Bucket 不匹配")
+    target_bucket = bucket or expected_bucket
     if file.content_type not in {expected_mime, "application/octet-stream"}:
         raise HTTPException(status_code=415, detail="文件 MIME 类型不匹配")
 
@@ -79,11 +115,41 @@ async def upload_catalog_asset(
     if not data or not _has_valid_signature(data, suffix):
         raise HTTPException(status_code=415, detail="文件内容与扩展名不匹配")
 
+    effective_contract = model_contract
+    if asset_kind == "model" and product_id:
+        product = await db.get(Product, product_id)
+        if not product:
+            raise HTTPException(status_code=404, detail="待绑定商品不存在")
+        category_slug = await db.scalar(
+            select(Category.slug).where(Category.id == product.category_id)
+        )
+        if category_slug == "case":
+            effective_contract = DIY_CASE_CONTRACT
+
+    contract_report = None
+    if asset_kind == "model":
+        if model_contract not in {None, "", DIY_CASE_CONTRACT}:
+            raise HTTPException(status_code=400, detail="不支持的 GLB 节点合同")
+        try:
+            contract_report = inspect_glb(data)
+        except InvalidGlb as exc:
+            raise HTTPException(status_code=415, detail=str(exc)) from exc
+        if effective_contract == DIY_CASE_CONTRACT and not contract_report.valid:
+            issues = []
+            if contract_report.missing:
+                issues.append(f"缺少节点：{'、'.join(contract_report.missing)}")
+            if contract_report.empty:
+                issues.append(f"节点没有可渲染 Mesh：{'、'.join(contract_report.empty)}")
+            raise HTTPException(
+                status_code=422,
+                detail=f"DIY 机箱 GLB 合同未通过；{'；'.join(issues)}",
+            )
+
     folder = "diy" if asset_kind == "model" else "products"
     object_path = f"{folder}/{uuid4().hex}{suffix}"
     try:
         asset = await storage_service.upload(
-            bucket=bucket,
+            bucket=target_bucket,
             path=object_path,
             data=data,
             mime_type=expected_mime,
@@ -92,7 +158,10 @@ async def upload_catalog_asset(
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     except StorageUploadError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
-    return asset.to_dict()
+    result = asset.to_dict()
+    if contract_report and effective_contract:
+        result["node_contract"] = contract_report.to_dict()
+    return result
 
 
 # ============ 数据概览 ============
@@ -550,6 +619,7 @@ async def get_all_products(
     if keyword:
         query = query.where(
             Product.name.ilike(f"%{keyword}%") |
+            Product.slug.ilike(f"%{keyword}%") |
             Product.brand.ilike(f"%{keyword}%") |
             Product.model.ilike(f"%{keyword}%")
         )
@@ -572,27 +642,7 @@ async def get_all_products(
     products = result.scalars().all()
 
     return {
-        "items": [
-            {
-                "id": str(p.id),
-                "name": p.name,
-                "slug": p.slug,
-                "description": p.description,
-                "price": float(p.price),
-                "original_price": float(p.original_price) if p.original_price else None,
-                "cost_price": float(p.cost_price) if p.cost_price else None,
-                "category_id": str(p.category_id) if p.category_id else None,
-                "brand": p.brand,
-                "model": p.model,
-                "stock": p.stock,
-                "sold_count": p.sold_count,
-                "image_url": p.image_url,
-                "is_active": p.is_active,
-                "is_featured": p.is_featured,
-                "created_at": p.created_at.isoformat() if p.created_at else None,
-            }
-            for p in products
-        ],
+        "items": [_serialize_admin_product(product) for product in products],
         "total": total or 0,
         "page": page,
         "page_size": page_size,

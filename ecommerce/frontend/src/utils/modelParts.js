@@ -26,3 +26,21 @@ export function findMissingDiyPartKeys(nodeNames) {
   const found = new Set((nodeNames || []).map(normalizeDiyPartKey).filter(Boolean))
   return DIY_MODEL_PART_KEYS.filter(key => !found.has(key))
 }
+
+export function collectDiyPartRoots(object) {
+  const roots = new Map()
+  object?.traverse?.((node) => {
+    const partKey = normalizeDiyPartKey(node.name)
+    if (!partKey) return
+
+    let parent = node.parent
+    while (parent && parent !== object.parent) {
+      if (normalizeDiyPartKey(parent.name) === partKey) return
+      parent = parent.parent
+    }
+
+    if (!roots.has(partKey)) roots.set(partKey, [])
+    roots.get(partKey).push(node)
+  })
+  return roots
+}

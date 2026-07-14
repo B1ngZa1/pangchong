@@ -91,6 +91,7 @@ CREATE TABLE products (
     model_3d_position JSONB,
     model_3d_rotation JSONB,
     asset_license VARCHAR(100),
+    asset_source_url VARCHAR(500),
     price_source_name VARCHAR(100),
     price_source_url VARCHAR(500),
     price_checked_at TIMESTAMP WITH TIME ZONE,

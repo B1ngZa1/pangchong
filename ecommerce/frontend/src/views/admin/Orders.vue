@@ -134,7 +134,7 @@
                 <div v-for="item in detail.items" :key="item.id"
                   class="flex items-center gap-3 p-3 bg-dark-800 rounded-lg">
                   <div class="w-10 h-10 bg-dark-700 rounded flex-shrink-0 overflow-hidden flex items-center justify-center">
-                    <img v-if="item.product_image" :src="item.product_image" class="w-full h-full object-cover" />
+                    <img v-if="item.product_image" :src="item.product_image" class="w-full h-full object-cover" @error="handleImageError" />
                     <span v-else-if="isCustomItem(item)" class="text-[10px] font-bold text-primary-500">DIY</span>
                   </div>
                   <div class="flex-1 min-w-0">
@@ -241,6 +241,14 @@ const total = ref(0)
 const currentPage = ref(1)
 const pageSize = 20
 const filters = ref({ keyword: '', status: '' })
+const fallbackImage = '/assets/pangchong-product-fallback.png'
+
+function handleImageError(event) {
+  const image = event.target
+  if (image instanceof HTMLImageElement && !image.src.endsWith(fallbackImage)) {
+    image.src = fallbackImage
+  }
+}
 
 const totalPages = computed(() => Math.ceil(total.value / pageSize))
 const ordersWithPreview = computed(() => orders.value.map(order => ({

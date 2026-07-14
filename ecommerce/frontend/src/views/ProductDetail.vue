@@ -20,6 +20,8 @@
             <span v-if="discount" class="inline-flex rounded border border-red-400/45 bg-dark-900 px-2 py-1 text-xs text-red-300">-{{ discount }}%</span>
           </div>
 
+          <PriceProvenance :product="product" class="mt-5" />
+
           <p class="mt-6 leading-relaxed text-dark-300">{{ product.description || '高性能整机与配件，支持定制化选择。' }}</p>
 
           <div v-if="product.specs" class="mt-8 grid grid-cols-2 gap-3">
@@ -56,6 +58,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useCartStore, useNotifyStore } from '@/store'
 import api from '@/api'
+import PriceProvenance from '@/components/PriceProvenance.vue'
 
 const route = useRoute()
 const router = useRouter()

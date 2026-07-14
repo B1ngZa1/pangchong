@@ -103,6 +103,7 @@ docker-compose up -d --build
 | `SECRET_KEY` | `change-me-local-dev-secret` |
 | `DEBUG` | `true` |
 | `ALLOWED_ORIGINS` | `["http://localhost:3000","http://localhost","http://localhost:80"]` |
+| `ASSET_STORAGE_BACKEND` | `local` |
 
 只有在你要修改默认密码、JWT 密钥、CORS 来源、支付宝或邮件配置时，才复制模板：
 
@@ -118,7 +119,9 @@ cp .env.example .env
 
 注意：
 
-- Docker Compose 会自动读取 `ecommerce/.env`，并用其中的变量覆盖 `docker-compose.yml` 的默认值。
+- Docker Compose 会自动读取 `ecommerce/.env`，并用其中的变量覆盖允许自定义的默认值。
+- 本地 `docker-compose.yml` 会忽略外部 `DATABASE_URL` 并固定使用 Compose PostgreSQL；资产存储也固定为本地 `backend/uploads`。
+- Supabase 数据库或 Storage 仅通过 `docker-compose.prod.yml` 或手动后端配置显式启用。
 - `.env` 已在 `.gitignore` 中忽略，不要提交。
 - `ecommerce/.env` 只服务于 Docker Compose。
 - 手动运行后端时，请在 `backend/.env` 中配置 `DATABASE_URL` 等变量。

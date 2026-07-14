@@ -55,6 +55,7 @@ class Product(Base):
     model_3d_position = Column(JSONB)  # [x, y, z]
     model_3d_rotation = Column(JSONB)  # [x, y, z]，单位为弧度
     asset_license = Column(String(100))
+    asset_source_url = Column(String(500))
     price_source_name = Column(String(100))
     price_source_url = Column(String(500))
     price_checked_at = Column(DateTime(timezone=True))

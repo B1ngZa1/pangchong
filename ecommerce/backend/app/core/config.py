@@ -3,7 +3,7 @@
 """
 from pydantic import ConfigDict
 from pydantic_settings import BaseSettings
-from typing import Optional
+from typing import Literal, Optional
 import os
 
 
@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     DEBUG: bool = False
 
     # 数据库配置
-    DATABASE_URL: str = "postgresql+asyncpg://pangchong:CHANGE_ME@localhost:5432/pangchong_ecommerce"
+    DATABASE_URL: str = "postgresql+asyncpg://pangchong:pangchong_dev_password@localhost:5432/pangchong_ecommerce"
     DATABASE_POOL_SIZE: int = 20
     DATABASE_MAX_OVERFLOW: int = 10
 
@@ -36,7 +36,8 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
     # 安全配置
-    MAX_REQUEST_SIZE: int = 10 * 1024 * 1024  # 10MB
+    # 20 MB GLB plus multipart framing; per-file limits are enforced by the route.
+    MAX_REQUEST_SIZE: int = 22 * 1024 * 1024
     PASSWORD_MIN_LENGTH: int = 8
     PASSWORD_REQUIRE_UPPER: bool = True
     PASSWORD_REQUIRE_DIGIT: bool = True
@@ -75,6 +76,7 @@ class Settings(BaseSettings):
     SUPABASE_SECRET_KEY: str = ""
     SUPABASE_IMAGE_BUCKET: str = "catalog-images"
     SUPABASE_MODEL_BUCKET: str = "catalog-models"
+    ASSET_STORAGE_BACKEND: Literal["local", "supabase"] = "local"
 
     # 文件上传配置
     UPLOAD_DIR: str = "./uploads"

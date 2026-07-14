@@ -74,7 +74,7 @@
             <div v-for="item in order.items" :key="item.id"
               class="flex items-center gap-4 py-3 border-b border-dark-800 last:border-0">
               <div class="w-16 h-16 bg-dark-800 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
-                <img v-if="item.product_image" :src="item.product_image" :alt="item.product_name" class="w-full h-full object-cover" />
+                <img v-if="item.product_image" :src="item.product_image" :alt="item.product_name" class="w-full h-full object-cover" @error="handleImageError" />
                 <span v-else-if="isCustomItem(item)" class="text-xs font-bold text-primary-500">DIY</span>
                 <span v-else class="text-2xl opacity-40">📦</span>
               </div>
@@ -140,6 +140,14 @@ import { formatCustomSpecs, formatSpecs, hasCustomSnapshotDisplay, isCustomOrder
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
+const fallbackImage = '/assets/pangchong-product-fallback.png'
+
+function handleImageError(event) {
+  const image = event.target
+  if (image instanceof HTMLImageElement && !image.src.endsWith(fallbackImage)) {
+    image.src = fallbackImage
+  }
+}
 
 const order = ref(null)
 const loading = ref(true)

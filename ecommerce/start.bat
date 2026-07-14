@@ -64,6 +64,18 @@ if errorlevel 1 (
     exit /b 1
 )
 
+echo [INFO] Waiting for backend and frontend health checks...
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$deadline=(Get-Date).AddSeconds(180); do { $backend=docker inspect --format '{{.State.Health.Status}}' pangchong-backend 2>$null; $frontend=docker inspect --format '{{.State.Health.Status}}' pangchong-frontend 2>$null; if ($backend -eq 'healthy' -and $frontend -eq 'healthy') { exit 0 }; Start-Sleep -Seconds 2 } while ((Get-Date) -lt $deadline); exit 1"
+if errorlevel 1 (
+    echo.
+    echo [ERROR] Services did not become healthy within 180 seconds.
+    call %COMPOSE_CMD% ps
+    call %COMPOSE_CMD% logs --tail 80 backend frontend
+    pause
+    popd
+    exit /b 1
+)
+
 echo.
 echo ========================================
 echo   Started successfully
@@ -99,3 +111,4 @@ echo   Remove data: %COMPOSE_CMD% down -v
 echo.
 pause
 popd
+exit /b 0

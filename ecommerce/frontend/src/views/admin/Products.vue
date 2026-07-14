@@ -51,6 +51,7 @@
                   <span v-else class="flex items-center justify-center h-full text-dark-600">📦</span>
                 </div>
                 <span class="truncate max-w-xs font-medium">{{ p.name }}</span>
+                <span v-if="p.model_3d_url" class="rounded bg-primary-500/10 px-1.5 py-0.5 text-[10px] text-primary-400">GLB</span>
               </div>
             </td>
             <td class="py-3 px-4 text-dark-400 text-xs">{{ p.brand }} {{ p.model }}</td>
@@ -104,6 +105,15 @@
               <label class="text-sm text-dark-400 block mb-1">商品标识 (slug) *</label>
               <input v-model="form.slug" class="input w-full" placeholder="product-slug" :disabled="!!editingId" />
             </div>
+            <div>
+              <label class="text-sm text-dark-400 block mb-1">商品分类 *</label>
+              <select v-model="form.category_id" class="input w-full">
+                <option value="">请选择分类</option>
+                <option v-for="category in categories" :key="category.id" :value="category.id">
+                  {{ category.name }}
+                </option>
+              </select>
+            </div>
             <div class="grid grid-cols-2 gap-3">
               <div>
                 <label class="text-sm text-dark-400 block mb-1">品牌</label>
@@ -133,15 +143,37 @@
               <input v-model="form.image_url" class="input w-full" placeholder="https://..." />
               <input class="mt-2 block w-full text-xs text-dark-400" type="file" accept=".png,.jpg,.jpeg,.webp" @change="uploadAsset($event, 'image')" />
             </div>
-            <div>
-              <label class="text-sm text-dark-400 block mb-1">GLB 模型 URL</label>
+            <div class="rounded-lg border border-dark-700 bg-dark-950/40 p-4">
+              <div class="mb-3 flex items-center justify-between gap-3">
+                <label class="text-sm text-dark-300">{{ isDiyCaseProduct ? 'DIY 机箱 GLB（八节点合同）' : 'GLB 模型 URL' }}</label>
+                <span v-if="form.model_3d_url" class="text-xs text-primary-400">已绑定</span>
+              </div>
               <input v-model="form.model_3d_url" class="input w-full" placeholder="https://.../model.glb" />
-              <input class="mt-2 block w-full text-xs text-dark-400" type="file" accept=".glb" @change="uploadAsset($event, 'model')" />
+              <div class="mt-3 grid grid-cols-[1fr_110px] gap-3">
+                <input
+                  class="block w-full text-xs text-dark-400 disabled:opacity-40"
+                  type="file"
+                  accept=".glb,model/gltf-binary"
+                  :disabled="!editingId || uploading === '3D 模型'"
+                  @change="uploadAsset($event, 'model')"
+                />
+                <input v-model.number="form.model_3d_scale" type="number" min="0.01" max="100" step="0.01" class="input w-full" aria-label="模型缩放" />
+              </div>
+              <p v-if="!editingId" class="mt-2 text-xs text-dark-500">先保存商品，再上传模型，避免产生未绑定文件。</p>
               <p v-if="uploading" class="mt-1 text-xs text-primary-500">正在上传 {{ uploading }}...</p>
+              <p v-if="modelContractStatus" class="mt-2 text-xs" :class="modelContractStatus.valid ? 'text-primary-400' : 'text-yellow-300'">
+                {{ modelContractStatus.message }}
+              </p>
             </div>
-            <div>
-              <label class="text-sm text-dark-400 block mb-1">素材许可</label>
-              <input v-model="form.asset_license" class="input w-full" placeholder="例如 Vendor CAD / CC BY 4.0" />
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="text-sm text-dark-400 block mb-1">素材许可</label>
+                <input v-model="form.asset_license" class="input w-full" placeholder="例如 CC BY 4.0" />
+              </div>
+              <div>
+                <label class="text-sm text-dark-400 block mb-1">素材来源 URL</label>
+                <input v-model="form.asset_source_url" class="input w-full" placeholder="https://厂商或素材页" />
+              </div>
             </div>
             <div class="grid grid-cols-2 gap-3">
               <div>
@@ -186,6 +218,7 @@ import { ref, computed, onMounted } from 'vue'
 import { adminApi } from '@/api'
 
 const products = ref([])
+const categories = ref([])
 const loading = ref(true)
 const total = ref(0)
 const currentPage = ref(1)
@@ -206,13 +239,17 @@ const showForm = ref(false)
 const editingId = ref(null)
 const saving = ref(false)
 const uploading = ref('')
+const modelContractStatus = ref(null)
 const defaultForm = {
   name: '', slug: '', brand: '', model: '', price: null, original_price: null,
-  stock: 0, image_url: '', description: '', is_active: true, is_featured: false,
-  model_3d_url: '', model_3d_scale: 1, asset_license: '',
+  category_id: '', stock: 0, image_url: '', description: '', is_active: true, is_featured: false,
+  model_3d_url: '', model_3d_scale: 1, model_3d_position: null, model_3d_rotation: null,
+  asset_license: '', asset_source_url: '',
   price_source_name: '', price_source_url: '', price_checked_at: null,
 }
 const form = ref({ ...defaultForm })
+const activeCategory = computed(() => categories.value.find(category => category.id === form.value.category_id))
+const isDiyCaseProduct = computed(() => activeCategory.value?.slug === 'case')
 
 async function fetchProducts() {
   loading.value = true
@@ -230,9 +267,19 @@ async function fetchProducts() {
   }
 }
 
+async function fetchCategories() {
+  try {
+    categories.value = await adminApi.getCategories()
+  } catch (error) {
+    console.error('获取分类失败:', error)
+    categories.value = []
+  }
+}
+
 function openCreate() {
   editingId.value = null
   form.value = { ...defaultForm }
+  modelContractStatus.value = null
   showForm.value = true
 }
 
@@ -240,19 +287,28 @@ function openEdit(p) {
   editingId.value = p.id
   form.value = {
     name: p.name, slug: p.slug, brand: p.brand || '', model: p.model || '',
-    price: p.price, original_price: p.original_price, stock: p.stock,
+    price: p.price, original_price: p.original_price, category_id: p.category_id || '', stock: p.stock,
     image_url: p.image_url || '', description: p.description || '',
     model_3d_url: p.model_3d_url || '', model_3d_scale: Number(p.model_3d_scale || 1),
-    asset_license: p.asset_license || '', price_source_name: p.price_source_name || '',
+    model_3d_position: p.model_3d_position || null, model_3d_rotation: p.model_3d_rotation || null,
+    asset_license: p.asset_license || '', asset_source_url: p.asset_source_url || '',
+    price_source_name: p.price_source_name || '',
     price_source_url: p.price_source_url || '', price_checked_at: p.price_checked_at || null,
     is_active: p.is_active, is_featured: p.is_featured,
   }
+  modelContractStatus.value = p.model_3d_url
+    ? { valid: true, message: '目录中已有模型；重新上传会生成新 URL。' }
+    : null
   showForm.value = true
 }
 
 async function handleSubmit() {
-  if (!form.value.name || !form.value.slug || !form.value.price) {
-    alert('请填写必填字段：名称、标识、售价')
+  if (!form.value.name || !form.value.slug || !form.value.price || !form.value.category_id) {
+    alert('请填写必填字段：名称、标识、分类、售价')
+    return
+  }
+  if (form.value.model_3d_url && (!form.value.asset_license.trim() || !form.value.asset_source_url.trim())) {
+    alert('绑定 3D 模型前，请填写素材许可和素材来源 URL')
     return
   }
   saving.value = true
@@ -279,14 +335,38 @@ async function uploadAsset(event, kind) {
   const input = event.target
   const file = input.files?.[0]
   if (!file) return
+  if (kind === 'model' && file.size > 20 * 1024 * 1024) {
+    alert('GLB 文件不能超过 20 MB')
+    input.value = ''
+    return
+  }
+  if (kind === 'model' && (!form.value.asset_license.trim() || !form.value.asset_source_url.trim())) {
+    alert('请先填写素材许可和素材来源 URL，再上传 GLB')
+    input.value = ''
+    return
+  }
   uploading.value = kind === 'model' ? '3D 模型' : '商品图片'
   try {
-    const bucket = kind === 'model' ? 'catalog-models' : 'catalog-images'
-    const asset = await adminApi.uploadAsset(bucket, file)
-    if (kind === 'model') form.value.model_3d_url = asset.url
+    const contract = kind === 'model' && isDiyCaseProduct.value ? 'diy-case-v1' : ''
+    const asset = await adminApi.uploadAsset('', file, contract, editingId.value)
+    if (kind === 'model') {
+      form.value.model_3d_url = asset.url
+      const report = asset.node_contract
+      modelContractStatus.value = report
+        ? {
+            valid: report.valid,
+            message: report.valid
+              ? `节点合同通过：${report.found.join('、')}`
+              : [
+                  report.missing?.length ? `缺少节点：${report.missing.join('、')}` : '',
+                  report.empty?.length ? `空节点：${report.empty.join('、')}` : '',
+                ].filter(Boolean).join('；'),
+          }
+        : { valid: true, message: '模型已上传。' }
+    }
     else form.value.image_url = asset.url
   } catch (e) {
-    alert('上传失败：' + (e.displayMessage || e.message || '请检查 Supabase 配置'))
+    alert('上传失败：' + (e.displayMessage || e.message || '请检查资产存储配置'))
   } finally {
     uploading.value = ''
     input.value = ''
@@ -302,5 +382,10 @@ async function toggleStatus(p) {
   }
 }
 
-onMounted(fetchProducts)
+onMounted(async () => {
+  await Promise.all([
+    fetchProducts(),
+    fetchCategories(),
+  ])
+})
 </script>

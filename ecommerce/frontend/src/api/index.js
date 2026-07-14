@@ -11,6 +11,13 @@ const api = axios.create({
   }
 })
 
+function redirectToLoginForProtectedRoute() {
+  const currentRoute = router.currentRoute.value
+  if (currentRoute.meta.requiresAuth || currentRoute.meta.requiresAdmin) {
+    router.push({ name: 'Login', query: { redirect: currentRoute.fullPath } })
+  }
+}
+
 // 请求拦截器
 api.interceptors.request.use(
   (config) => {
@@ -32,9 +39,10 @@ api.interceptors.response.use(
   },
   async (error) => {
     const originalRequest = error.config
+    const isRefreshRequest = originalRequest?.url?.includes('/auth/refresh')
 
-    // 如果是 401 错误且不是刷新 token 的请求
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // 刷新请求自身的 401 必须直接返回，否则旧 token 会触发无限刷新循环。
+    if (error.response?.status === 401 && originalRequest && !originalRequest._retry && !isRefreshRequest) {
       originalRequest._retry = true
 
       const userStore = useUserStore()
@@ -47,15 +55,15 @@ api.interceptors.response.use(
           originalRequest.headers.Authorization = `Bearer ${userStore.token}`
           return api(originalRequest)
         } catch (refreshError) {
-          // 刷新失败，跳转登录页
-          userStore.logout()
-          router.push({ name: 'Login', query: { redirect: router.currentRoute.value.fullPath } })
+          // 刷新失败：保留游客购物车，只有受保护页面才跳转登录。
+          userStore.clearSession()
+          redirectToLoginForProtectedRoute()
           return Promise.reject(refreshError)
         }
       } else {
-        // 没有 refresh token，跳转登录页
-        userStore.logout()
-        router.push({ name: 'Login', query: { redirect: router.currentRoute.value.fullPath } })
+        // 没有 refresh token：清理会话，但不要打断公开页面。
+        userStore.clearSession()
+        redirectToLoginForProtectedRoute()
       }
     }
 
@@ -76,7 +84,8 @@ export default api
 export const authApi = {
   register: (data) => api.post('/auth/register', data),
   login: (data) => api.post('/auth/login', data),
-  refreshToken: (data) => api.post('/auth/refresh', data),
+  // Refresh uses a bare client so its own 401 can never re-enter this interceptor.
+  refreshToken: (data) => axios.post('/api/auth/refresh', data).then(response => response.data),
   getProfile: () => api.get('/auth/me'),
   updateProfile: (data) => api.put('/auth/me', data),
   changePassword: (data) => api.post('/auth/change-password', data),
@@ -152,9 +161,11 @@ export const adminApi = {
   toggleProductStatus: (id, isActive) => api.put(`/admin/products/${id}/status`, { is_active: isActive }),
   createProduct: (data) => api.post('/products', data),
   updateProduct: (id, data) => api.put(`/products/${id}`, data),
-  uploadAsset: (bucket, file) => {
+  uploadAsset: (bucket, file, modelContract = '', productId = '') => {
     const data = new FormData()
-    data.append('bucket', bucket)
+    if (bucket) data.append('bucket', bucket)
+    if (modelContract) data.append('model_contract', modelContract)
+    if (productId) data.append('product_id', productId)
     data.append('file', file)
     return api.post('/admin/assets', data, { headers: { 'Content-Type': 'multipart/form-data' } })
   },

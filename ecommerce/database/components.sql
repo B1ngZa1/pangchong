@@ -1180,6 +1180,17 @@ INSERT INTO products (id, name, slug, description, price, original_price, cost_p
  '{"type":"全塔","style":"大面积侧透","material":"SPCC+钢化玻璃","mb_support":"E-ATX/ATX/M-ATX/ITX","gpu_length":"435mm","cooler_height":"187mm","radiator_support":"顶部420mm + 前部420mm + 底部360mm","fans_included":"4x 140mm PWM","drive_bays":"6x 3.5寸 + 4x 2.5寸","io_panel":"USB 3.0 x2 + USB-C x2 + Audio","color":"黑色","weight":"12.8kg"}',
  true, false, 12.80);
 
+-- Fresh-clone defense data uses committed assets, so inactive object storage
+-- never produces broken thumbnails or a burst of predictable 404 responses.
+UPDATE products
+SET image_url = '/assets/pangchong-product-fallback.png',
+    images = '["/assets/pangchong-product-fallback.png"]'::jsonb
+WHERE image_url LIKE '/images/%';
+
+UPDATE order_items
+SET product_image = '/assets/pangchong-product-fallback.png'
+WHERE product_image LIKE '/images/%';
+
 -- =============================================
 -- 完成！
 -- CPU: 8款 | 显卡: 12款 | 主板: 10款 | 内存: 12款

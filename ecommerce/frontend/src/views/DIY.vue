@@ -51,6 +51,11 @@
         <Suspense>
           <Product3DViewer
             :model-url="activeModelUrl"
+            :model-scale="activeCaseModel.scale"
+            :model-position="activeCaseModel.position"
+            :model-rotation="activeCaseModel.rotation"
+            :asset-license="activeCaseModel.license"
+            :asset-source-url="activeCaseModel.sourceUrl"
             :selected-variant="activeVariant"
             :selected-material="activeMaterial"
             :auto-rotate="autoRotate"
@@ -186,6 +191,7 @@
                       </div>
                     </div>
                     <p class="mt-2 line-clamp-2 text-xs leading-5 text-dark-500">{{ product.description }}</p>
+                    <PriceProvenance :product="product" compact class="mt-3" />
                   </div>
                 </div>
 
@@ -259,6 +265,7 @@
                   <span>总计</span>
                   <span class="text-primary-500">¥{{ money(totalPrice) }}</span>
                 </div>
+                <p class="mt-3 text-xs leading-5 text-dark-500">{{ diyPriceVerificationLabel }}</p>
               </div>
 
               <button
@@ -315,15 +322,20 @@
 
             <section class="rounded-lg border border-dark-800 bg-dark-900 p-5">
               <div class="flex items-center justify-between">
-                <h2 class="text-base font-bold text-white">价格走势</h2>
-                <button class="rounded-lg border border-dark-700 px-3 py-1.5 text-xs text-dark-300 hover:border-primary-500 hover:text-primary-500" @click="refreshPriceHistory">
-                  刷新
+                <h2 class="text-base font-bold text-white">价格来源与记录</h2>
+                <button
+                  class="rounded-lg border border-dark-700 px-3 py-1.5 text-xs text-dark-300 hover:border-primary-500 hover:text-primary-500 disabled:cursor-not-allowed disabled:opacity-40"
+                  :disabled="!selectedPriceTarget || priceHistoryLoading"
+                  @click="refreshPriceHistory"
+                >
+                  {{ priceHistoryLoading ? '核验中...' : '刷新' }}
                 </button>
               </div>
+              <PriceProvenance v-if="selectedPriceTarget" :product="selectedPriceTarget" compact class="mt-3 rounded-lg border border-dark-800 bg-dark-950 p-3" />
               <p class="mt-2 text-xs text-dark-500">{{ priceHistoryHint }}</p>
               <div class="mt-4 h-28 rounded-lg border border-dark-800 bg-dark-950 p-3">
                 <div v-if="!chartPoints" class="flex h-full items-center justify-center text-xs text-dark-500">
-                  暂无可验证的历史价格
+                  {{ priceHistoryEmptyLabel }}
                 </div>
                 <svg v-else viewBox="0 0 280 96" class="h-full w-full" role="img" aria-label="价格走势图">
                   <polyline v-if="chartPoints" :points="chartPoints" fill="none" stroke="#44D62C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
@@ -349,11 +361,17 @@ import api, { marketApi } from '@/api'
 import { useCartStore } from '@/store/cart'
 import { useNotifyStore } from '@/store/notify'
 import ProductConfiguratorPanel from '@/components/ProductConfiguratorPanel.vue'
+import PriceProvenance from '@/components/PriceProvenance.vue'
 import {
   cameraPresets,
   materialOptions,
   productVariants as colorOptions,
 } from '@/data/productConfigurator'
+import {
+  getPriceProvenance,
+  getTraceablePricePoints,
+  summarizePriceProvenance,
+} from '@/utils/priceProvenance'
 
 const router = useRouter()
 const route = useRoute()
@@ -414,6 +432,8 @@ const allProducts = ref({})
 const loading = ref(true)
 const priceHistory = ref([])
 const priceHistorySource = ref('unavailable')
+const priceHistoryLoading = ref(false)
+const priceHistoryError = ref(false)
 const filters = reactive({
   keyword: '',
   brand: '',
@@ -437,10 +457,29 @@ const isComplete = computed(() => selectedCount.value === steps.length)
 const selectedPartsTotal = computed(() => Object.values(selected.value).reduce((sum, item) => sum + Number(item.price), 0))
 const activeVariant = computed(() => colorOptions.find(option => option.id === selectedVariant.value) || colorOptions[0])
 const activeMaterial = computed(() => materialOptions.find(option => option.id === selectedMaterial.value) || materialOptions[0])
-const activeModelUrl = computed(() => selected.value[7]?.model_3d_url || '')
+const activeCaseModel = computed(() => {
+  const product = selected.value[7] || {}
+  return {
+    url: product.model_3d_url || '',
+    scale: Number(product.model_3d_scale || 1),
+    position: product.model_3d_position || [0, 0, 0],
+    rotation: product.model_3d_rotation || [0, 0, 0],
+    license: product.asset_license || '',
+    sourceUrl: product.asset_source_url || '',
+  }
+})
+const activeModelUrl = computed(() => activeCaseModel.value.url)
 const appearancePriceDiff = computed(() => activeVariant.value?.priceDiff || 0)
 const totalPrice = computed(() => selectedPartsTotal.value + appearancePriceDiff.value)
 const savedAmount = computed(() => Object.values(selected.value).reduce((sum, item) => sum + Math.max(Number(item.original_price || item.price) - Number(item.price), 0), 0))
+const priceVerificationSummary = computed(() => summarizePriceProvenance(Object.values(selected.value)))
+const diyPriceVerificationLabel = computed(() => {
+  const { total, verified } = priceVerificationSummary.value
+  if (total === 0) return '选择配件后显示售价来源与核验覆盖。'
+  if (verified === total) return `已选 ${total} 件配件均带完整核价来源；总价按当前售价计算。`
+  if (verified === 0) return `已选 ${total} 件配件暂无可验证价格来源；总价仍按当前售价计算。`
+  return `已选 ${total} 件中 ${verified} 件已核价，其余售价来源暂不可验证。`
+})
 
 const viewerParts = computed(() => steps.map((step, index) => {
   const product = selected.value[index]
@@ -585,9 +624,24 @@ const compatibilityChecks = computed(() => {
 const selectedPriceTarget = computed(() => selected.value[currentStep.value] || Object.values(selected.value)[0])
 const priceHistoryHint = computed(() => {
   if (!selectedPriceTarget.value) return '选择一个配件后显示走势。'
-  if (priceHistorySource.value === 'database') return '数据来自平台核价记录，可追溯来源。'
-  if (priceHistorySource.value === 'external-provider') return '数据来自已配置的外部行情提供商。'
-  return '暂无可靠历史价格，不使用模拟曲线。'
+  if (priceHistoryLoading.value) return '正在检查来源完整的价格记录。'
+  if (priceHistoryError.value) return '历史价格暂时无法加载，请稍后重试。'
+  if (priceHistory.value.length > 0 && priceHistorySource.value === 'database') {
+    return `已找到 ${priceHistory.value.length} 条来源完整的平台核价记录。`
+  }
+  if (priceHistory.value.length > 0 && priceHistorySource.value === 'external-provider') {
+    return `已找到 ${priceHistory.value.length} 条来源完整的外部行情记录。`
+  }
+  if (getPriceProvenance(selectedPriceTarget.value).isVerified) {
+    return '当前售价已核验，但暂无来源完整的历史价格记录。'
+  }
+  return '当前售价来源尚未完成核验，暂无可验证的历史价格记录。'
+})
+const priceHistoryEmptyLabel = computed(() => {
+  if (!selectedPriceTarget.value) return '选择配件后查看价格记录'
+  if (priceHistoryLoading.value) return '正在加载价格记录'
+  if (priceHistoryError.value) return '价格记录暂时不可用'
+  return '暂无可验证的历史价格'
 })
 const chartPoints = computed(() => {
   if (priceHistory.value.length === 0) return ''
@@ -740,6 +794,8 @@ function nextStep() {
 function clearAll() {
   selected.value = {}
   priceHistory.value = []
+  priceHistorySource.value = 'unavailable'
+  priceHistoryError.value = false
   currentStep.value = 0
 }
 
@@ -771,6 +827,8 @@ function buildDiySnapshot() {
       model_3d_scale: Number(product?.model_3d_scale || 1),
       model_3d_position: product?.model_3d_position || null,
       model_3d_rotation: product?.model_3d_rotation || null,
+      asset_license: product?.asset_license || '',
+      asset_source_url: product?.asset_source_url || '',
       specs: product?.specs || {},
     }
   })
@@ -895,15 +953,26 @@ async function loadCategoryProducts(catId) {
 
 async function refreshPriceHistory() {
   const target = selectedPriceTarget.value
-  if (!target) return
+  if (!target) {
+    priceHistory.value = []
+    priceHistorySource.value = 'unavailable'
+    priceHistoryError.value = false
+    return
+  }
+  priceHistoryLoading.value = true
+  priceHistoryError.value = false
   try {
     const res = await marketApi.getPriceHistory(target.id, 30)
-    priceHistory.value = res.points || []
-    priceHistorySource.value = res.source || 'unavailable'
+    const points = getTraceablePricePoints(res.points)
+    priceHistory.value = points
+    priceHistorySource.value = points.length > 0 ? (res.source || 'unavailable') : 'unavailable'
   } catch (e) {
     console.error('Failed to load price history:', e)
     priceHistory.value = []
     priceHistorySource.value = 'unavailable'
+    priceHistoryError.value = true
+  } finally {
+    priceHistoryLoading.value = false
   }
 }
 

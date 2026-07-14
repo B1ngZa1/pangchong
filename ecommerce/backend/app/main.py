@@ -7,6 +7,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.status import HTTP_413_REQUEST_ENTITY_TOO_LARGE
+from sqlalchemy.engine import make_url
 import time
 import os
 
@@ -113,9 +114,9 @@ async def shutdown_event():
 # API 路由
 app.include_router(api_router)
 
-# 静态文件（上传的图片等）
-if os.path.exists(settings.UPLOAD_DIR):
-    app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads")
+# 静态文件（上传的图片等）。导入时即创建目录，保证本地直接运行也会挂载路由。
+os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads")
 
 
 # ============ 健康检查 ============
@@ -123,10 +124,14 @@ if os.path.exists(settings.UPLOAD_DIR):
 @app.get("/health", tags=["系统"])
 async def health_check():
     """健康检查"""
+    database_host = make_url(settings.DATABASE_URL).host
+    database_mode = "local" if database_host in {"postgres", "localhost", "127.0.0.1"} else "external"
     return {
         "status": "healthy",
         "app": settings.APP_NAME,
-        "version": settings.APP_VERSION
+        "version": settings.APP_VERSION,
+        "database": database_mode,
+        "asset_storage": settings.ASSET_STORAGE_BACKEND,
     }
 
 

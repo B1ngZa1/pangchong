@@ -31,7 +31,13 @@ class AlipayService:
         self.gateway = settings.ALIPAY_GATEWAY
         self.sandbox = settings.ALIPAY_SANDBOX
 
-    def create_payment_url(self, order_no: str, amount: float, subject: str) -> str:
+    def create_payment_url(
+        self,
+        order_no: str,
+        amount: float,
+        subject: str,
+        order_id: Optional[UUID] = None,
+    ) -> str:
         """
         创建支付链接（沙箱环境模拟）
 
@@ -41,8 +47,10 @@ class AlipayService:
         3. 调用 alipay.trade.page.pay 接口
         """
         if self.sandbox:
-            # 沙箱环境返回模拟链接
-            return f"https://openapi.alipay.com/gateway.do?mock_pay=true&order_no={order_no}&amount={amount}"
+            if order_id is None:
+                raise ValueError("沙箱支付缺少订单 ID")
+            # 本地沙箱必须留在站内，避免答辩时跳到不可用的第三方网关。
+            return f"/sandbox/orders/{order_id}"
 
         # 生产环境实现（需要安装 alipay-sdk-python）
         # from alipay.aop.api.AlipayClientConfig import AlipayClientConfig
@@ -153,7 +161,8 @@ async def create_payment(
         payment_url = alipay_service.create_payment_url(
             order_no=order.order_no,
             amount=float(order.final_amount),
-            subject=subject
+            subject=subject,
+            order_id=order.id,
         )
 
         return {

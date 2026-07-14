@@ -8,6 +8,7 @@ from sqlalchemy.orm import selectinload
 from typing import Optional
 from uuid import UUID
 from datetime import datetime, timezone
+from urllib.parse import urlparse
 
 from ..core.database import get_db
 from ..core.security import get_current_user, get_current_admin
@@ -23,6 +24,32 @@ from ..schemas.product import (
 )
 
 router = APIRouter(prefix="/products", tags=["商品"])
+
+
+def _validate_asset_provenance(
+    model_3d_url: Optional[str],
+    asset_license: Optional[str],
+    asset_source_url: Optional[str],
+) -> None:
+    """A catalog model is publishable only with its license and source recorded."""
+    if not str(model_3d_url or "").strip():
+        return
+    missing = []
+    if not str(asset_license or "").strip():
+        missing.append("素材许可")
+    if not str(asset_source_url or "").strip():
+        missing.append("素材来源 URL")
+    if missing:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"绑定 3D 模型前请填写：{'、'.join(missing)}",
+        )
+    parsed_source = urlparse(str(asset_source_url).strip())
+    if parsed_source.scheme not in {"http", "https"} or not parsed_source.netloc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="素材来源 URL 必须是可审计的 HTTP(S) 地址",
+        )
 
 
 # ============ 分类 ============
@@ -221,6 +248,11 @@ async def create_product(
     admin = Depends(get_current_admin)
 ):
     """创建商品（管理员）"""
+    _validate_asset_provenance(
+        product_data.model_3d_url,
+        product_data.asset_license,
+        product_data.asset_source_url,
+    )
     # 检查 slug 是否已存在
     result = await db.execute(select(Product).where(Product.slug == product_data.slug))
     if result.scalar_one_or_none():
@@ -275,6 +307,12 @@ async def update_product(
     previous_price = product.price
     for field, value in update_data.items():
         setattr(product, field, value)
+
+    _validate_asset_provenance(
+        product.model_3d_url,
+        product.asset_license,
+        product.asset_source_url,
+    )
 
     if "price" in update_data and update_data["price"] != previous_price:
         if "price_checked_at" not in update_data:

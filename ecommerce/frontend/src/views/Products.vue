@@ -106,6 +106,7 @@
                   <button class="rounded-md border border-dark-600 px-3 py-1.5 text-xs font-semibold text-dark-300 transition-all hover:border-primary-500 hover:text-primary-400" @click.stop="$router.push(`/products/${product.slug}`)">详情</button>
                 </div>
               </div>
+              <PriceProvenance :product="product" compact class="mt-3 border-t border-dark-800 pt-3" />
             </div>
           </article>
         </div>
@@ -133,6 +134,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '@/api'
 import { useCartStore, useNotifyStore } from '@/store'
+import PriceProvenance from '@/components/PriceProvenance.vue'
 import { buildProductListParams, getCatalogQueryLabel, resolveCategoryId } from '@/utils/productCatalogFilters'
 
 const route = useRoute()

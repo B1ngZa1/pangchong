@@ -49,6 +49,26 @@ if ! "${COMPOSE_CMD[@]}" up -d --build; then
   exit 1
 fi
 
+echo "[INFO] Waiting for backend and frontend health checks..."
+ready=false
+for ((attempt = 1; attempt <= 90; attempt += 1)); do
+  backend_health="$(docker inspect --format '{{.State.Health.Status}}' pangchong-backend 2>/dev/null || true)"
+  frontend_health="$(docker inspect --format '{{.State.Health.Status}}' pangchong-frontend 2>/dev/null || true)"
+  if [[ "${backend_health}" == "healthy" && "${frontend_health}" == "healthy" ]]; then
+    ready=true
+    break
+  fi
+  sleep 2
+done
+
+if [[ "${ready}" != "true" ]]; then
+  echo
+  echo "[ERROR] Services did not become healthy within 180 seconds."
+  "${COMPOSE_CMD[@]}" ps
+  "${COMPOSE_CMD[@]}" logs --tail 80 backend frontend
+  exit 1
+fi
+
 echo
 echo "========================================"
 echo "  Started successfully"

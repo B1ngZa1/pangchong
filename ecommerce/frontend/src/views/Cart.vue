@@ -70,6 +70,7 @@
                 <!-- 缩略图 120x120 -->
                 <div class="w-[120px] h-[120px] flex-shrink-0 bg-[#222] rounded-lg overflow-hidden">
                   <img v-if="item.image_url" :src="item.image_url" :alt="item.name"
+                    @error="handleImageError"
                     class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
                   <div v-else class="w-full h-full flex items-center justify-center text-[#444]">
                     <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -379,6 +380,14 @@ import { hasCustomSnapshotDisplay } from '@/utils/orderSpecs'
 
 const router = useRouter()
 const cart = useCartStore()
+const fallbackImage = '/assets/pangchong-product-fallback.png'
+
+function handleImageError(event) {
+  const image = event.target
+  if (image instanceof HTMLImageElement && !image.src.endsWith(fallbackImage)) {
+    image.src = fallbackImage
+  }
+}
 
 const shippingRegion = ref(cart.shippingRegion)
 const shippingRates = cart.getShippingRates()
