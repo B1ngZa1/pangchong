@@ -5,12 +5,9 @@
         <p class="text-[11px] font-semibold text-primary-500">{{ display.title }}</p>
         <span v-if="display.createdAt" class="text-[10px] text-dark-500">{{ display.createdAt }}</span>
       </div>
-      <span v-if="display.compatibility"
-        class="rounded-full border px-2 py-0.5 text-[10px] font-medium"
-        :class="compatibilityClass(display.compatibility.tone)">
-        {{ display.compatibility.label }}
-      </span>
     </div>
+
+    <DsCompatibilityStatus v-if="display.compatibility" :status="display.compatibility" compact />
 
     <div v-if="display.appearance" class="mb-2 text-[11px] leading-5">
       <span class="text-dark-500">{{ display.appearance.label }}：</span>
@@ -49,18 +46,13 @@
       </span>
     </div>
 
-    <div v-if="display.compatibility?.issues.length" class="mt-2 space-y-1">
-      <p v-for="issue in display.compatibility.issues" :key="issue.key"
-        class="text-[10px] leading-4 text-yellow-300">
-        {{ issue.title }}：{{ issue.message }}
-      </p>
-    </div>
   </div>
 </template>
 
 <script setup>
 import { computed } from 'vue'
 import { buildCustomSnapshotDisplay } from '@/utils/orderSpecs'
+import { DsCompatibilityStatus } from '@/design-system'
 
 const props = defineProps({
   item: {
@@ -71,9 +63,4 @@ const props = defineProps({
 
 const display = computed(() => buildCustomSnapshotDisplay(props.item))
 
-function compatibilityClass(tone) {
-  if (tone === 'warn') return 'border-yellow-500/30 bg-yellow-500/10 text-yellow-300'
-  if (tone === 'pending') return 'border-blue-500/30 bg-blue-500/10 text-blue-300'
-  return 'border-green-500/30 bg-green-500/10 text-green-300'
-}
 </script>

@@ -7,7 +7,7 @@
       <span>武汉市武昌区江盛路19号3号楼2楼</span>
     </section>
 
-    <section class="store-hero" aria-label="store preview">
+    <section class="store-hero" aria-label="胖虫武汉体验中心预览">
       <img :src="storeHeroImage" alt="胖虫电脑线下体验区" />
     </section>
 
@@ -34,7 +34,7 @@
 
     <section class="store-shell">
       <div class="section-heading">
-        <p>Today at Pangchong</p>
+        <p>今日到店体验</p>
         <h2>来店里，把配置方案当面说清楚。</h2>
       </div>
       <div class="store-card-row">
@@ -61,7 +61,7 @@
 
     <section class="store-shell split-section">
       <div>
-        <p>Genius Bar for PC</p>
+        <p>电脑技术服务台</p>
         <h2>我们协助上手，也帮你把问题定位到具体部件。</h2>
         <router-link to="/services#tech-support">查看技术支持</router-link>
       </div>
@@ -71,7 +71,7 @@
     <section class="store-shell">
       <div class="section-heading">
         <p>门店活动</p>
-        <h2>后续可放入装机分享、新品体验和玩家交流内容。</h2>
+        <h2>从第一套配置到下一次升级，欢迎到店把问题和目标当面讲清楚。</h2>
       </div>
       <div class="activity-grid">
         <article v-for="activity in activityCards" :key="activity.title">
@@ -155,8 +155,8 @@ const activityCards = [
 <style scoped>
 .store-page {
   min-height: 100vh;
-  background: #f5f5f7;
-  color: #1d1d1f;
+  background: var(--pc-color-theme-store-canvas);
+  color: var(--pc-color-theme-store-text);
 }
 
 .store-shell {
@@ -176,14 +176,14 @@ const activityCards = [
   position: absolute;
   left: 0;
   top: 48px;
-  color: #1d1d1f;
+  color: var(--pc-color-theme-store-text);
   font-size: 14px;
   font-weight: 600;
 }
 
 .store-title p {
   margin: 0;
-  color: #6e6e73;
+  color: var(--pc-color-theme-store-muted);
   font-size: 14px;
   font-weight: 600;
 }
@@ -197,14 +197,14 @@ const activityCards = [
 }
 
 .store-title span {
-  color: #6e6e73;
+  color: var(--pc-color-theme-store-muted);
   font-size: 15px;
 }
 
 .store-hero {
   height: clamp(280px, 46vw, 560px);
   overflow: hidden;
-  background: #fff;
+  background: var(--pc-color-theme-store-surface);
 }
 
 .store-hero img {
@@ -224,7 +224,7 @@ const activityCards = [
 .section-heading h2,
 .split-section h2 {
   margin: 0;
-  color: #1d1d1f;
+  color: var(--pc-color-theme-store-text);
   font-size: 30px;
   line-height: 1.18;
   font-weight: 800;
@@ -234,7 +234,7 @@ const activityCards = [
 .section-heading p,
 .split-section p {
   margin: 12px 0 0;
-  color: #6e6e73;
+  color: var(--pc-color-theme-store-muted);
   font-size: 15px;
   line-height: 1.7;
 }
@@ -250,14 +250,14 @@ const activityCards = [
 }
 
 .store-info dt {
-  color: #6e6e73;
+  color: var(--pc-color-theme-store-muted);
   font-size: 13px;
   font-weight: 700;
 }
 
 .store-info dd {
   margin: 6px 0 0;
-  color: #1d1d1f;
+  color: var(--pc-color-theme-store-text);
   font-size: 16px;
   font-weight: 700;
 }
@@ -279,7 +279,7 @@ const activityCards = [
 .service-grid article {
   overflow: hidden;
   border-radius: 8px;
-  background: #fff;
+  background: var(--pc-color-theme-store-surface);
 }
 
 .store-card img {
@@ -296,7 +296,7 @@ const activityCards = [
 .store-card p,
 .activity-grid p {
   margin: 0 0 8px;
-  color: #6e6e73;
+  color: var(--pc-color-theme-store-muted);
   font-size: 12px;
   font-weight: 700;
 }
@@ -305,7 +305,7 @@ const activityCards = [
 .activity-grid h3,
 .service-grid h3 {
   margin: 0;
-  color: #1d1d1f;
+  color: var(--pc-color-theme-store-text);
   font-size: 18px;
   line-height: 1.35;
   font-weight: 800;
@@ -315,7 +315,7 @@ const activityCards = [
 .service-grid p {
   display: block;
   margin-top: 10px;
-  color: #6e6e73;
+  color: var(--pc-color-theme-store-muted);
   font-size: 14px;
   line-height: 1.65;
 }
@@ -323,7 +323,7 @@ const activityCards = [
 .store-band {
   margin-top: 56px;
   padding: 56px 0;
-  background: #fff;
+  background: var(--pc-color-theme-store-surface);
 }
 
 .service-grid {
@@ -333,7 +333,7 @@ const activityCards = [
 }
 
 .service-grid article {
-  border: 1px solid #e8e8ed;
+  border: 1px solid var(--pc-color-theme-store-border);
   padding: 28px 22px;
   text-align: center;
 }
@@ -346,8 +346,8 @@ const activityCards = [
   height: 40px;
   margin-bottom: 18px;
   border-radius: 999px;
-  background: #0071e3;
-  color: #fff;
+  background: var(--pc-color-theme-store-action);
+  color: var(--pc-color-theme-store-surface);
   font-size: 13px;
   font-weight: 800;
 }
@@ -367,7 +367,7 @@ const activityCards = [
 .activity-grid a {
   display: inline-flex;
   margin-top: 18px;
-  color: #0066cc;
+  color: var(--pc-color-theme-store-link);
   font-size: 14px;
   font-weight: 700;
 }

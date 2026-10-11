@@ -7,10 +7,15 @@ from uuid import uuid4
 
 import pytest
 
-from app.api.admin import _has_valid_signature, _serialize_admin_product
+from app.api.admin import _build_asset_usage_map, _has_valid_signature, _serialize_admin_product
 from app.core.config import settings
 from app.services.glb import DIY_MODEL_PART_KEYS, InvalidGlb, inspect_glb
-from app.services.storage import StorageNotConfigured, storage_service
+from app.services.storage import (
+    StorageAssetMissing,
+    StorageNotConfigured,
+    StorageUploadError,
+    storage_service,
+)
 
 
 def make_glb(node_names):
@@ -99,6 +104,9 @@ def test_admin_product_payload_keeps_the_attached_model_metadata():
         model_3d_rotation=[0, 1.57, 0],
         asset_license="CC BY 4.0",
         asset_source_url="https://example.com/source",
+        price_source_name="Catalog review",
+        price_source_url="https://example.com/price",
+        price_checked_at=datetime(2026, 9, 13, tzinfo=timezone.utc),
         weight=Decimal("8.2"),
         is_active=True,
         is_featured=True,
@@ -110,6 +118,9 @@ def test_admin_product_payload_keeps_the_attached_model_metadata():
     assert payload["model_3d_scale"] == 0.01
     assert payload["asset_license"] == "CC BY 4.0"
     assert payload["asset_source_url"] == "https://example.com/source"
+    assert payload["price_source_name"] == "Catalog review"
+    assert payload["price_source_url"] == "https://example.com/price"
+    assert payload["price_checked_at"] == "2026-09-13T00:00:00+00:00"
 
 
 @pytest.mark.asyncio
@@ -141,3 +152,97 @@ async def test_supabase_mode_requires_server_credentials(monkeypatch):
             data=b"\x89PNG\r\n\x1a\ncontent",
             mime_type="image/png",
         )
+
+
+def _use_local_storage(tmp_path, monkeypatch):
+    monkeypatch.setattr(settings, "ASSET_STORAGE_BACKEND", "local")
+    monkeypatch.setattr(settings, "UPLOAD_DIR", str(tmp_path))
+
+
+@pytest.mark.asyncio
+async def test_local_storage_lists_catalog_assets_and_ignores_other_files(tmp_path, monkeypatch):
+    _use_local_storage(tmp_path, monkeypatch)
+    (tmp_path / "products").mkdir()
+    (tmp_path / "products" / "demo.png").write_bytes(b"\x89PNG\r\n\x1a\ncontent")
+    (tmp_path / "products" / "sub").mkdir()
+    (tmp_path / "products" / "sub" / "nested.webp").write_bytes(b"RIFFxxxxWEBP")
+    (tmp_path / "products" / "notes.txt").write_text("ignore me")
+    (tmp_path / "diy").mkdir()
+    (tmp_path / "diy" / "case.glb").write_bytes(make_glb(DIY_MODEL_PART_KEYS))
+
+    assets = await storage_service.list_assets()
+    by_path = {asset.path: asset for asset in assets}
+
+    assert set(by_path) == {"products/demo.png", "products/sub/nested.webp", "diy/case.glb"}
+    assert by_path["products/demo.png"].kind == "image"
+    assert by_path["products/demo.png"].mime_type == "image/png"
+    assert by_path["products/demo.png"].bucket == settings.SUPABASE_IMAGE_BUCKET
+    assert by_path["diy/case.glb"].kind == "model"
+    assert by_path["diy/case.glb"].bucket == settings.SUPABASE_MODEL_BUCKET
+    assert by_path["diy/case.glb"].updated_at is not None
+    updated = [asset.updated_at for asset in assets]
+    assert updated == sorted(updated, reverse=True)
+
+
+@pytest.mark.asyncio
+async def test_local_storage_list_on_missing_upload_dir_returns_empty(tmp_path, monkeypatch):
+    _use_local_storage(tmp_path, monkeypatch)
+
+    assert await storage_service.list_assets() == []
+
+
+@pytest.mark.asyncio
+async def test_local_storage_delete_removes_only_the_requested_asset(tmp_path, monkeypatch):
+    _use_local_storage(tmp_path, monkeypatch)
+    (tmp_path / "products").mkdir()
+    (tmp_path / "products" / "demo.png").write_bytes(b"\x89PNG\r\n\x1a\ncontent")
+    (tmp_path / "products" / "keep.png").write_bytes(b"\x89PNG\r\n\x1a\nkeep")
+
+    await storage_service.delete_asset(bucket=settings.SUPABASE_IMAGE_BUCKET, path="products/demo.png")
+    assert not (tmp_path / "products" / "demo.png").exists()
+    assert (tmp_path / "products" / "keep.png").exists()
+
+    with pytest.raises(StorageAssetMissing):
+        await storage_service.delete_asset(bucket=settings.SUPABASE_IMAGE_BUCKET, path="products/demo.png")
+
+    with pytest.raises(StorageUploadError):
+        await storage_service.delete_asset(bucket=settings.SUPABASE_IMAGE_BUCKET, path="../escape.png")
+
+
+class _StaticRows:
+    def __init__(self, rows):
+        self._rows = rows
+
+    def __iter__(self):
+        return iter(self._rows)
+
+
+async def test_asset_usage_map_matches_local_and_remote_object_paths(mock_db):
+    product_a = {"id": "id-a", "name": "机箱 A", "slug": "case-a"}
+    product_b = {"id": "id-b", "name": "机箱 B", "slug": "case-b"}
+    mock_db.execute.return_value = _StaticRows(
+        [
+            (
+                product_a["id"],
+                product_a["name"],
+                product_a["slug"],
+                "/uploads/products/a.png",
+                ["/uploads/products/shared.webp"],
+                None,
+            ),
+            (
+                product_b["id"],
+                product_b["name"],
+                product_b["slug"],
+                None,
+                [],
+                "https://supabase.example/storage/v1/object/public/catalog-models/diy/b.glb",
+            ),
+        ]
+    )
+
+    usage = await _build_asset_usage_map(mock_db, ["products/a.png", "diy/b.glb", "products/unused.png"])
+
+    assert [product["id"] for product in usage["products/a.png"]] == ["id-a"]
+    assert [product["id"] for product in usage["diy/b.glb"]] == ["id-b"]
+    assert "products/unused.png" not in usage

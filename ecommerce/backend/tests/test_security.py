@@ -1,13 +1,18 @@
 """
 Tests for security module: password hashing, JWT tokens, password strength validation.
 """
+from datetime import timedelta
+
 import pytest
+from fastapi import HTTPException
 from app.core.security import (
     verify_password,
     get_password_hash,
+    create_access_token,
     create_tokens,
     verify_token,
     validate_password_strength,
+    get_current_user_optional,
 )
 
 
@@ -87,3 +92,34 @@ class TestPasswordStrength:
     def test_unicode_password(self):
         ok, msg = validate_password_strength("密码Test1Long")
         assert ok
+
+
+class TestOptionalAuthentication:
+    @pytest.mark.asyncio
+    async def test_missing_token_is_treated_as_anonymous(self, mock_db):
+        user = await get_current_user_optional(token=None, db=mock_db)
+
+        assert user is None
+        mock_db.execute.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_invalid_token_returns_401_instead_of_anonymous(self, mock_db):
+        with pytest.raises(HTTPException) as exc_info:
+            await get_current_user_optional(token="expired-or-invalid-token", db=mock_db)
+
+        assert exc_info.value.status_code == 401
+        assert exc_info.value.headers == {"WWW-Authenticate": "Bearer"}
+        mock_db.execute.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_expired_token_returns_401_so_clients_can_refresh(self, mock_db):
+        expired_token = create_access_token(
+            {"sub": "user-uuid"},
+            expires_delta=timedelta(seconds=-1),
+        )
+
+        with pytest.raises(HTTPException) as exc_info:
+            await get_current_user_optional(token=expired_token, db=mock_db)
+
+        assert exc_info.value.status_code == 401
+        mock_db.execute.assert_not_awaited()

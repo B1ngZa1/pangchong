@@ -141,6 +141,8 @@ CREATE TABLE orders (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     order_no VARCHAR(32) NOT NULL UNIQUE,  -- 订单号，格式: PC + 时间戳 + 随机数
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+    idempotency_key UUID,
+    request_fingerprint VARCHAR(64),
     status VARCHAR(20) NOT NULL DEFAULT 'pending'
         CHECK (status IN ('pending', 'paid', 'shipped', 'completed', 'cancelled', 'refunded')),
     total_amount DECIMAL(10, 2) NOT NULL,  -- 商品总金额
@@ -169,7 +171,8 @@ CREATE TABLE orders (
     admin_note TEXT,
 
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uq_orders_user_idempotency_key UNIQUE (user_id, idempotency_key)
 );
 
 -- 订单表索引
@@ -189,6 +192,8 @@ CREATE TABLE order_items (
     product_name VARCHAR(200) NOT NULL,  -- 商品名称快照
     product_image VARCHAR(500),          -- 商品图片快照
     product_specs JSONB,
+    configuration_id VARCHAR(100),
+    configuration_version INTEGER,
     price DECIMAL(10, 2) NOT NULL,       -- 下单时价格
     quantity INTEGER NOT NULL CHECK (quantity > 0),
     subtotal DECIMAL(10, 2) NOT NULL,    -- 小计 = price * quantity
@@ -200,7 +205,33 @@ CREATE INDEX idx_order_items_order_id ON order_items(order_id);
 CREATE INDEX idx_order_items_product_id ON order_items(product_id);
 
 -- =============================================
--- 8. 价格历史表 (price_history)
+-- 8. 支付事件表 (payment_events)
+-- =============================================
+-- 只保存已验签通知的最小审计摘要，不保存签名、私钥或原始回调正文。
+CREATE TABLE payment_events (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    provider VARCHAR(32) NOT NULL DEFAULT 'alipay',
+    event_key VARCHAR(128) NOT NULL,
+    dedupe_key VARCHAR(64) NOT NULL,
+    order_id UUID NOT NULL REFERENCES orders(id) ON DELETE RESTRICT,
+    order_no VARCHAR(32) NOT NULL,
+    trade_no VARCHAR(100) NOT NULL,
+    notification_id VARCHAR(128),
+    trade_status VARCHAR(32) NOT NULL,
+    amount DECIMAL(10, 2) NOT NULL,
+    payload_hash VARCHAR(64) NOT NULL,
+    processing_result VARCHAR(32) NOT NULL,
+    received_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    applied_at TIMESTAMP WITH TIME ZONE,
+    CONSTRAINT uq_payment_events_provider_event_key UNIQUE (provider, event_key),
+    CONSTRAINT uq_payment_events_provider_dedupe_key UNIQUE (provider, dedupe_key)
+);
+
+CREATE INDEX idx_payment_events_order_id ON payment_events(order_id);
+CREATE INDEX idx_payment_events_trade_no ON payment_events(provider, trade_no);
+
+-- =============================================
+-- 9. 价格历史表 (price_history)
 -- =============================================
 CREATE TABLE price_history (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

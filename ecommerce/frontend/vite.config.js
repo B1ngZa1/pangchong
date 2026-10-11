@@ -2,6 +2,18 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
 
+const apiProxyTarget = process.env.VITE_API_TARGET || 'http://localhost:8000'
+const apiProxy = {
+  '/api': {
+    target: apiProxyTarget,
+    changeOrigin: true,
+  },
+  '/uploads': {
+    target: apiProxyTarget,
+    changeOrigin: true,
+  },
+}
+
 export default defineConfig({
   plugins: [vue()],
   resolve: {
@@ -12,16 +24,12 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 3000,
-    proxy: {
-      '/api': {
-        target: process.env.VITE_API_TARGET || 'http://localhost:8000',
-        changeOrigin: true,
-      },
-      '/uploads': {
-        target: process.env.VITE_API_TARGET || 'http://localhost:8000',
-        changeOrigin: true,
-      },
-    },
+    proxy: apiProxy,
+  },
+  preview: {
+    host: '0.0.0.0',
+    port: 4173,
+    proxy: apiProxy,
   },
   build: {
     outDir: 'dist',
@@ -31,6 +39,7 @@ export default defineConfig({
         manualChunks: {
           vue: ['vue', 'vue-router', 'pinia'],
           vendor: ['axios'],
+          three: ['three'],
         },
       },
     },

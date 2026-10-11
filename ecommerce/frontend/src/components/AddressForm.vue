@@ -1,78 +1,101 @@
 <template>
   <div>
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-      <div>
-        <label class="text-sm text-dark-400 block mb-1.5">收货人姓名 <span class="text-red-500">*</span></label>
-        <input v-model="form.recipient_name" placeholder="请输入收货人姓名"
-          class="w-full bg-dark-800 text-dark-200 border rounded-lg px-4 py-2.5 text-sm focus:border-primary-500 outline-none"
-          :class="errors.recipient_name ? 'border-red-500' : 'border-dark-700'" />
-        <p v-if="errors.recipient_name" class="text-red-400 text-xs mt-1">{{ errors.recipient_name }}</p>
-      </div>
-      <div>
-        <label class="text-sm text-dark-400 block mb-1.5">手机号码 <span class="text-red-500">*</span></label>
-        <input v-model="form.phone" placeholder="11位手机号" maxlength="11"
-          class="w-full bg-dark-800 text-dark-200 border rounded-lg px-4 py-2.5 text-sm focus:border-primary-500 outline-none"
-          :class="errors.phone ? 'border-red-500' : 'border-dark-700'" />
-        <p v-if="errors.phone" class="text-red-400 text-xs mt-1">{{ errors.phone }}</p>
-      </div>
+    <div class="grid grid-cols-1 gap-4 mb-4 sm:grid-cols-2">
+      <DsField
+        v-model="form.recipient_name"
+        label="收货人姓名"
+        name="recipient_name"
+        autocomplete="name"
+        placeholder="请输入收货人姓名"
+        required
+        :error="errors.recipient_name"
+      />
+      <DsField
+        v-model="form.phone"
+        label="手机号码"
+        name="phone"
+        type="tel"
+        maxlength="11"
+        inputmode="tel"
+        autocomplete="tel"
+        placeholder="11位手机号"
+        required
+        :error="errors.phone"
+      />
     </div>
 
-    <!-- 省市区三级联动 -->
     <div class="grid grid-cols-3 gap-3 mb-4">
-      <div>
-        <label class="text-sm text-dark-400 block mb-1.5">省份 <span class="text-red-500">*</span></label>
-        <select v-model="form.province" @change="onProvinceChange"
-          class="w-full bg-dark-800 text-dark-200 border rounded-lg px-3 py-2.5 text-sm focus:border-primary-500 outline-none"
-          :class="errors.province ? 'border-red-500' : 'border-dark-700'">
-          <option value="">选择省份</option>
-          <option v-for="p in provinces" :key="p" :value="p">{{ p }}</option>
-        </select>
-        <p v-if="errors.province" class="text-red-400 text-xs mt-1">{{ errors.province }}</p>
-      </div>
-      <div>
-        <label class="text-sm text-dark-400 block mb-1.5">城市 <span class="text-red-500">*</span></label>
-        <select v-model="form.city" @change="onCityChange" :disabled="!form.province"
-          class="w-full bg-dark-800 text-dark-200 border rounded-lg px-3 py-2.5 text-sm focus:border-primary-500 outline-none disabled:opacity-50"
-          :class="errors.city ? 'border-red-500' : 'border-dark-700'">
-          <option value="">选择城市</option>
-          <option v-for="c in cities" :key="c" :value="c">{{ c }}</option>
-        </select>
-        <p v-if="errors.city" class="text-red-400 text-xs mt-1">{{ errors.city }}</p>
-      </div>
-      <div>
-        <label class="text-sm text-dark-400 block mb-1.5">区县</label>
-        <select v-model="form.district" :disabled="!form.city"
-          class="w-full bg-dark-800 text-dark-200 border border-dark-700 rounded-lg px-3 py-2.5 text-sm focus:border-primary-500 outline-none disabled:opacity-50">
-          <option value="">选择区县</option>
-          <option v-for="d in districts" :key="d" :value="d">{{ d }}</option>
-        </select>
-      </div>
+      <DsField
+        v-model="form.province"
+        as="select"
+        label="省份"
+        name="province"
+        autocomplete="address-level1"
+        :options="provinces"
+        placeholder="选择省份"
+        required
+        :error="errors.province"
+        @change="onProvinceChange"
+      />
+      <DsField
+        v-model="form.city"
+        as="select"
+        label="城市"
+        name="city"
+        autocomplete="address-level2"
+        :options="cities"
+        placeholder="选择城市"
+        required
+        :disabled="!form.province"
+        :error="errors.city"
+        @change="onCityChange"
+      />
+      <DsField
+        v-model="form.district"
+        as="select"
+        label="区县"
+        name="district"
+        autocomplete="address-level3"
+        :options="districts"
+        placeholder="选择区县"
+        :disabled="!form.city"
+      />
     </div>
 
-    <div class="mb-4">
-      <label class="text-sm text-dark-400 block mb-1.5">详细地址 <span class="text-red-500">*</span></label>
-      <input v-model="form.address" placeholder="街道、门牌号等详细地址"
-        class="w-full bg-dark-800 text-dark-200 border rounded-lg px-4 py-2.5 text-sm focus:border-primary-500 outline-none"
-        :class="errors.address ? 'border-red-500' : 'border-dark-700'" />
-      <p v-if="errors.address" class="text-red-400 text-xs mt-1">{{ errors.address }}</p>
-    </div>
+    <DsField
+      v-model="form.address"
+      class="mb-4"
+      label="详细地址"
+      name="address"
+      autocomplete="street-address"
+      placeholder="街道、门牌号等详细地址"
+      required
+      :error="errors.address"
+    />
 
-    <div class="mb-4">
-      <label class="text-sm text-dark-400 block mb-1.5">邮编（可选）</label>
-      <input v-model="form.postal_code" placeholder="邮政编码" maxlength="6"
-        class="w-full bg-dark-800 text-dark-200 border border-dark-700 rounded-lg px-4 py-2.5 text-sm focus:border-primary-500 outline-none" />
-    </div>
+    <DsField
+      v-model="form.postal_code"
+      class="mb-4"
+      label="邮编（可选）"
+      name="postal_code"
+      type="text"
+      maxlength="6"
+      inputmode="numeric"
+      autocomplete="postal-code"
+      placeholder="邮政编码"
+    />
 
     <label class="flex items-center gap-2 mb-4 cursor-pointer">
-      <input type="checkbox" v-model="form.is_default" class="accent-primary-500" />
+      <input v-model="form.is_default" type="checkbox" class="accent-primary-500" />
       <span class="text-sm text-dark-400">设为默认地址</span>
     </label>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { computed } from 'vue'
 import { getProvinces, getCities, getDistricts } from '@/data/regions'
+import { DsField } from '@/design-system'
 
 const props = defineProps({
   modelValue: {
@@ -86,45 +109,34 @@ const props = defineProps({
       address: '',
       postal_code: '',
       is_default: false,
-    })
+    }),
   },
   errors: {
     type: Object,
-    default: () => ({})
-  }
+    default: () => ({}),
+  },
 })
 
 const emit = defineEmits(['update:modelValue'])
 
 const form = computed({
   get: () => props.modelValue,
-  set: (val) => emit('update:modelValue', val)
+  set: (value) => emit('update:modelValue', value),
 })
 
 const provinces = getProvinces()
+const cities = computed(() => form.value.province ? getCities(form.value.province) : [])
+const districts = computed(() => form.value.province && form.value.city ? getDistricts(form.value.province, form.value.city) : [])
 
-const cities = computed(() => {
-  if (!form.value.province) return []
-  return getCities(form.value.province)
-})
-
-const districts = computed(() => {
-  if (!form.value.province || !form.value.city) return []
-  return getDistricts(form.value.province, form.value.city)
-})
-
-// 省份变化时清空城市和区县
 function onProvinceChange() {
   form.value.city = ''
   form.value.district = ''
 }
 
-// 城市变化时清空区县
 function onCityChange() {
   form.value.district = ''
 }
 
-// 验证表单
 function validate() {
   const errs = {}
   if (!form.value.recipient_name?.trim()) errs.recipient_name = '请输入收货人姓名'

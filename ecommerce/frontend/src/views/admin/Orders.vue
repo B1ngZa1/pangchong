@@ -1,34 +1,36 @@
 <template>
   <div>
+    <DsAlert
+      v-if="feedback"
+      class="mb-4"
+      :title="feedback.title"
+      :description="feedback.description"
+      :tone="feedback.tone"
+      :role="feedback.tone === 'danger' ? 'alert' : 'status'"
+      dismissible
+      @dismiss="feedback = null"
+    />
+
     <!-- 筛选栏 -->
-    <div class="bg-dark-900 rounded-xl border border-dark-800 p-4 mb-4 flex flex-wrap gap-3">
-      <input v-model="filters.keyword" placeholder="搜索订单号/收货人/手机号" @keyup.enter="fetchOrders"
-        class="bg-dark-800 text-dark-200 border border-dark-700 rounded-lg px-4 py-2 text-sm focus:border-primary-500 outline-none w-64" />
-      <select v-model="filters.status" @change="fetchOrders"
-        class="bg-dark-800 text-dark-200 border border-dark-700 rounded-lg px-3 py-2 text-sm focus:border-primary-500 outline-none">
-        <option value="">全部状态</option>
-        <option value="pending">待付款</option>
-        <option value="paid">待发货</option>
-        <option value="shipped">已发货</option>
-        <option value="completed">已完成</option>
-        <option value="cancelled">已取消</option>
-      </select>
-      <button @click="fetchOrders" class="px-4 py-2 bg-primary-500 text-dark-950 text-sm font-semibold rounded-lg hover:bg-primary-400">
-        <i class="fas fa-search mr-1"></i>搜索
-      </button>
-    </div>
+    <form class="bg-dark-900 rounded-xl border border-dark-800 p-4 mb-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_12rem_auto] items-end" @submit.prevent="searchOrders">
+      <DsField v-model="filters.keyword" label="搜索订单" placeholder="订单号 / 收货人 / 手机号" autocomplete="off" />
+      <DsField v-model="filters.status" as="select" label="订单状态" placeholder="全部状态" :options="statusOptions" @change="searchOrders" />
+      <DsButton :loading="loading" type="submit"><i class="fas fa-search mr-1" aria-hidden="true"></i>搜索</DsButton>
+    </form>
 
     <!-- 订单表格 -->
     <div class="bg-dark-900 rounded-xl border border-dark-800 overflow-hidden">
-      <div v-if="loading" class="flex justify-center py-16">
-        <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-500"></div>
-      </div>
-
-      <div v-else-if="orders.length === 0" class="text-center py-16 text-dark-500">
-        暂无订单数据
-      </div>
-
-      <table v-else class="w-full text-sm">
+      <DsAsyncState
+        :state="requestState"
+        loading-label="正在加载订单列表"
+        empty-title="暂无订单数据"
+        empty-description="调整搜索条件，或等待新的订单进入系统。"
+        error-title="订单列表加载失败"
+        :error-description="requestError"
+        @retry="fetchOrders"
+      >
+        <DsDataTable v-if="requestState === 'success'" label="后台订单列表">
+        <table>
         <thead>
           <tr class="text-dark-500 border-b border-dark-800 bg-dark-950/50">
             <th class="text-left py-3 px-4">订单号</th>
@@ -87,31 +89,27 @@
             </td>
           </tr>
         </tbody>
-      </table>
+        </table>
+        </DsDataTable>
+      </DsAsyncState>
 
       <!-- 分页 -->
-      <div v-if="totalPages > 1" class="flex items-center justify-between px-4 py-3 border-t border-dark-800">
+      <div v-if="requestState === 'success' && totalPages > 1" class="flex items-center justify-between px-4 py-3 border-t border-dark-800">
         <span class="text-dark-500 text-xs">共 {{ total }} 条</span>
-        <div class="flex gap-1">
-          <button v-for="p in visiblePages" :key="p"
-            @click="currentPage = p; fetchOrders()"
-            class="w-8 h-8 rounded text-xs font-medium transition-colors"
-            :class="currentPage === p ? 'bg-primary-500 text-dark-950' : 'bg-dark-800 text-dark-400 hover:text-white'">
-            {{ p }}
-          </button>
-        </div>
+        <DsPagination v-model:page="currentPage" :total-pages="totalPages" :disabled="loading" @change="fetchOrders" />
       </div>
     </div>
 
     <!-- 订单详情弹窗 -->
-    <Teleport to="body">
-      <div v-if="showDetail" class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-        <div class="bg-dark-900 rounded-2xl border border-dark-700 w-[90vw] max-w-2xl max-h-[85vh] shadow-2xl flex flex-col">
-          <div class="flex items-center justify-between p-6 border-b border-dark-800">
-            <h3 class="text-lg font-bold">订单详情</h3>
-            <button @click="showDetail = false" class="text-dark-500 hover:text-white"><i class="fas fa-times"></i></button>
-          </div>
-          <div class="flex-1 overflow-y-auto p-6 space-y-4" v-if="detail">
+    <DsDialog v-model:open="showDetail" title="订单详情" :description="detail?.order_no ? `订单号：${detail.order_no}` : '正在读取订单信息'" size="lg">
+          <DsAsyncState
+            :state="detailLoading ? 'loading' : detail ? 'success' : 'error'"
+            loading-label="正在加载订单详情"
+            error-title="订单详情加载失败"
+            :error-description="detailError"
+            @retry="retryDetail"
+          >
+          <div v-if="detail" class="space-y-4">
             <!-- 状态 -->
             <div class="flex items-center gap-3">
               <span class="text-xs px-3 py-1 rounded-full font-medium" :class="statusClass(detail.status)">
@@ -179,47 +177,35 @@
               <p class="text-sm">{{ detail.shipping_company }} · {{ detail.tracking_number }}</p>
             </div>
           </div>
-        </div>
-      </div>
-    </Teleport>
+          </DsAsyncState>
+    </DsDialog>
 
     <!-- 发货弹窗 -->
-    <Teleport to="body">
-      <div v-if="showShipDialog" class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-        <div class="bg-dark-900 rounded-2xl border border-dark-700 p-6 w-[90vw] max-w-md shadow-2xl">
-          <h3 class="text-lg font-bold mb-4">订单发货</h3>
-          <p class="text-dark-400 text-sm mb-4">订单号：{{ shipOrder?.order_no }}</p>
+    <DsDialog v-model:open="showShipDialog" title="订单发货" :description="`订单号：${shipOrder?.order_no || ''}`" size="sm">
+          <DsAlert v-if="shipError" class="mb-4" title="无法提交发货" :description="shipError" tone="danger" role="alert" />
           <div class="space-y-3 mb-4">
-            <div>
-              <label class="text-sm text-dark-400 block mb-1">物流公司</label>
-              <select v-model="shipForm.shipping_company"
-                class="w-full bg-dark-800 text-dark-200 border border-dark-700 rounded-lg px-3 py-2 text-sm focus:border-primary-500 outline-none">
-                <option value="">选择物流公司</option>
-                <option value="顺丰速运">顺丰速运</option>
-                <option value="中通快递">中通快递</option>
-                <option value="圆通速递">圆通速递</option>
-                <option value="韵达快递">韵达快递</option>
-                <option value="申通快递">申通快递</option>
-                <option value="京东物流">京东物流</option>
-                <option value="邮政EMS">邮政EMS</option>
-              </select>
-            </div>
-            <div>
-              <label class="text-sm text-dark-400 block mb-1">物流单号</label>
-              <input v-model="shipForm.tracking_number" placeholder="请输入物流单号"
-                class="w-full bg-dark-800 text-dark-200 border border-dark-700 rounded-lg px-3 py-2 text-sm focus:border-primary-500 outline-none" />
-            </div>
+            <DsField
+              v-model="shipForm.shipping_company"
+              as="select"
+              label="物流公司"
+              placeholder="选择物流公司"
+              :options="shippingCompanies"
+              :error="shipError && !shipForm.shipping_company ? '请选择物流公司' : undefined"
+              required
+            />
+            <DsField
+              v-model="shipForm.tracking_number"
+              label="物流单号"
+              placeholder="请输入物流单号"
+              :error="shipError && !shipForm.tracking_number ? '请输入物流单号' : undefined"
+              required
+            />
           </div>
-          <div class="flex gap-3 justify-end">
-            <button @click="showShipDialog = false" class="px-5 py-2 rounded-lg text-sm bg-dark-800 text-dark-300 hover:bg-dark-700">取消</button>
-            <button @click="confirmShip" :disabled="shipping"
-              class="px-5 py-2 rounded-lg text-sm bg-primary-500 text-dark-950 font-semibold hover:bg-primary-400 disabled:opacity-50">
-              {{ shipping ? '发货中...' : '确认发货' }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </Teleport>
+          <template #footer>
+            <DsButton variant="ghost" type="button" @click="showShipDialog = false">取消</DsButton>
+            <DsButton :loading="shipping" type="button" @click="confirmShip">确认发货</DsButton>
+          </template>
+    </DsDialog>
   </div>
 </template>
 
@@ -227,6 +213,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { adminApi } from '@/api'
 import OrderDiySnapshot from '@/components/OrderDiySnapshot.vue'
+import { DsAlert, DsAsyncState, DsButton, DsDataTable, DsDialog, DsField, DsPagination } from '@/design-system'
 import {
   buildOrderCustomPreview,
   formatCustomSpecs,
@@ -237,10 +224,22 @@ import {
 
 const orders = ref([])
 const loading = ref(true)
+const requestState = ref('loading')
+const requestError = ref('请检查网络后重试。')
+const feedback = ref(null)
 const total = ref(0)
 const currentPage = ref(1)
 const pageSize = 20
 const filters = ref({ keyword: '', status: '' })
+let listRequestId = 0
+let detailRequestId = 0
+const statusOptions = [
+  { value: 'pending', label: '待付款' },
+  { value: 'paid', label: '待发货' },
+  { value: 'shipped', label: '已发货' },
+  { value: 'completed', label: '已完成' },
+  { value: 'cancelled', label: '已取消' },
+]
 const fallbackImage = '/assets/pangchong-product-fallback.png'
 
 function handleImageError(event) {
@@ -266,12 +265,25 @@ const visiblePages = computed(() => {
 // 详情弹窗
 const showDetail = ref(false)
 const detail = ref(null)
+const detailTarget = ref(null)
+const detailLoading = ref(false)
+const detailError = ref('请重试。')
 
 // 发货弹窗
 const showShipDialog = ref(false)
 const shipOrder = ref(null)
 const shipForm = ref({ shipping_company: '', tracking_number: '' })
 const shipping = ref(false)
+const shipError = ref('')
+const shippingCompanies = [
+  { value: '顺丰速运', label: '顺丰速运' },
+  { value: '中通快递', label: '中通快递' },
+  { value: '圆通速递', label: '圆通速递' },
+  { value: '韵达快递', label: '韵达快递' },
+  { value: '申通快递', label: '申通快递' },
+  { value: '京东物流', label: '京东物流' },
+  { value: '邮政EMS', label: '邮政EMS' },
+]
 
 const statusClass = (s) => ({
   pending: 'bg-yellow-500/20 text-yellow-400',
@@ -289,48 +301,83 @@ const displaySpecs = (item) => isCustomItem(item)
   : formatSpecs(item.product_specs)
 
 async function fetchOrders() {
+  const requestId = ++listRequestId
   loading.value = true
+  requestState.value = 'loading'
+  requestError.value = '请检查网络后重试。'
   try {
     const params = { page: currentPage.value, page_size: pageSize }
     if (filters.value.keyword) params.keyword = filters.value.keyword
     if (filters.value.status) params.status = filters.value.status
     const data = await adminApi.getOrders(params)
+    if (requestId !== listRequestId) return
     orders.value = data.items || []
     total.value = data.total || 0
+    requestState.value = orders.value.length ? 'success' : 'empty'
   } catch (e) {
-    console.error('获取订单失败:', e)
+    if (requestId !== listRequestId) return
+    console.warn('后台订单服务不可用', e)
+    requestError.value = e.displayMessage || e.message || '请检查网络后重试。'
+    requestState.value = 'error'
   } finally {
-    loading.value = false
+    if (requestId === listRequestId) loading.value = false
   }
 }
 
+function searchOrders() {
+  currentPage.value = 1
+  return fetchOrders()
+}
+
 async function viewDetail(order) {
+  const requestId = ++detailRequestId
+  detailTarget.value = order
+  showDetail.value = true
+  detail.value = null
+  detailLoading.value = true
+  detailError.value = '请重试。'
   try {
-    detail.value = await adminApi.getOrderDetail(order.id)
-    showDetail.value = true
+    const response = await adminApi.getOrderDetail(order.id)
+    if (requestId === detailRequestId) detail.value = response
   } catch (e) {
-    alert('获取详情失败')
+    if (requestId !== detailRequestId) return
+    detailError.value = e.displayMessage || e.message || '请检查网络后重试。'
+  } finally {
+    if (requestId === detailRequestId) detailLoading.value = false
   }
+}
+
+function retryDetail() {
+  if (detailTarget.value) return viewDetail(detailTarget.value)
+  showDetail.value = false
 }
 
 function openShipDialog(order) {
   shipOrder.value = order
   shipForm.value = { shipping_company: '', tracking_number: '' }
+  shipError.value = ''
   showShipDialog.value = true
 }
 
 async function confirmShip() {
-  if (!shipForm.value.shipping_company || !shipForm.value.tracking_number) {
-    alert('请填写物流公司和物流单号')
+  if (shipping.value || !shipOrder.value) return
+  const shipment = {
+    shipping_company: shipForm.value.shipping_company.trim(),
+    tracking_number: shipForm.value.tracking_number.trim(),
+  }
+  if (!shipment.shipping_company || !shipment.tracking_number) {
+    shipError.value = '请填写物流公司和物流单号。'
     return
   }
+  shipError.value = ''
   shipping.value = true
   try {
-    await adminApi.shipOrder(shipOrder.value.id, shipForm.value)
+    await adminApi.shipOrder(shipOrder.value.id, shipment)
     showShipDialog.value = false
-    fetchOrders()
+    await fetchOrders()
+    feedback.value = { title: '发货信息已保存', description: '订单状态已更新为已发货。', tone: 'success' }
   } catch (e) {
-    alert('发货失败：' + (e.message || '请重试'))
+    shipError.value = e.displayMessage || e.message || '请重试。'
   } finally {
     shipping.value = false
   }

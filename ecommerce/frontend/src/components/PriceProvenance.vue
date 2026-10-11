@@ -3,6 +3,7 @@
     class="price-provenance"
     :class="{ 'price-provenance--compact': compact }"
     :data-verification-state="provenance.state"
+    aria-label="价格依据"
   >
     <div class="price-provenance__head">
       <span class="price-provenance__status" :class="`price-provenance__status--${provenance.state}`">
@@ -56,10 +57,10 @@ const provenance = computed(() => getPriceProvenance(props.product))
 
 <style scoped>
 .price-provenance {
-  padding: 14px;
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  border-radius: 8px;
-  background: rgba(2, 6, 23, 0.48);
+  padding: var(--pc-space-4);
+  border: 1px solid var(--pc-color-semantic-border-subtle);
+  border-radius: var(--pc-radius-md);
+  background: var(--pc-color-semantic-background-canvas);
 }
 
 .price-provenance--compact {
@@ -73,56 +74,55 @@ const provenance = computed(() => getPriceProvenance(props.product))
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: var(--pc-space-3);
 }
 
 .price-provenance__status {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  color: #94a3b8;
-  font-size: 11px;
-  font-weight: 750;
+  gap: var(--pc-space-2);
+  color: var(--pc-color-semantic-text-muted);
+  font-size: var(--pc-font-size-xs);
+  font-weight: var(--pc-font-weight-semibold);
 }
 
 .price-provenance__status > span {
-  width: 6px;
-  height: 6px;
+  width: 0.375rem;
+  height: 0.375rem;
   flex: 0 0 auto;
-  border-radius: 999px;
-  background: #64748b;
+  border-radius: var(--pc-radius-full);
+  background: var(--pc-color-semantic-text-subtle);
 }
 
 .price-provenance__status--verified {
-  color: #86ef7a;
+  color: var(--pc-color-semantic-text-accent);
 }
 
 .price-provenance__status--verified > span {
-  background: #44d62c;
-  box-shadow: 0 0 12px rgba(68, 214, 44, 0.56);
+  background: var(--pc-color-semantic-action-primary);
 }
 
 .price-provenance__eyebrow {
-  color: #64748b;
-  font-size: 10px;
-  font-weight: 750;
+  color: var(--pc-color-semantic-text-subtle);
+  font-size: var(--pc-font-size-xs);
+  font-weight: var(--pc-font-weight-semibold);
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 
 .price-provenance__source,
 .price-provenance__unavailable {
-  margin: 9px 0 0;
-  color: #cbd5e1;
-  font-size: 12px;
-  line-height: 1.6;
+  margin: var(--pc-space-3) 0 0;
+  color: var(--pc-color-semantic-text-secondary);
+  font-size: var(--pc-font-size-sm);
+  line-height: var(--pc-font-line-height-normal);
 }
 
 .price-provenance__source a,
 .price-provenance__source strong {
-  margin-left: 4px;
-  color: #44d62c;
-  font-weight: 700;
+  margin-left: var(--pc-space-1);
+  color: var(--pc-color-semantic-text-accent);
+  font-weight: var(--pc-font-weight-bold);
 }
 
 .price-provenance__source a:hover {
@@ -131,18 +131,18 @@ const provenance = computed(() => getPriceProvenance(props.product))
 }
 
 .price-provenance__unavailable {
-  color: #94a3b8;
+  color: var(--pc-color-semantic-text-muted);
 }
 
 .price-provenance__meta {
-  margin: 4px 0 0;
-  color: #64748b;
-  font-size: 11px;
-  line-height: 1.55;
+  margin: var(--pc-space-1) 0 0;
+  color: var(--pc-color-semantic-text-subtle);
+  font-size: var(--pc-font-size-xs);
+  line-height: var(--pc-font-line-height-normal);
 }
 
 .price-provenance--compact .price-provenance__source,
 .price-provenance--compact .price-provenance__unavailable {
-  margin-top: 5px;
+  margin-top: var(--pc-space-1);
 }
 </style>

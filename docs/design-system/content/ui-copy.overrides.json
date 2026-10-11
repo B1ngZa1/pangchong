@@ -1,0 +1,5 @@
+{
+  "schemaVersion": 1,
+  "instructions": "把需要修改的条目写入 replacements；from 必须等于清单中的 sourceText，to 为新文案。先 dry-run，再加 --write 写回源码。",
+  "replacements": {}
+}

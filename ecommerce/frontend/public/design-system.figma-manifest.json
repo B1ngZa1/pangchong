@@ -1,0 +1,3105 @@
+{
+  "schemaVersion": "0.1.0",
+  "designSystemVersion": "0.9.11",
+  "generatedBy": "scripts/build-figma-handoff.mjs",
+  "source": "src/design-system/tokens/pangchong.tokens.json",
+  "syncStatus": {
+    "targetFileKey": null,
+    "editAccess": false,
+    "note": "等待用户提供目标 Figma design URL 与编辑权限；此 manifest 不宣称已写回 Figma。"
+  },
+  "collections": [
+    {
+      "name": "Primitives",
+      "modes": [
+        "Value"
+      ],
+      "purpose": "raw color values; scopes stay empty"
+    },
+    {
+      "name": "Color",
+      "modes": [
+        "Default",
+        "High Contrast"
+      ],
+      "purpose": "semantic color aliases and accessible overrides"
+    },
+    {
+      "name": "Theme",
+      "modes": [
+        "Value"
+      ],
+      "purpose": "page-specific brand atmosphere only"
+    },
+    {
+      "name": "Layout",
+      "modes": [
+        "Value"
+      ],
+      "purpose": "spacing, sizing, radius, opacity, breakpoints and layering"
+    },
+    {
+      "name": "Typography",
+      "modes": [
+        "Value"
+      ],
+      "purpose": "font family, size, line height and weight"
+    },
+    {
+      "name": "Motion",
+      "modes": [
+        "Value"
+      ],
+      "purpose": "duration and easing strings"
+    },
+    {
+      "name": "Effects",
+      "modes": [
+        "Value"
+      ],
+      "purpose": "effect-style source tokens; not variables"
+    }
+  ],
+  "variables": [
+    {
+      "sourcePath": "color.brand.50",
+      "name": "Primitives/brand/50",
+      "collection": "Primitives",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-brand-50)",
+      "value": "#f0fdf4",
+      "modes": {
+        "Value": "#f0fdf4"
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.brand.100",
+      "name": "Primitives/brand/100",
+      "collection": "Primitives",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-brand-100)",
+      "value": "#dcfce7",
+      "modes": {
+        "Value": "#dcfce7"
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.brand.200",
+      "name": "Primitives/brand/200",
+      "collection": "Primitives",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-brand-200)",
+      "value": "#bbf7d0",
+      "modes": {
+        "Value": "#bbf7d0"
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.brand.300",
+      "name": "Primitives/brand/300",
+      "collection": "Primitives",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-brand-300)",
+      "value": "#86efac",
+      "modes": {
+        "Value": "#86efac"
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.brand.400",
+      "name": "Primitives/brand/400",
+      "collection": "Primitives",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-brand-400)",
+      "value": "#4ade80",
+      "modes": {
+        "Value": "#4ade80"
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.brand.500",
+      "name": "Primitives/brand/500",
+      "collection": "Primitives",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-brand-500)",
+      "value": "#44d62c",
+      "modes": {
+        "Value": "#44d62c"
+      },
+      "description": "PANGCHONG 虫翼绿，主行动与品牌强调色"
+    },
+    {
+      "sourcePath": "color.brand.600",
+      "name": "Primitives/brand/600",
+      "collection": "Primitives",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-brand-600)",
+      "value": "#2ba81a",
+      "modes": {
+        "Value": "#2ba81a"
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.brand.700",
+      "name": "Primitives/brand/700",
+      "collection": "Primitives",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-brand-700)",
+      "value": "#15803d",
+      "modes": {
+        "Value": "#15803d"
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.brand.800",
+      "name": "Primitives/brand/800",
+      "collection": "Primitives",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-brand-800)",
+      "value": "#166534",
+      "modes": {
+        "Value": "#166534"
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.brand.900",
+      "name": "Primitives/brand/900",
+      "collection": "Primitives",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-brand-900)",
+      "value": "#14532d",
+      "modes": {
+        "Value": "#14532d"
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.dark.50",
+      "name": "Primitives/dark/50",
+      "collection": "Primitives",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-dark-50)",
+      "value": "#f8fafc",
+      "modes": {
+        "Value": "#f8fafc"
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.dark.100",
+      "name": "Primitives/dark/100",
+      "collection": "Primitives",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-dark-100)",
+      "value": "#f1f5f9",
+      "modes": {
+        "Value": "#f1f5f9"
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.dark.200",
+      "name": "Primitives/dark/200",
+      "collection": "Primitives",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-dark-200)",
+      "value": "#e2e8f0",
+      "modes": {
+        "Value": "#e2e8f0"
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.dark.300",
+      "name": "Primitives/dark/300",
+      "collection": "Primitives",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-dark-300)",
+      "value": "#cbd5e1",
+      "modes": {
+        "Value": "#cbd5e1"
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.dark.400",
+      "name": "Primitives/dark/400",
+      "collection": "Primitives",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-dark-400)",
+      "value": "#94a3b8",
+      "modes": {
+        "Value": "#94a3b8"
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.dark.500",
+      "name": "Primitives/dark/500",
+      "collection": "Primitives",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-dark-500)",
+      "value": "#64748b",
+      "modes": {
+        "Value": "#64748b"
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.dark.600",
+      "name": "Primitives/dark/600",
+      "collection": "Primitives",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-dark-600)",
+      "value": "#475569",
+      "modes": {
+        "Value": "#475569"
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.dark.700",
+      "name": "Primitives/dark/700",
+      "collection": "Primitives",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-dark-700)",
+      "value": "#334155",
+      "modes": {
+        "Value": "#334155"
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.dark.800",
+      "name": "Primitives/dark/800",
+      "collection": "Primitives",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-dark-800)",
+      "value": "#1e293b",
+      "modes": {
+        "Value": "#1e293b"
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.dark.900",
+      "name": "Primitives/dark/900",
+      "collection": "Primitives",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-dark-900)",
+      "value": "#0f172a",
+      "modes": {
+        "Value": "#0f172a"
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.dark.950",
+      "name": "Primitives/dark/950",
+      "collection": "Primitives",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-dark-950)",
+      "value": "#020617",
+      "modes": {
+        "Value": "#020617"
+      },
+      "description": "全局画布背景"
+    },
+    {
+      "sourcePath": "color.red.400",
+      "name": "Primitives/red/400",
+      "collection": "Primitives",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-red-400)",
+      "value": "#f87171",
+      "modes": {
+        "Value": "#f87171"
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.red.500",
+      "name": "Primitives/red/500",
+      "collection": "Primitives",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-red-500)",
+      "value": "#ef4444",
+      "modes": {
+        "Value": "#ef4444"
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.red.900",
+      "name": "Primitives/red/900",
+      "collection": "Primitives",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-red-900)",
+      "value": "#7f1d1d",
+      "modes": {
+        "Value": "#7f1d1d"
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.amber.300",
+      "name": "Primitives/amber/300",
+      "collection": "Primitives",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-amber-300)",
+      "value": "#fcd34d",
+      "modes": {
+        "Value": "#fcd34d"
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.amber.500",
+      "name": "Primitives/amber/500",
+      "collection": "Primitives",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-amber-500)",
+      "value": "#f59e0b",
+      "modes": {
+        "Value": "#f59e0b"
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.amber.900",
+      "name": "Primitives/amber/900",
+      "collection": "Primitives",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-amber-900)",
+      "value": "#78350f",
+      "modes": {
+        "Value": "#78350f"
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.blue.300",
+      "name": "Primitives/blue/300",
+      "collection": "Primitives",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-blue-300)",
+      "value": "#93c5fd",
+      "modes": {
+        "Value": "#93c5fd"
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.blue.500",
+      "name": "Primitives/blue/500",
+      "collection": "Primitives",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-blue-500)",
+      "value": "#3b82f6",
+      "modes": {
+        "Value": "#3b82f6"
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.blue.900",
+      "name": "Primitives/blue/900",
+      "collection": "Primitives",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-blue-900)",
+      "value": "#1e3a8a",
+      "modes": {
+        "Value": "#1e3a8a"
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.semantic.background.canvas",
+      "name": "Color/background/canvas",
+      "collection": "Color",
+      "type": "COLOR",
+      "scopes": [
+        "FRAME_FILL",
+        "SHAPE_FILL"
+      ],
+      "codeSyntax": "var(--pc-color-semantic-background-canvas)",
+      "value": {
+        "alias": "Primitives/dark/950"
+      },
+      "modes": {
+        "Default": {
+          "alias": "Primitives/dark/950"
+        },
+        "High Contrast": {
+          "alias": "Primitives/dark/950"
+        }
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.semantic.background.surface",
+      "name": "Color/background/surface",
+      "collection": "Color",
+      "type": "COLOR",
+      "scopes": [
+        "FRAME_FILL",
+        "SHAPE_FILL"
+      ],
+      "codeSyntax": "var(--pc-color-semantic-background-surface)",
+      "value": {
+        "alias": "Primitives/dark/900"
+      },
+      "modes": {
+        "Default": {
+          "alias": "Primitives/dark/900"
+        },
+        "High Contrast": {
+          "alias": "Primitives/dark/900"
+        }
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.semantic.background.elevated",
+      "name": "Color/background/elevated",
+      "collection": "Color",
+      "type": "COLOR",
+      "scopes": [
+        "FRAME_FILL",
+        "SHAPE_FILL"
+      ],
+      "codeSyntax": "var(--pc-color-semantic-background-elevated)",
+      "value": {
+        "alias": "Primitives/dark/800"
+      },
+      "modes": {
+        "Default": {
+          "alias": "Primitives/dark/800"
+        },
+        "High Contrast": {
+          "alias": "Primitives/dark/800"
+        }
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.semantic.background.accent",
+      "name": "Color/background/accent",
+      "collection": "Color",
+      "type": "COLOR",
+      "scopes": [
+        "FRAME_FILL",
+        "SHAPE_FILL"
+      ],
+      "codeSyntax": "var(--pc-color-semantic-background-accent)",
+      "value": {
+        "alias": "Primitives/brand/500"
+      },
+      "modes": {
+        "Default": {
+          "alias": "Primitives/brand/500"
+        },
+        "High Contrast": {
+          "alias": "Primitives/brand/500"
+        }
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.semantic.background.danger",
+      "name": "Color/background/danger",
+      "collection": "Color",
+      "type": "COLOR",
+      "scopes": [
+        "FRAME_FILL",
+        "SHAPE_FILL"
+      ],
+      "codeSyntax": "var(--pc-color-semantic-background-danger)",
+      "value": {
+        "alias": "Primitives/red/900"
+      },
+      "modes": {
+        "Default": {
+          "alias": "Primitives/red/900"
+        },
+        "High Contrast": {
+          "alias": "Primitives/red/900"
+        }
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.semantic.background.warning",
+      "name": "Color/background/warning",
+      "collection": "Color",
+      "type": "COLOR",
+      "scopes": [
+        "FRAME_FILL",
+        "SHAPE_FILL"
+      ],
+      "codeSyntax": "var(--pc-color-semantic-background-warning)",
+      "value": {
+        "alias": "Primitives/amber/900"
+      },
+      "modes": {
+        "Default": {
+          "alias": "Primitives/amber/900"
+        },
+        "High Contrast": {
+          "alias": "Primitives/amber/900"
+        }
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.semantic.background.info",
+      "name": "Color/background/info",
+      "collection": "Color",
+      "type": "COLOR",
+      "scopes": [
+        "FRAME_FILL",
+        "SHAPE_FILL"
+      ],
+      "codeSyntax": "var(--pc-color-semantic-background-info)",
+      "value": {
+        "alias": "Primitives/blue/900"
+      },
+      "modes": {
+        "Default": {
+          "alias": "Primitives/blue/900"
+        },
+        "High Contrast": {
+          "alias": "Primitives/blue/900"
+        }
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.semantic.text.primary",
+      "name": "Color/text/primary",
+      "collection": "Color",
+      "type": "COLOR",
+      "scopes": [
+        "TEXT_FILL"
+      ],
+      "codeSyntax": "var(--pc-color-semantic-text-primary)",
+      "value": {
+        "alias": "Primitives/dark/50"
+      },
+      "modes": {
+        "Default": {
+          "alias": "Primitives/dark/50"
+        },
+        "High Contrast": {
+          "alias": "Primitives/dark/50"
+        }
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.semantic.text.secondary",
+      "name": "Color/text/secondary",
+      "collection": "Color",
+      "type": "COLOR",
+      "scopes": [
+        "TEXT_FILL"
+      ],
+      "codeSyntax": "var(--pc-color-semantic-text-secondary)",
+      "value": {
+        "alias": "Primitives/dark/300"
+      },
+      "modes": {
+        "Default": {
+          "alias": "Primitives/dark/300"
+        },
+        "High Contrast": {
+          "alias": "Primitives/dark/100"
+        }
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.semantic.text.muted",
+      "name": "Color/text/muted",
+      "collection": "Color",
+      "type": "COLOR",
+      "scopes": [
+        "TEXT_FILL"
+      ],
+      "codeSyntax": "var(--pc-color-semantic-text-muted)",
+      "value": {
+        "alias": "Primitives/dark/400"
+      },
+      "modes": {
+        "Default": {
+          "alias": "Primitives/dark/400"
+        },
+        "High Contrast": {
+          "alias": "Primitives/dark/200"
+        }
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.semantic.text.subtle",
+      "name": "Color/text/subtle",
+      "collection": "Color",
+      "type": "COLOR",
+      "scopes": [
+        "TEXT_FILL"
+      ],
+      "codeSyntax": "var(--pc-color-semantic-text-subtle)",
+      "value": {
+        "alias": "Primitives/dark/500"
+      },
+      "modes": {
+        "Default": {
+          "alias": "Primitives/dark/500"
+        },
+        "High Contrast": {
+          "alias": "Primitives/dark/500"
+        }
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.semantic.text.inverse",
+      "name": "Color/text/inverse",
+      "collection": "Color",
+      "type": "COLOR",
+      "scopes": [
+        "TEXT_FILL"
+      ],
+      "codeSyntax": "var(--pc-color-semantic-text-inverse)",
+      "value": {
+        "alias": "Primitives/dark/950"
+      },
+      "modes": {
+        "Default": {
+          "alias": "Primitives/dark/950"
+        },
+        "High Contrast": {
+          "alias": "Primitives/dark/950"
+        }
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.semantic.text.accent",
+      "name": "Color/text/accent",
+      "collection": "Color",
+      "type": "COLOR",
+      "scopes": [
+        "TEXT_FILL"
+      ],
+      "codeSyntax": "var(--pc-color-semantic-text-accent)",
+      "value": {
+        "alias": "Primitives/brand/500"
+      },
+      "modes": {
+        "Default": {
+          "alias": "Primitives/brand/500"
+        },
+        "High Contrast": {
+          "alias": "Primitives/brand/500"
+        }
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.semantic.text.danger",
+      "name": "Color/text/danger",
+      "collection": "Color",
+      "type": "COLOR",
+      "scopes": [
+        "TEXT_FILL"
+      ],
+      "codeSyntax": "var(--pc-color-semantic-text-danger)",
+      "value": {
+        "alias": "Primitives/red/400"
+      },
+      "modes": {
+        "Default": {
+          "alias": "Primitives/red/400"
+        },
+        "High Contrast": {
+          "alias": "Primitives/red/400"
+        }
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.semantic.text.warning",
+      "name": "Color/text/warning",
+      "collection": "Color",
+      "type": "COLOR",
+      "scopes": [
+        "TEXT_FILL"
+      ],
+      "codeSyntax": "var(--pc-color-semantic-text-warning)",
+      "value": {
+        "alias": "Primitives/amber/300"
+      },
+      "modes": {
+        "Default": {
+          "alias": "Primitives/amber/300"
+        },
+        "High Contrast": {
+          "alias": "Primitives/amber/300"
+        }
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.semantic.text.info",
+      "name": "Color/text/info",
+      "collection": "Color",
+      "type": "COLOR",
+      "scopes": [
+        "TEXT_FILL"
+      ],
+      "codeSyntax": "var(--pc-color-semantic-text-info)",
+      "value": {
+        "alias": "Primitives/blue/300"
+      },
+      "modes": {
+        "Default": {
+          "alias": "Primitives/blue/300"
+        },
+        "High Contrast": {
+          "alias": "Primitives/blue/300"
+        }
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.semantic.border.subtle",
+      "name": "Color/border/subtle",
+      "collection": "Color",
+      "type": "COLOR",
+      "scopes": [
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": "var(--pc-color-semantic-border-subtle)",
+      "value": {
+        "alias": "Primitives/dark/800"
+      },
+      "modes": {
+        "Default": {
+          "alias": "Primitives/dark/800"
+        },
+        "High Contrast": {
+          "alias": "Primitives/dark/600"
+        }
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.semantic.border.default",
+      "name": "Color/border/default",
+      "collection": "Color",
+      "type": "COLOR",
+      "scopes": [
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": "var(--pc-color-semantic-border-default)",
+      "value": {
+        "alias": "Primitives/dark/700"
+      },
+      "modes": {
+        "Default": {
+          "alias": "Primitives/dark/700"
+        },
+        "High Contrast": {
+          "alias": "Primitives/dark/700"
+        }
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.semantic.border.strong",
+      "name": "Color/border/strong",
+      "collection": "Color",
+      "type": "COLOR",
+      "scopes": [
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": "var(--pc-color-semantic-border-strong)",
+      "value": {
+        "alias": "Primitives/dark/600"
+      },
+      "modes": {
+        "Default": {
+          "alias": "Primitives/dark/600"
+        },
+        "High Contrast": {
+          "alias": "Primitives/dark/600"
+        }
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.semantic.border.accent",
+      "name": "Color/border/accent",
+      "collection": "Color",
+      "type": "COLOR",
+      "scopes": [
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": "var(--pc-color-semantic-border-accent)",
+      "value": {
+        "alias": "Primitives/brand/500"
+      },
+      "modes": {
+        "Default": {
+          "alias": "Primitives/brand/500"
+        },
+        "High Contrast": {
+          "alias": "Primitives/brand/500"
+        }
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.semantic.border.danger",
+      "name": "Color/border/danger",
+      "collection": "Color",
+      "type": "COLOR",
+      "scopes": [
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": "var(--pc-color-semantic-border-danger)",
+      "value": {
+        "alias": "Primitives/red/500"
+      },
+      "modes": {
+        "Default": {
+          "alias": "Primitives/red/500"
+        },
+        "High Contrast": {
+          "alias": "Primitives/red/500"
+        }
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.semantic.border.warning",
+      "name": "Color/border/warning",
+      "collection": "Color",
+      "type": "COLOR",
+      "scopes": [
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": "var(--pc-color-semantic-border-warning)",
+      "value": {
+        "alias": "Primitives/amber/500"
+      },
+      "modes": {
+        "Default": {
+          "alias": "Primitives/amber/500"
+        },
+        "High Contrast": {
+          "alias": "Primitives/amber/500"
+        }
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.semantic.border.focus",
+      "name": "Color/border/focus",
+      "collection": "Color",
+      "type": "COLOR",
+      "scopes": [
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": "var(--pc-color-semantic-border-focus)",
+      "value": {
+        "alias": "Primitives/brand/300"
+      },
+      "modes": {
+        "Default": {
+          "alias": "Primitives/brand/300"
+        },
+        "High Contrast": {
+          "alias": "Primitives/brand/300"
+        }
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.semantic.action.primary",
+      "name": "Color/action/primary",
+      "collection": "Color",
+      "type": "COLOR",
+      "scopes": [
+        "FRAME_FILL",
+        "SHAPE_FILL"
+      ],
+      "codeSyntax": "var(--pc-color-semantic-action-primary)",
+      "value": {
+        "alias": "Primitives/brand/500"
+      },
+      "modes": {
+        "Default": {
+          "alias": "Primitives/brand/500"
+        },
+        "High Contrast": {
+          "alias": "Primitives/brand/500"
+        }
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.semantic.action.primary-hover",
+      "name": "Color/action/primary-hover",
+      "collection": "Color",
+      "type": "COLOR",
+      "scopes": [
+        "FRAME_FILL",
+        "SHAPE_FILL"
+      ],
+      "codeSyntax": "var(--pc-color-semantic-action-primary-hover)",
+      "value": {
+        "alias": "Primitives/brand/400"
+      },
+      "modes": {
+        "Default": {
+          "alias": "Primitives/brand/400"
+        },
+        "High Contrast": {
+          "alias": "Primitives/brand/400"
+        }
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.semantic.action.primary-active",
+      "name": "Color/action/primary-active",
+      "collection": "Color",
+      "type": "COLOR",
+      "scopes": [
+        "FRAME_FILL",
+        "SHAPE_FILL"
+      ],
+      "codeSyntax": "var(--pc-color-semantic-action-primary-active)",
+      "value": {
+        "alias": "Primitives/brand/600"
+      },
+      "modes": {
+        "Default": {
+          "alias": "Primitives/brand/600"
+        },
+        "High Contrast": {
+          "alias": "Primitives/brand/600"
+        }
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.semantic.action.secondary",
+      "name": "Color/action/secondary",
+      "collection": "Color",
+      "type": "COLOR",
+      "scopes": [
+        "FRAME_FILL",
+        "SHAPE_FILL"
+      ],
+      "codeSyntax": "var(--pc-color-semantic-action-secondary)",
+      "value": {
+        "alias": "Primitives/dark/800"
+      },
+      "modes": {
+        "Default": {
+          "alias": "Primitives/dark/800"
+        },
+        "High Contrast": {
+          "alias": "Primitives/dark/800"
+        }
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.semantic.action.secondary-hover",
+      "name": "Color/action/secondary-hover",
+      "collection": "Color",
+      "type": "COLOR",
+      "scopes": [
+        "FRAME_FILL",
+        "SHAPE_FILL"
+      ],
+      "codeSyntax": "var(--pc-color-semantic-action-secondary-hover)",
+      "value": {
+        "alias": "Primitives/dark/700"
+      },
+      "modes": {
+        "Default": {
+          "alias": "Primitives/dark/700"
+        },
+        "High Contrast": {
+          "alias": "Primitives/dark/700"
+        }
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.semantic.action.disabled",
+      "name": "Color/action/disabled",
+      "collection": "Color",
+      "type": "COLOR",
+      "scopes": [
+        "FRAME_FILL",
+        "SHAPE_FILL"
+      ],
+      "codeSyntax": "var(--pc-color-semantic-action-disabled)",
+      "value": {
+        "alias": "Primitives/dark/700"
+      },
+      "modes": {
+        "Default": {
+          "alias": "Primitives/dark/700"
+        },
+        "High Contrast": {
+          "alias": "Primitives/dark/700"
+        }
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "color.theme.home.deep",
+      "name": "Theme/home/deep",
+      "collection": "Theme",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-theme-home-deep)",
+      "value": "#030b13",
+      "modes": {
+        "Value": "#030b13"
+      },
+      "description": "首页深色渐变中间层"
+    },
+    {
+      "sourcePath": "color.theme.home.stage",
+      "name": "Theme/home/stage",
+      "collection": "Theme",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-theme-home-stage)",
+      "value": "#071016",
+      "modes": {
+        "Value": "#071016"
+      },
+      "description": "首页商品媒体背景"
+    },
+    {
+      "sourcePath": "color.theme.home.cyan",
+      "name": "Theme/home/cyan",
+      "collection": "Theme",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-theme-home-cyan)",
+      "value": "#0e7490",
+      "modes": {
+        "Value": "#0e7490"
+      },
+      "description": "首页冷色氛围光"
+    },
+    {
+      "sourcePath": "color.theme.store.canvas",
+      "name": "Theme/store/canvas",
+      "collection": "Theme",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-theme-store-canvas)",
+      "value": "#f5f5f7",
+      "modes": {
+        "Value": "#f5f5f7"
+      },
+      "description": "门店浅色主题画布"
+    },
+    {
+      "sourcePath": "color.theme.store.text",
+      "name": "Theme/store/text",
+      "collection": "Theme",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-theme-store-text)",
+      "value": "#1d1d1f",
+      "modes": {
+        "Value": "#1d1d1f"
+      },
+      "description": "门店浅色主题主文字"
+    },
+    {
+      "sourcePath": "color.theme.store.muted",
+      "name": "Theme/store/muted",
+      "collection": "Theme",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-theme-store-muted)",
+      "value": "#6e6e73",
+      "modes": {
+        "Value": "#6e6e73"
+      },
+      "description": "门店浅色主题辅助文字"
+    },
+    {
+      "sourcePath": "color.theme.store.surface",
+      "name": "Theme/store/surface",
+      "collection": "Theme",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-theme-store-surface)",
+      "value": "#ffffff",
+      "modes": {
+        "Value": "#ffffff"
+      },
+      "description": "门店浅色主题卡片"
+    },
+    {
+      "sourcePath": "color.theme.store.border",
+      "name": "Theme/store/border",
+      "collection": "Theme",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-theme-store-border)",
+      "value": "#e8e8ed",
+      "modes": {
+        "Value": "#e8e8ed"
+      },
+      "description": "门店浅色主题边框"
+    },
+    {
+      "sourcePath": "color.theme.store.action",
+      "name": "Theme/store/action",
+      "collection": "Theme",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-theme-store-action)",
+      "value": "#0071e3",
+      "modes": {
+        "Value": "#0071e3"
+      },
+      "description": "门店浅色主题主行动"
+    },
+    {
+      "sourcePath": "color.theme.store.link",
+      "name": "Theme/store/link",
+      "collection": "Theme",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-theme-store-link)",
+      "value": "#0066cc",
+      "modes": {
+        "Value": "#0066cc"
+      },
+      "description": "门店浅色主题链接"
+    },
+    {
+      "sourcePath": "color.theme.service.canvas",
+      "name": "Theme/service/canvas",
+      "collection": "Theme",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-theme-service-canvas)",
+      "value": "#050505",
+      "modes": {
+        "Value": "#050505"
+      },
+      "description": "服务中心深色画布"
+    },
+    {
+      "sourcePath": "color.theme.service.hero",
+      "name": "Theme/service/hero",
+      "collection": "Theme",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-theme-service-hero)",
+      "value": "#20262a",
+      "modes": {
+        "Value": "#20262a"
+      },
+      "description": "服务中心 Hero 氛围层"
+    },
+    {
+      "sourcePath": "color.theme.service.rail",
+      "name": "Theme/service/rail",
+      "collection": "Theme",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-theme-service-rail)",
+      "value": "#101010",
+      "modes": {
+        "Value": "#101010"
+      },
+      "description": "服务中心导航与收束表面"
+    },
+    {
+      "sourcePath": "color.theme.service.surface",
+      "name": "Theme/service/surface",
+      "collection": "Theme",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-theme-service-surface)",
+      "value": "#151515",
+      "modes": {
+        "Value": "#151515"
+      },
+      "description": "服务中心默认卡片表面"
+    },
+    {
+      "sourcePath": "color.theme.service.surface-hover",
+      "name": "Theme/service/surface-hover",
+      "collection": "Theme",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-theme-service-surface-hover)",
+      "value": "#1d1d1f",
+      "modes": {
+        "Value": "#1d1d1f"
+      },
+      "description": "服务中心悬停表面"
+    },
+    {
+      "sourcePath": "color.theme.service.category-hover",
+      "name": "Theme/service/category-hover",
+      "collection": "Theme",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-theme-service-category-hover)",
+      "value": "#161616",
+      "modes": {
+        "Value": "#161616"
+      },
+      "description": "服务分类悬停表面"
+    },
+    {
+      "sourcePath": "color.theme.service.search",
+      "name": "Theme/service/search",
+      "collection": "Theme",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-theme-service-search)",
+      "value": "#141416",
+      "modes": {
+        "Value": "#141416"
+      },
+      "description": "服务搜索输入表面"
+    },
+    {
+      "sourcePath": "color.theme.service.contact",
+      "name": "Theme/service/contact",
+      "collection": "Theme",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-theme-service-contact)",
+      "value": "#000000",
+      "modes": {
+        "Value": "#000000"
+      },
+      "description": "服务联系区表面"
+    },
+    {
+      "sourcePath": "color.theme.service.border-subtle",
+      "name": "Theme/service/border-subtle",
+      "collection": "Theme",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-theme-service-border-subtle)",
+      "value": "#1c1c1f",
+      "modes": {
+        "Value": "#1c1c1f"
+      },
+      "description": "服务中心弱分隔线"
+    },
+    {
+      "sourcePath": "color.theme.service.border",
+      "name": "Theme/service/border",
+      "collection": "Theme",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-theme-service-border)",
+      "value": "#262629",
+      "modes": {
+        "Value": "#262629"
+      },
+      "description": "服务中心默认边框"
+    },
+    {
+      "sourcePath": "color.theme.service.divider",
+      "name": "Theme/service/divider",
+      "collection": "Theme",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-theme-service-divider)",
+      "value": "#1f1f22",
+      "modes": {
+        "Value": "#1f1f22"
+      },
+      "description": "服务分类分隔线"
+    },
+    {
+      "sourcePath": "color.theme.service.divider-strong",
+      "name": "Theme/service/divider-strong",
+      "collection": "Theme",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-theme-service-divider-strong)",
+      "value": "#2a2a2d",
+      "modes": {
+        "Value": "#2a2a2d"
+      },
+      "description": "服务联系区分隔线"
+    },
+    {
+      "sourcePath": "color.theme.service.control-border",
+      "name": "Theme/service/control-border",
+      "collection": "Theme",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-theme-service-control-border)",
+      "value": "#3a3a3d",
+      "modes": {
+        "Value": "#3a3a3d"
+      },
+      "description": "服务中心次级控件边框"
+    },
+    {
+      "sourcePath": "color.theme.service.control",
+      "name": "Theme/service/control",
+      "collection": "Theme",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-theme-service-control)",
+      "value": "#4a4a4f",
+      "modes": {
+        "Value": "#4a4a4f"
+      },
+      "description": "服务中心开关边框"
+    },
+    {
+      "sourcePath": "color.theme.service.text-primary",
+      "name": "Theme/service/text-primary",
+      "collection": "Theme",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-theme-service-text-primary)",
+      "value": "#ffffff",
+      "modes": {
+        "Value": "#ffffff"
+      },
+      "description": "服务中心高优先级文字"
+    },
+    {
+      "sourcePath": "color.theme.service.text-secondary",
+      "name": "Theme/service/text-secondary",
+      "collection": "Theme",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-theme-service-text-secondary)",
+      "value": "#f5f5f7",
+      "modes": {
+        "Value": "#f5f5f7"
+      },
+      "description": "服务中心正文强调文字"
+    },
+    {
+      "sourcePath": "color.theme.service.text-body",
+      "name": "Theme/service/text-body",
+      "collection": "Theme",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-theme-service-text-body)",
+      "value": "#d1d1d6",
+      "modes": {
+        "Value": "#d1d1d6"
+      },
+      "description": "服务中心正文文字"
+    },
+    {
+      "sourcePath": "color.theme.service.text-muted",
+      "name": "Theme/service/text-muted",
+      "collection": "Theme",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-theme-service-text-muted)",
+      "value": "#a1a1aa",
+      "modes": {
+        "Value": "#a1a1aa"
+      },
+      "description": "服务中心辅助文字"
+    },
+    {
+      "sourcePath": "color.theme.service.text-subtle",
+      "name": "Theme/service/text-subtle",
+      "collection": "Theme",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-theme-service-text-subtle)",
+      "value": "#8e8e93",
+      "modes": {
+        "Value": "#8e8e93"
+      },
+      "description": "服务中心弱化文字"
+    },
+    {
+      "sourcePath": "color.theme.service.text-category",
+      "name": "Theme/service/text-category",
+      "collection": "Theme",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-theme-service-text-category)",
+      "value": "#9b9ba1",
+      "modes": {
+        "Value": "#9b9ba1"
+      },
+      "description": "服务分类辅助文字"
+    },
+    {
+      "sourcePath": "color.theme.service.text-legal",
+      "name": "Theme/service/text-legal",
+      "collection": "Theme",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-theme-service-text-legal)",
+      "value": "#c7c7cc",
+      "modes": {
+        "Value": "#c7c7cc"
+      },
+      "description": "服务条款正文文字"
+    },
+    {
+      "sourcePath": "color.theme.service.spark",
+      "name": "Theme/service/spark",
+      "collection": "Theme",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-theme-service-spark)",
+      "value": "#38bdf8",
+      "modes": {
+        "Value": "#38bdf8"
+      },
+      "description": "服务中心冷色氛围光"
+    },
+    {
+      "sourcePath": "color.theme.service.focus-glow",
+      "name": "Theme/service/focus-glow",
+      "collection": "Theme",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-theme-service-focus-glow)",
+      "value": "#14b8a6",
+      "modes": {
+        "Value": "#14b8a6"
+      },
+      "description": "服务中心搜索聚焦氛围光"
+    },
+    {
+      "sourcePath": "color.theme.service.print-canvas",
+      "name": "Theme/service/print-canvas",
+      "collection": "Theme",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-theme-service-print-canvas)",
+      "value": "#ffffff",
+      "modes": {
+        "Value": "#ffffff"
+      },
+      "description": "服务中心打印画布"
+    },
+    {
+      "sourcePath": "color.theme.service.print-text",
+      "name": "Theme/service/print-text",
+      "collection": "Theme",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-theme-service-print-text)",
+      "value": "#111827",
+      "modes": {
+        "Value": "#111827"
+      },
+      "description": "服务中心打印正文文字"
+    },
+    {
+      "sourcePath": "color.theme.service.print-border",
+      "name": "Theme/service/print-border",
+      "collection": "Theme",
+      "type": "COLOR",
+      "scopes": [],
+      "codeSyntax": "var(--pc-color-theme-service-print-border)",
+      "value": "#d1d5db",
+      "modes": {
+        "Value": "#d1d5db"
+      },
+      "description": "服务中心打印边框"
+    },
+    {
+      "sourcePath": "space.0",
+      "name": "Layout/space/0",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [
+        "GAP"
+      ],
+      "codeSyntax": "var(--pc-space-0)",
+      "value": 0,
+      "modes": {
+        "Value": 0
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "space.1",
+      "name": "Layout/space/1",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [
+        "GAP"
+      ],
+      "codeSyntax": "var(--pc-space-1)",
+      "value": 4,
+      "modes": {
+        "Value": 4
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "space.2",
+      "name": "Layout/space/2",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [
+        "GAP"
+      ],
+      "codeSyntax": "var(--pc-space-2)",
+      "value": 8,
+      "modes": {
+        "Value": 8
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "space.3",
+      "name": "Layout/space/3",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [
+        "GAP"
+      ],
+      "codeSyntax": "var(--pc-space-3)",
+      "value": 12,
+      "modes": {
+        "Value": 12
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "space.4",
+      "name": "Layout/space/4",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [
+        "GAP"
+      ],
+      "codeSyntax": "var(--pc-space-4)",
+      "value": 16,
+      "modes": {
+        "Value": 16
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "space.5",
+      "name": "Layout/space/5",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [
+        "GAP"
+      ],
+      "codeSyntax": "var(--pc-space-5)",
+      "value": 20,
+      "modes": {
+        "Value": 20
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "space.6",
+      "name": "Layout/space/6",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [
+        "GAP"
+      ],
+      "codeSyntax": "var(--pc-space-6)",
+      "value": 24,
+      "modes": {
+        "Value": 24
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "space.8",
+      "name": "Layout/space/8",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [
+        "GAP"
+      ],
+      "codeSyntax": "var(--pc-space-8)",
+      "value": 32,
+      "modes": {
+        "Value": 32
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "space.10",
+      "name": "Layout/space/10",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [
+        "GAP"
+      ],
+      "codeSyntax": "var(--pc-space-10)",
+      "value": 40,
+      "modes": {
+        "Value": 40
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "space.12",
+      "name": "Layout/space/12",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [
+        "GAP"
+      ],
+      "codeSyntax": "var(--pc-space-12)",
+      "value": 48,
+      "modes": {
+        "Value": 48
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "space.16",
+      "name": "Layout/space/16",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [
+        "GAP"
+      ],
+      "codeSyntax": "var(--pc-space-16)",
+      "value": 64,
+      "modes": {
+        "Value": 64
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "space.20",
+      "name": "Layout/space/20",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [
+        "GAP"
+      ],
+      "codeSyntax": "var(--pc-space-20)",
+      "value": 80,
+      "modes": {
+        "Value": 80
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "space.24",
+      "name": "Layout/space/24",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [
+        "GAP"
+      ],
+      "codeSyntax": "var(--pc-space-24)",
+      "value": 96,
+      "modes": {
+        "Value": 96
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "size.control.sm",
+      "name": "Layout/size/control/sm",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": "var(--pc-size-control-sm)",
+      "value": 32,
+      "modes": {
+        "Value": 32
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "size.control.md",
+      "name": "Layout/size/control/md",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": "var(--pc-size-control-md)",
+      "value": 40,
+      "modes": {
+        "Value": 40
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "size.control.lg",
+      "name": "Layout/size/control/lg",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": "var(--pc-size-control-lg)",
+      "value": 48,
+      "modes": {
+        "Value": 48
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "size.control.touch",
+      "name": "Layout/size/control/touch",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": "var(--pc-size-control-touch)",
+      "value": 44,
+      "modes": {
+        "Value": 44
+      },
+      "description": "最小触控目标"
+    },
+    {
+      "sourcePath": "size.content.sm",
+      "name": "Layout/size/content/sm",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": "var(--pc-size-content-sm)",
+      "value": 640,
+      "modes": {
+        "Value": 640
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "size.content.md",
+      "name": "Layout/size/content/md",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": "var(--pc-size-content-md)",
+      "value": 1024,
+      "modes": {
+        "Value": 1024
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "size.content.lg",
+      "name": "Layout/size/content/lg",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": "var(--pc-size-content-lg)",
+      "value": 1280,
+      "modes": {
+        "Value": 1280
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "layout.commerce.max",
+      "name": "Layout/layout/commerce/max",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [],
+      "codeSyntax": "var(--pc-layout-commerce-max)",
+      "value": 1280,
+      "modes": {
+        "Value": 1280
+      },
+      "description": "商城内容区最大宽度"
+    },
+    {
+      "sourcePath": "layout.workbench.nav",
+      "name": "Layout/layout/workbench/nav",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [],
+      "codeSyntax": "var(--pc-layout-workbench-nav)",
+      "value": 224,
+      "modes": {
+        "Value": 224
+      },
+      "description": "工作台左侧导航宽度"
+    },
+    {
+      "sourcePath": "layout.workbench.inspector",
+      "name": "Layout/layout/workbench/inspector",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [],
+      "codeSyntax": "var(--pc-layout-workbench-inspector)",
+      "value": 320,
+      "modes": {
+        "Value": 320
+      },
+      "description": "工作台右侧检查器宽度"
+    },
+    {
+      "sourcePath": "layout.workbench.gap",
+      "name": "Layout/layout/workbench/gap",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [],
+      "codeSyntax": "var(--pc-layout-workbench-gap)",
+      "value": 16,
+      "modes": {
+        "Value": 16
+      },
+      "description": "工作台三栏间距"
+    },
+    {
+      "sourcePath": "layout.workbench.canvas-min",
+      "name": "Layout/layout/workbench/canvas-min",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [],
+      "codeSyntax": "var(--pc-layout-workbench-canvas-min)",
+      "value": 448,
+      "modes": {
+        "Value": 448
+      },
+      "description": "工作台画布最小宽度"
+    },
+    {
+      "sourcePath": "density.comfortable.gap",
+      "name": "Layout/density/comfortable/gap",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [],
+      "codeSyntax": "var(--pc-density-comfortable-gap)",
+      "value": 24,
+      "modes": {
+        "Value": 24
+      },
+      "description": "商城浏览模式的内容间距"
+    },
+    {
+      "sourcePath": "density.comfortable.padding",
+      "name": "Layout/density/comfortable/padding",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [],
+      "codeSyntax": "var(--pc-density-comfortable-padding)",
+      "value": 24,
+      "modes": {
+        "Value": 24
+      },
+      "description": "商城浏览模式的容器内边距"
+    },
+    {
+      "sourcePath": "density.compact.gap",
+      "name": "Layout/density/compact/gap",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [],
+      "codeSyntax": "var(--pc-density-compact-gap)",
+      "value": 12,
+      "modes": {
+        "Value": 12
+      },
+      "description": "配置工作台的紧凑间距"
+    },
+    {
+      "sourcePath": "density.compact.padding",
+      "name": "Layout/density/compact/padding",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [],
+      "codeSyntax": "var(--pc-density-compact-padding)",
+      "value": 12,
+      "modes": {
+        "Value": 12
+      },
+      "description": "配置工作台的紧凑内边距"
+    },
+    {
+      "sourcePath": "radius.none",
+      "name": "Layout/radius/none",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [
+        "CORNER_RADIUS"
+      ],
+      "codeSyntax": "var(--pc-radius-none)",
+      "value": 0,
+      "modes": {
+        "Value": 0
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "radius.sm",
+      "name": "Layout/radius/sm",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [
+        "CORNER_RADIUS"
+      ],
+      "codeSyntax": "var(--pc-radius-sm)",
+      "value": 4,
+      "modes": {
+        "Value": 4
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "radius.md",
+      "name": "Layout/radius/md",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [
+        "CORNER_RADIUS"
+      ],
+      "codeSyntax": "var(--pc-radius-md)",
+      "value": 8,
+      "modes": {
+        "Value": 8
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "radius.lg",
+      "name": "Layout/radius/lg",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [
+        "CORNER_RADIUS"
+      ],
+      "codeSyntax": "var(--pc-radius-lg)",
+      "value": 12,
+      "modes": {
+        "Value": 12
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "radius.xl",
+      "name": "Layout/radius/xl",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [
+        "CORNER_RADIUS"
+      ],
+      "codeSyntax": "var(--pc-radius-xl)",
+      "value": 16,
+      "modes": {
+        "Value": 16
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "radius.full",
+      "name": "Layout/radius/full",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [
+        "CORNER_RADIUS"
+      ],
+      "codeSyntax": "var(--pc-radius-full)",
+      "value": 9999,
+      "modes": {
+        "Value": 9999
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "font.family.sans",
+      "name": "Typography/family/sans",
+      "collection": "Typography",
+      "type": "STRING",
+      "scopes": [
+        "FONT_FAMILY"
+      ],
+      "codeSyntax": "var(--pc-font-family-sans)",
+      "value": "'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      "modes": {
+        "Value": "'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "font.family.mono",
+      "name": "Typography/family/mono",
+      "collection": "Typography",
+      "type": "STRING",
+      "scopes": [
+        "FONT_FAMILY"
+      ],
+      "codeSyntax": "var(--pc-font-family-mono)",
+      "value": "'SFMono-Regular', Consolas, 'Liberation Mono', monospace",
+      "modes": {
+        "Value": "'SFMono-Regular', Consolas, 'Liberation Mono', monospace"
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "font.size.xs",
+      "name": "Typography/size/xs",
+      "collection": "Typography",
+      "type": "FLOAT",
+      "scopes": [
+        "FONT_SIZE"
+      ],
+      "codeSyntax": "var(--pc-font-size-xs)",
+      "value": 12,
+      "modes": {
+        "Value": 12
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "font.size.sm",
+      "name": "Typography/size/sm",
+      "collection": "Typography",
+      "type": "FLOAT",
+      "scopes": [
+        "FONT_SIZE"
+      ],
+      "codeSyntax": "var(--pc-font-size-sm)",
+      "value": 14,
+      "modes": {
+        "Value": 14
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "font.size.md",
+      "name": "Typography/size/md",
+      "collection": "Typography",
+      "type": "FLOAT",
+      "scopes": [
+        "FONT_SIZE"
+      ],
+      "codeSyntax": "var(--pc-font-size-md)",
+      "value": 16,
+      "modes": {
+        "Value": 16
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "font.size.lg",
+      "name": "Typography/size/lg",
+      "collection": "Typography",
+      "type": "FLOAT",
+      "scopes": [
+        "FONT_SIZE"
+      ],
+      "codeSyntax": "var(--pc-font-size-lg)",
+      "value": 18,
+      "modes": {
+        "Value": 18
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "font.size.xl",
+      "name": "Typography/size/xl",
+      "collection": "Typography",
+      "type": "FLOAT",
+      "scopes": [
+        "FONT_SIZE"
+      ],
+      "codeSyntax": "var(--pc-font-size-xl)",
+      "value": 20,
+      "modes": {
+        "Value": 20
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "font.size.2xl",
+      "name": "Typography/size/2xl",
+      "collection": "Typography",
+      "type": "FLOAT",
+      "scopes": [
+        "FONT_SIZE"
+      ],
+      "codeSyntax": "var(--pc-font-size-2xl)",
+      "value": 24,
+      "modes": {
+        "Value": 24
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "font.size.3xl",
+      "name": "Typography/size/3xl",
+      "collection": "Typography",
+      "type": "FLOAT",
+      "scopes": [
+        "FONT_SIZE"
+      ],
+      "codeSyntax": "var(--pc-font-size-3xl)",
+      "value": 30,
+      "modes": {
+        "Value": 30
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "font.size.4xl",
+      "name": "Typography/size/4xl",
+      "collection": "Typography",
+      "type": "FLOAT",
+      "scopes": [
+        "FONT_SIZE"
+      ],
+      "codeSyntax": "var(--pc-font-size-4xl)",
+      "value": 36,
+      "modes": {
+        "Value": 36
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "font.size.display",
+      "name": "Typography/size/display",
+      "collection": "Typography",
+      "type": "FLOAT",
+      "scopes": [
+        "FONT_SIZE"
+      ],
+      "codeSyntax": "var(--pc-font-size-display)",
+      "value": {
+        "unsupported": true,
+        "sourceValue": "clamp(3rem, 7vw, 5.75rem)"
+      },
+      "modes": {
+        "Value": {
+          "unsupported": true,
+          "sourceValue": "clamp(3rem, 7vw, 5.75rem)"
+        }
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "font.lineHeight.tight",
+      "name": "Typography/lineHeight/tight",
+      "collection": "Typography",
+      "type": "FLOAT",
+      "scopes": [
+        "LINE_HEIGHT"
+      ],
+      "codeSyntax": "var(--pc-font-line-height-tight)",
+      "value": 1.15,
+      "modes": {
+        "Value": 1.15
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "font.lineHeight.normal",
+      "name": "Typography/lineHeight/normal",
+      "collection": "Typography",
+      "type": "FLOAT",
+      "scopes": [
+        "LINE_HEIGHT"
+      ],
+      "codeSyntax": "var(--pc-font-line-height-normal)",
+      "value": 1.5,
+      "modes": {
+        "Value": 1.5
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "font.lineHeight.relaxed",
+      "name": "Typography/lineHeight/relaxed",
+      "collection": "Typography",
+      "type": "FLOAT",
+      "scopes": [
+        "LINE_HEIGHT"
+      ],
+      "codeSyntax": "var(--pc-font-line-height-relaxed)",
+      "value": 1.75,
+      "modes": {
+        "Value": 1.75
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "font.weight.regular",
+      "name": "Typography/weight/regular",
+      "collection": "Typography",
+      "type": "FLOAT",
+      "scopes": [
+        "FONT_WEIGHT"
+      ],
+      "codeSyntax": "var(--pc-font-weight-regular)",
+      "value": 400,
+      "modes": {
+        "Value": 400
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "font.weight.medium",
+      "name": "Typography/weight/medium",
+      "collection": "Typography",
+      "type": "FLOAT",
+      "scopes": [
+        "FONT_WEIGHT"
+      ],
+      "codeSyntax": "var(--pc-font-weight-medium)",
+      "value": 500,
+      "modes": {
+        "Value": 500
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "font.weight.semibold",
+      "name": "Typography/weight/semibold",
+      "collection": "Typography",
+      "type": "FLOAT",
+      "scopes": [
+        "FONT_WEIGHT"
+      ],
+      "codeSyntax": "var(--pc-font-weight-semibold)",
+      "value": 600,
+      "modes": {
+        "Value": 600
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "font.weight.bold",
+      "name": "Typography/weight/bold",
+      "collection": "Typography",
+      "type": "FLOAT",
+      "scopes": [
+        "FONT_WEIGHT"
+      ],
+      "codeSyntax": "var(--pc-font-weight-bold)",
+      "value": 700,
+      "modes": {
+        "Value": 700
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "font.weight.black",
+      "name": "Typography/weight/black",
+      "collection": "Typography",
+      "type": "FLOAT",
+      "scopes": [
+        "FONT_WEIGHT"
+      ],
+      "codeSyntax": "var(--pc-font-weight-black)",
+      "value": 900,
+      "modes": {
+        "Value": 900
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "opacity.status",
+      "name": "Layout/opacity/status",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [
+        "OPACITY"
+      ],
+      "codeSyntax": "var(--pc-opacity-status)",
+      "value": 0.42,
+      "modes": {
+        "Value": 0.42
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "opacity.disabled",
+      "name": "Layout/opacity/disabled",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [
+        "OPACITY"
+      ],
+      "codeSyntax": "var(--pc-opacity-disabled)",
+      "value": 0.64,
+      "modes": {
+        "Value": 0.64
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "opacity.muted",
+      "name": "Layout/opacity/muted",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [
+        "OPACITY"
+      ],
+      "codeSyntax": "var(--pc-opacity-muted)",
+      "value": 0.56,
+      "modes": {
+        "Value": 0.56
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "opacity.overlay",
+      "name": "Layout/opacity/overlay",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [
+        "OPACITY"
+      ],
+      "codeSyntax": "var(--pc-opacity-overlay)",
+      "value": 0.74,
+      "modes": {
+        "Value": 0.74
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "motion.duration.fast",
+      "name": "Motion/duration/fast",
+      "collection": "Motion",
+      "type": "FLOAT",
+      "scopes": [],
+      "codeSyntax": "var(--pc-motion-duration-fast)",
+      "value": 120,
+      "modes": {
+        "Value": 120
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "motion.duration.micro",
+      "name": "Motion/duration/micro",
+      "collection": "Motion",
+      "type": "FLOAT",
+      "scopes": [],
+      "codeSyntax": "var(--pc-motion-duration-micro)",
+      "value": 160,
+      "modes": {
+        "Value": 160
+      },
+      "description": "服务中心、导航等高频微交互时长"
+    },
+    {
+      "sourcePath": "motion.duration.normal",
+      "name": "Motion/duration/normal",
+      "collection": "Motion",
+      "type": "FLOAT",
+      "scopes": [],
+      "codeSyntax": "var(--pc-motion-duration-normal)",
+      "value": 200,
+      "modes": {
+        "Value": 200
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "motion.duration.slow",
+      "name": "Motion/duration/slow",
+      "collection": "Motion",
+      "type": "FLOAT",
+      "scopes": [],
+      "codeSyntax": "var(--pc-motion-duration-slow)",
+      "value": 320,
+      "modes": {
+        "Value": 320
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "motion.duration.prominent",
+      "name": "Motion/duration/prominent",
+      "collection": "Motion",
+      "type": "FLOAT",
+      "scopes": [],
+      "codeSyntax": "var(--pc-motion-duration-prominent)",
+      "value": 450,
+      "modes": {
+        "Value": 450
+      },
+      "description": "商品媒体和重点视觉状态过渡时长"
+    },
+    {
+      "sourcePath": "motion.duration.ambient",
+      "name": "Motion/duration/ambient",
+      "collection": "Motion",
+      "type": "FLOAT",
+      "scopes": [],
+      "codeSyntax": "var(--pc-motion-duration-ambient)",
+      "value": 700,
+      "modes": {
+        "Value": 700
+      },
+      "description": "首页氛围层和背景状态过渡时长"
+    },
+    {
+      "sourcePath": "motion.duration.spin",
+      "name": "Motion/duration/spin",
+      "collection": "Motion",
+      "type": "FLOAT",
+      "scopes": [],
+      "codeSyntax": "var(--pc-motion-duration-spin)",
+      "value": 800,
+      "modes": {
+        "Value": 800
+      },
+      "description": "装饰性加载 spinner 周期"
+    },
+    {
+      "sourcePath": "motion.duration.loading",
+      "name": "Motion/duration/loading",
+      "collection": "Motion",
+      "type": "FLOAT",
+      "scopes": [],
+      "codeSyntax": "var(--pc-motion-duration-loading)",
+      "value": 700,
+      "modes": {
+        "Value": 700
+      },
+      "description": "按钮和图标按钮 loading spinner 周期"
+    },
+    {
+      "sourcePath": "motion.duration.shimmer",
+      "name": "Motion/duration/shimmer",
+      "collection": "Motion",
+      "type": "FLOAT",
+      "scopes": [],
+      "codeSyntax": "var(--pc-motion-duration-shimmer)",
+      "value": 1400,
+      "modes": {
+        "Value": 1400
+      },
+      "description": "Skeleton 内容占位 shimmer 周期"
+    },
+    {
+      "sourcePath": "motion.ease.standard",
+      "name": "Motion/ease/standard",
+      "collection": "Motion",
+      "type": "STRING",
+      "scopes": [],
+      "codeSyntax": "var(--pc-motion-ease-standard)",
+      "value": "cubic-bezier(0.2, 0, 0, 1)",
+      "modes": {
+        "Value": "cubic-bezier(0.2, 0, 0, 1)"
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "motion.ease.exit",
+      "name": "Motion/ease/exit",
+      "collection": "Motion",
+      "type": "STRING",
+      "scopes": [],
+      "codeSyntax": "var(--pc-motion-ease-exit)",
+      "value": "cubic-bezier(0.4, 0, 1, 1)",
+      "modes": {
+        "Value": "cubic-bezier(0.4, 0, 1, 1)"
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "motion.ease.linear",
+      "name": "Motion/ease/linear",
+      "collection": "Motion",
+      "type": "STRING",
+      "scopes": [],
+      "codeSyntax": "var(--pc-motion-ease-linear)",
+      "value": "linear",
+      "modes": {
+        "Value": "linear"
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "breakpoint.sm",
+      "name": "Layout/breakpoint/sm",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [],
+      "codeSyntax": "var(--pc-breakpoint-sm)",
+      "value": 640,
+      "modes": {
+        "Value": 640
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "breakpoint.md",
+      "name": "Layout/breakpoint/md",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [],
+      "codeSyntax": "var(--pc-breakpoint-md)",
+      "value": 768,
+      "modes": {
+        "Value": 768
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "breakpoint.lg",
+      "name": "Layout/breakpoint/lg",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [],
+      "codeSyntax": "var(--pc-breakpoint-lg)",
+      "value": 1024,
+      "modes": {
+        "Value": 1024
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "breakpoint.xl",
+      "name": "Layout/breakpoint/xl",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [],
+      "codeSyntax": "var(--pc-breakpoint-xl)",
+      "value": 1280,
+      "modes": {
+        "Value": 1280
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "zIndex.base",
+      "name": "Layout/zIndex/base",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [],
+      "codeSyntax": "var(--pc-z-index-base)",
+      "value": 0,
+      "modes": {
+        "Value": 0
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "zIndex.sticky",
+      "name": "Layout/zIndex/sticky",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [],
+      "codeSyntax": "var(--pc-z-index-sticky)",
+      "value": 40,
+      "modes": {
+        "Value": 40
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "zIndex.navigation",
+      "name": "Layout/zIndex/navigation",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [],
+      "codeSyntax": "var(--pc-z-index-navigation)",
+      "value": 50,
+      "modes": {
+        "Value": 50
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "zIndex.overlay",
+      "name": "Layout/zIndex/overlay",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [],
+      "codeSyntax": "var(--pc-z-index-overlay)",
+      "value": 900,
+      "modes": {
+        "Value": 900
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "zIndex.modal",
+      "name": "Layout/zIndex/modal",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [],
+      "codeSyntax": "var(--pc-z-index-modal)",
+      "value": 1000,
+      "modes": {
+        "Value": 1000
+      },
+      "description": ""
+    },
+    {
+      "sourcePath": "zIndex.toast",
+      "name": "Layout/zIndex/toast",
+      "collection": "Layout",
+      "type": "FLOAT",
+      "scopes": [],
+      "codeSyntax": "var(--pc-z-index-toast)",
+      "value": 1100,
+      "modes": {
+        "Value": 1100
+      },
+      "description": ""
+    }
+  ],
+  "effects": [
+    {
+      "sourcePath": "shadow.sm",
+      "name": "Effects/sm",
+      "cssValue": "0 1px 2px rgb(0 0 0 / 0.24)",
+      "description": ""
+    },
+    {
+      "sourcePath": "shadow.md",
+      "name": "Effects/md",
+      "cssValue": "0 10px 30px rgb(0 0 0 / 0.28)",
+      "description": ""
+    },
+    {
+      "sourcePath": "shadow.lg",
+      "name": "Effects/lg",
+      "cssValue": "0 24px 64px rgb(0 0 0 / 0.4)",
+      "description": ""
+    },
+    {
+      "sourcePath": "shadow.focus",
+      "name": "Effects/focus",
+      "cssValue": "0 0 0 3px rgb(134 239 172 / 0.32)",
+      "description": ""
+    }
+  ],
+  "components": [
+    {
+      "name": "Button",
+      "figmaName": "Components/Button",
+      "source": "src/design-system/components/DsButton.vue",
+      "framework": "Vue",
+      "codeConnect": {
+        "label": "Vue",
+        "source": "src/design-system/components/DsButton.vue"
+      }
+    },
+    {
+      "name": "IconButton",
+      "figmaName": "Components/IconButton",
+      "source": "src/design-system/components/DsIconButton.vue",
+      "framework": "Vue",
+      "codeConnect": {
+        "label": "Vue",
+        "source": "src/design-system/components/DsIconButton.vue"
+      }
+    },
+    {
+      "name": "Menu",
+      "figmaName": "Components/Menu",
+      "source": "src/design-system/components/DsMenu.vue",
+      "framework": "Vue",
+      "codeConnect": {
+        "label": "Vue",
+        "source": "src/design-system/components/DsMenu.vue"
+      }
+    },
+    {
+      "name": "SearchField",
+      "figmaName": "Components/SearchField",
+      "source": "src/design-system/components/DsSearchField.vue",
+      "framework": "Vue",
+      "codeConnect": {
+        "label": "Vue",
+        "source": "src/design-system/components/DsSearchField.vue"
+      }
+    },
+    {
+      "name": "Field",
+      "figmaName": "Components/Field",
+      "source": "src/design-system/components/DsField.vue",
+      "framework": "Vue",
+      "codeConnect": {
+        "label": "Vue",
+        "source": "src/design-system/components/DsField.vue"
+      }
+    },
+    {
+      "name": "Toggle",
+      "figmaName": "Components/Toggle",
+      "source": "src/design-system/components/DsToggle.vue",
+      "framework": "Vue",
+      "codeConnect": {
+        "label": "Vue",
+        "source": "src/design-system/components/DsToggle.vue"
+      }
+    },
+    {
+      "name": "Checkbox",
+      "figmaName": "Components/Checkbox",
+      "source": "src/design-system/components/DsCheckbox.vue",
+      "framework": "Vue",
+      "codeConnect": {
+        "label": "Vue",
+        "source": "src/design-system/components/DsCheckbox.vue"
+      }
+    },
+    {
+      "name": "Badge",
+      "figmaName": "Components/Badge",
+      "source": "src/design-system/components/DsBadge.vue",
+      "framework": "Vue",
+      "codeConnect": {
+        "label": "Vue",
+        "source": "src/design-system/components/DsBadge.vue"
+      }
+    },
+    {
+      "name": "Alert",
+      "figmaName": "Components/Alert",
+      "source": "src/design-system/components/DsAlert.vue",
+      "framework": "Vue",
+      "codeConnect": {
+        "label": "Vue",
+        "source": "src/design-system/components/DsAlert.vue"
+      }
+    },
+    {
+      "name": "Toast",
+      "figmaName": "Components/Toast",
+      "source": "src/design-system/components/DsToast.vue",
+      "framework": "Vue",
+      "codeConnect": {
+        "label": "Vue",
+        "source": "src/design-system/components/DsToast.vue"
+      }
+    },
+    {
+      "name": "Skeleton",
+      "figmaName": "Components/Skeleton",
+      "source": "src/design-system/components/DsSkeleton.vue",
+      "framework": "Vue",
+      "codeConnect": {
+        "label": "Vue",
+        "source": "src/design-system/components/DsSkeleton.vue"
+      }
+    },
+    {
+      "name": "AsyncState",
+      "figmaName": "Components/AsyncState",
+      "source": "src/design-system/components/DsAsyncState.vue",
+      "framework": "Vue",
+      "codeConnect": {
+        "label": "Vue",
+        "source": "src/design-system/components/DsAsyncState.vue"
+      }
+    },
+    {
+      "name": "EmptyState",
+      "figmaName": "Components/EmptyState",
+      "source": "src/design-system/components/DsEmptyState.vue",
+      "framework": "Vue",
+      "codeConnect": {
+        "label": "Vue",
+        "source": "src/design-system/components/DsEmptyState.vue"
+      }
+    },
+    {
+      "name": "Card",
+      "figmaName": "Components/Card",
+      "source": "src/design-system/components/DsCard.vue",
+      "framework": "Vue",
+      "codeConnect": {
+        "label": "Vue",
+        "source": "src/design-system/components/DsCard.vue"
+      }
+    },
+    {
+      "name": "Dialog",
+      "figmaName": "Components/Dialog",
+      "source": "src/design-system/components/DsDialog.vue",
+      "framework": "Vue",
+      "codeConnect": {
+        "label": "Vue",
+        "source": "src/design-system/components/DsDialog.vue"
+      }
+    },
+    {
+      "name": "Tabs",
+      "figmaName": "Components/Tabs",
+      "source": "src/design-system/components/DsTabs.vue",
+      "framework": "Vue",
+      "codeConnect": {
+        "label": "Vue",
+        "source": "src/design-system/components/DsTabs.vue"
+      }
+    },
+    {
+      "name": "ChoiceCard",
+      "figmaName": "Components/ChoiceCard",
+      "source": "src/design-system/components/DsChoiceCard.vue",
+      "framework": "Vue",
+      "codeConnect": {
+        "label": "Vue",
+        "source": "src/design-system/components/DsChoiceCard.vue"
+      }
+    },
+    {
+      "name": "ProductCard",
+      "figmaName": "Components/ProductCard",
+      "source": "src/design-system/components/DsProductCard.vue",
+      "framework": "Vue",
+      "codeConnect": {
+        "label": "Vue",
+        "source": "src/design-system/components/DsProductCard.vue"
+      }
+    },
+    {
+      "name": "CartLineItem",
+      "figmaName": "Components/CartLineItem",
+      "source": "src/design-system/components/DsCartLineItem.vue",
+      "framework": "Vue",
+      "codeConnect": {
+        "label": "Vue",
+        "source": "src/design-system/components/DsCartLineItem.vue"
+      }
+    },
+    {
+      "name": "OrderSummary",
+      "figmaName": "Components/OrderSummary",
+      "source": "src/design-system/components/DsOrderSummary.vue",
+      "framework": "Vue",
+      "codeConnect": {
+        "label": "Vue",
+        "source": "src/design-system/components/DsOrderSummary.vue"
+      }
+    },
+    {
+      "name": "PriceSummary",
+      "figmaName": "Components/PriceSummary",
+      "source": "src/design-system/components/DsPriceSummary.vue",
+      "framework": "Vue",
+      "codeConnect": {
+        "label": "Vue",
+        "source": "src/design-system/components/DsPriceSummary.vue"
+      }
+    },
+    {
+      "name": "DiyPartPicker",
+      "figmaName": "Components/DiyPartPicker",
+      "source": "src/design-system/components/DsDiyPartPicker.vue",
+      "framework": "Vue",
+      "codeConnect": {
+        "label": "Vue",
+        "source": "src/design-system/components/DsDiyPartPicker.vue"
+      }
+    },
+    {
+      "name": "StepIndicator",
+      "figmaName": "Components/StepIndicator",
+      "source": "src/design-system/components/DsStepIndicator.vue",
+      "framework": "Vue",
+      "codeConnect": {
+        "label": "Vue",
+        "source": "src/design-system/components/DsStepIndicator.vue"
+      }
+    },
+    {
+      "name": "Pagination",
+      "figmaName": "Components/Pagination",
+      "source": "src/design-system/components/DsPagination.vue",
+      "framework": "Vue",
+      "codeConnect": {
+        "label": "Vue",
+        "source": "src/design-system/components/DsPagination.vue"
+      }
+    },
+    {
+      "name": "OrderTimeline",
+      "figmaName": "Components/OrderTimeline",
+      "source": "src/design-system/components/DsOrderTimeline.vue",
+      "framework": "Vue",
+      "codeConnect": {
+        "label": "Vue",
+        "source": "src/design-system/components/DsOrderTimeline.vue"
+      }
+    },
+    {
+      "name": "DataTable",
+      "figmaName": "Components/DataTable",
+      "source": "src/design-system/components/DsDataTable.vue",
+      "framework": "Vue",
+      "codeConnect": {
+        "label": "Vue",
+        "source": "src/design-system/components/DsDataTable.vue"
+      }
+    },
+    {
+      "name": "CompatibilityStatus",
+      "figmaName": "Components/CompatibilityStatus",
+      "source": "src/design-system/components/DsCompatibilityStatus.vue",
+      "framework": "Vue",
+      "codeConnect": {
+        "label": "Vue",
+        "source": "src/design-system/components/DsCompatibilityStatus.vue"
+      }
+    },
+    {
+      "name": "OrderSuccess",
+      "figmaName": "Components/OrderSuccess",
+      "source": "src/design-system/components/DsOrderSuccess.vue",
+      "framework": "Vue",
+      "codeConnect": {
+        "label": "Vue",
+        "source": "src/design-system/components/DsOrderSuccess.vue"
+      }
+    },
+    {
+      "name": "ContrastToggle",
+      "figmaName": "Components/ContrastToggle",
+      "source": "src/design-system/components/DsContrastToggle.vue",
+      "framework": "Vue",
+      "codeConnect": {
+        "label": "Vue",
+        "source": "src/design-system/components/DsContrastToggle.vue"
+      }
+    },
+    {
+      "name": "MediaCategoryCard",
+      "figmaName": "Components/MediaCategoryCard",
+      "source": "src/design-system/components/commerce/DsMediaCategoryCard.vue",
+      "framework": "Vue",
+      "codeConnect": {
+        "label": "Vue",
+        "source": "src/design-system/components/commerce/DsMediaCategoryCard.vue"
+      }
+    },
+    {
+      "name": "CommerceNav",
+      "figmaName": "Components/CommerceNav",
+      "source": "src/design-system/components/commerce/DsCommerceNav.vue",
+      "framework": "Vue",
+      "codeConnect": {
+        "label": "Vue",
+        "source": "src/design-system/components/commerce/DsCommerceNav.vue"
+      }
+    },
+    {
+      "name": "WorkbenchShell",
+      "figmaName": "Components/WorkbenchShell",
+      "source": "src/design-system/components/workbench/DsWorkbenchShell.vue",
+      "framework": "Vue",
+      "codeConnect": {
+        "label": "Vue",
+        "source": "src/design-system/components/workbench/DsWorkbenchShell.vue"
+      }
+    },
+    {
+      "name": "PartsInspector",
+      "figmaName": "Components/PartsInspector",
+      "source": "src/design-system/components/workbench/DsPartsInspector.vue",
+      "framework": "Vue",
+      "codeConnect": {
+        "label": "Vue",
+        "source": "src/design-system/components/workbench/DsPartsInspector.vue"
+      }
+    },
+    {
+      "name": "BuildSummary",
+      "figmaName": "Components/BuildSummary",
+      "source": "src/design-system/components/workbench/DsBuildSummary.vue",
+      "framework": "Vue",
+      "codeConnect": {
+        "label": "Vue",
+        "source": "src/design-system/components/workbench/DsBuildSummary.vue"
+      }
+    },
+    {
+      "name": "PriceProvenance",
+      "figmaName": "Components/PriceProvenance",
+      "source": "src/components/PriceProvenance.vue",
+      "framework": "Vue",
+      "codeConnect": {
+        "label": "Vue",
+        "source": "src/components/PriceProvenance.vue"
+      }
+    }
+  ],
+  "qa": {
+    "requiredBeforeSync": [
+      "get_libraries(fileKey) before search_design_system",
+      "search_design_system for Button, Card, Field and ProductCard before creating components",
+      "validate scopes and WEB code syntax on every variable",
+      "get_metadata and get_screenshot after every Figma component",
+      "add_code_connect_map or send_code_connect_mappings after component validation"
+    ]
+  }
+}

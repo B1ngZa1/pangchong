@@ -5,6 +5,7 @@ from .user import User, UserAddress
 from .product import Product, Category
 from .cart import CartItem
 from .order import Order, OrderItem
+from .payment_event import PaymentEvent
 
 __all__ = [
     "User",
@@ -14,4 +15,5 @@ __all__ = [
     "CartItem",
     "Order",
     "OrderItem",
+    "PaymentEvent",
 ]

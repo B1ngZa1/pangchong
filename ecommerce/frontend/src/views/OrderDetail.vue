@@ -1,53 +1,62 @@
 <template>
   <div class="min-h-screen bg-dark-950 py-8">
     <div class="max-w-4xl mx-auto px-4">
-      <div v-if="loading" class="flex justify-center py-20">
-        <div class="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary-500"></div>
-      </div>
+      <DsAsyncState
+        v-if="loadState !== 'success'"
+        :state="loadState"
+        loading-label="正在加载订单详情"
+        empty-title="订单不存在"
+        empty-description="订单可能已被删除，或当前账号没有访问权限。"
+        error-title="订单详情加载失败"
+        :error-description="loadError"
+        @retry="fetchOrder"
+      >
+        <template #action>
+          <DsButton v-if="loadState === 'error'" size="sm" :loading="loadState === 'loading'" @click="fetchOrder">重新加载订单</DsButton>
+          <DsButton variant="secondary" size="sm" type="button" @click="router.push('/orders')">返回订单列表</DsButton>
+        </template>
+      </DsAsyncState>
 
-      <div v-else-if="!order" class="text-center py-20">
-        <div class="text-7xl mb-6 opacity-30">❓</div>
-        <p class="text-dark-400 text-xl mb-2">订单不存在</p>
-        <router-link to="/orders" class="text-primary-500 hover:underline text-sm">返回订单列表</router-link>
-      </div>
-
-      <div v-else>
-        <div class="flex items-center justify-between mb-8">
-          <div>
+      <div v-else-if="order">
+        <div class="flex flex-wrap items-start justify-between gap-4 mb-8">
+          <div class="min-w-0">
             <h1 class="text-3xl font-bold">订单详情</h1>
-            <p class="text-dark-500 text-sm mt-1">订单号：{{ order.order_no }}</p>
+            <p class="text-dark-400 text-sm mt-2 break-all">订单号：{{ order.order_no }}</p>
           </div>
           <router-link to="/orders" class="text-primary-500 hover:underline text-sm">
             <i class="fas fa-arrow-left mr-1"></i>返回订单列表
           </router-link>
         </div>
 
+        <DsAlert
+          v-if="feedback"
+          class="mb-6"
+          :title="feedback.title"
+          :description="feedback.description"
+          :tone="feedback.tone"
+          :role="feedback.tone === 'danger' ? 'alert' : 'status'"
+          dismissible
+          @dismiss="feedback = null"
+        />
+
         <!-- 订单状态 -->
         <div class="bg-dark-900 rounded-2xl border border-dark-800 p-6 mb-6">
-          <div class="flex items-center justify-between">
+          <div class="flex flex-wrap items-center justify-between gap-4">
             <div>
               <span class="text-xs px-3 py-1 rounded-full font-medium" :class="statusClass(order.status)">
                 {{ statusText(order.status) }}
               </span>
               <p class="text-dark-500 text-sm mt-2">{{ formatDate(order.created_at) }}</p>
             </div>
-            <div v-if="order.status === 'pending'" class="flex items-center gap-3">
-              <p class="text-yellow-400 text-sm font-medium">请在30分钟内完成支付</p>
-              <button @click="startPayment" :disabled="paying"
-                class="px-5 py-2 rounded-lg text-sm bg-primary-500 text-dark-950 font-semibold hover:bg-primary-400 disabled:opacity-50">
-                {{ paying ? '支付创建中...' : '去支付' }}
-              </button>
-              <button v-if="isSandboxPaymentPath" @click="sandboxMockPay" :disabled="paying"
-                class="px-5 py-2 rounded-lg text-sm bg-dark-800 text-dark-300 hover:bg-dark-700 disabled:opacity-50">
-                沙箱模拟支付
-              </button>
+            <div v-if="order.status === 'pending'" class="flex flex-wrap items-center gap-3">
+              <p class="text-yellow-400 text-sm font-medium w-full">完成支付后开始备货</p>
+              <DsButton :loading="paying" :disabled="cancelling" type="button" @click="startPayment">去支付</DsButton>
+              <DsButton v-if="isSandboxPaymentPath" variant="secondary" :loading="paying" type="button" @click="sandboxMockPay">沙箱模拟支付</DsButton>
             </div>
             <div v-if="order.status === 'pending'" class="mt-2">
-              <button @click="cancelOrder" :disabled="cancelling"
-                class="text-xs text-dark-500 hover:text-red-400 transition-colors disabled:opacity-50">
-                {{ cancelling ? '取消中...' : '取消订单' }}
-              </button>
+              <DsButton variant="ghost" size="sm" :loading="cancelling" :disabled="paying" type="button" @click="cancelOrder">取消订单</DsButton>
             </div>
+            <DsButton v-if="order.status === 'shipped'" :loading="completing" @click="completeDialogOpen = true">确认收货</DsButton>
           </div>
 
           <!-- 物流信息 -->
@@ -57,6 +66,11 @@
               {{ order.shipping_company }} · {{ order.tracking_number }}
             </p>
           </div>
+        </div>
+
+        <!-- 订单进度 -->
+        <div class="bg-dark-900 rounded-2xl border border-dark-800 p-6 mb-6">
+          <DsOrderTimeline :events="timelineEvents" :current-label="timelineCurrentLabel" />
         </div>
 
         <!-- 收货信息 -->
@@ -118,24 +132,39 @@
             </div>
             <hr class="border-dark-700 my-3">
             <div class="flex justify-between text-xl font-bold">
-              <span>实付金额</span>
+              <span>{{ order.status === 'pending' ? '应付金额' : '订单金额' }}</span>
               <span class="text-primary-500">¥{{ Number(order.final_amount).toLocaleString() }}</span>
             </div>
           </div>
         </div>
+
+        <DsDialog v-model:open="cancelDialogOpen" title="确认取消订单？" description="取消后当前订单将停止处理，此操作不可撤销。">
+          <p class="text-sm text-dark-300">如果商品已经进入装机或发货阶段，请先联系客户服务。</p>
+          <template #footer>
+            <DsButton variant="ghost" type="button" @click="cancelDialogOpen = false">暂不取消</DsButton>
+            <DsButton variant="danger" :loading="cancelling" type="button" @click="confirmCancelOrder">确认取消</DsButton>
+          </template>
+        </DsDialog>
+        <DsDialog v-model:open="completeDialogOpen" title="确认已收到商品？" description="请检查商品数量、外观和配件，确认无误后完成收货。">
+          <template #footer>
+            <DsButton variant="ghost" :disabled="completing" @click="completeDialogOpen = false">暂未收到</DsButton>
+            <DsButton :loading="completing" @click="confirmCompleteOrder">确认收货</DsButton>
+          </template>
+        </DsDialog>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed, ref, onMounted } from 'vue'
+import { computed, ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/store/user'
 import { orderApi, paymentApi } from '@/api'
 import { redirectToPayment } from '@/utils/payment'
 import OrderDiySnapshot from '@/components/OrderDiySnapshot.vue'
 import { formatCustomSpecs, formatSpecs, hasCustomSnapshotDisplay, isCustomOrderItem } from '@/utils/orderSpecs'
+import { DsAlert, DsAsyncState, DsButton, DsDialog, DsOrderTimeline } from '@/design-system'
 
 const route = useRoute()
 const router = useRouter()
@@ -150,9 +179,15 @@ function handleImageError(event) {
 }
 
 const order = ref(null)
-const loading = ref(true)
+const loadState = ref('loading')
+const loadError = ref('请检查网络后重试。')
 const paying = ref(false)
 const cancelling = ref(false)
+const cancelDialogOpen = ref(false)
+const completeDialogOpen = ref(false)
+const completing = ref(false)
+let requestId = 0
+const feedback = ref(null)
 const isSandboxPaymentPath = computed(() => route.meta.sandboxPayment === true)
 
 const statusText = (s) => ({ pending: '待支付', paid: '已支付', shipped: '已发货', completed: '已完成', cancelled: '已取消', refunded: '已退款' }[s] || s)
@@ -171,15 +206,56 @@ const displaySpecs = (item) => isCustomItem(item)
   ? formatCustomSpecs(item.product_specs)
   : formatSpecs(item.product_specs)
 
+const timelineCurrentLabel = computed(() => order.value ? statusText(order.value.status) : '')
+const timelineEvents = computed(() => {
+  if (!order.value) return []
+  const currentStatus = order.value.status
+  const stages = [
+    { id: 'created', label: '订单已提交', timestamp: order.value.created_at, description: '订单信息已确认，等待后续履约。' },
+    { id: 'paid', label: '支付成功', timestamp: order.value.paid_at, description: '款项已到账，订单进入备货流程。' },
+    { id: 'shipped', label: '商品已发货', timestamp: order.value.shipped_at, description: order.value.tracking_number ? `${order.value.shipping_company || '物流'} · ${order.value.tracking_number}` : '包裹出库后会在这里显示物流信息。' },
+    { id: 'completed', label: '订单已完成', timestamp: order.value.completed_at, description: '感谢你的购买，欢迎再次探索胖虫硬件。' },
+  ]
+  const statusIndex = { pending: 0, paid: 1, shipped: 2, completed: 3 }
+  if (currentStatus === 'cancelled') {
+    return [
+      { ...stages[0], state: 'complete' },
+      ...(order.value.paid_at ? [{ ...stages[1], state: 'complete' }] : []),
+      { id: 'cancelled', label: '订单已取消', timestamp: order.value.updated_at, description: '订单已停止处理，如有疑问请联系客服。', state: 'cancelled' },
+    ]
+  }
+  if (currentStatus === 'refunded') {
+    return [
+      { ...stages[0], state: 'complete' },
+      { ...stages[1], state: 'complete' },
+      { id: 'refunded', label: '款项已退款', timestamp: order.value.updated_at, description: '退款状态已更新，请留意原支付账户。', state: 'refunded' },
+    ]
+  }
+  const activeIndex = statusIndex[currentStatus] ?? 0
+  return stages.map((stage, index) => ({
+    ...stage,
+    state: index < activeIndex ? 'complete' : index === activeIndex ? 'current' : 'upcoming',
+  }))
+})
+
+function setFeedback(title, description, tone = 'danger') {
+  feedback.value = { title, description, tone }
+}
+
 async function fetchOrder() {
-  loading.value = true
+  const activeRequest = ++requestId
+  loadState.value = 'loading'
+  loadError.value = '请检查网络后重试。'
   try {
-    order.value = await orderApi.getOrder(route.params.id)
+    const data = await orderApi.getOrder(route.params.id)
+    if (activeRequest !== requestId) return
+    order.value = data
+    loadState.value = order.value ? 'success' : 'empty'
   } catch (e) {
-    console.error('获取订单详情失败:', e)
+    if (activeRequest !== requestId) return
     order.value = null
-  } finally {
-    loading.value = false
+    loadError.value = e.displayMessage || e.message || '请检查网络后重试。'
+    loadState.value = e.response?.status === 404 ? 'empty' : 'error'
   }
 }
 
@@ -190,7 +266,8 @@ function resolvePaymentMethod() {
 }
 
 async function startPayment() {
-  if (!order.value) return
+  if (!order.value || paying.value || cancelling.value) return
+  feedback.value = null
   paying.value = true
   try {
     const payment = await paymentApi.createPayment(order.value.id, {
@@ -198,7 +275,7 @@ async function startPayment() {
     })
     redirectToPayment(payment)
   } catch (e) {
-    alert('创建支付失败：' + (e.displayMessage || e.message || '请重试'))
+    setFeedback('创建支付失败', e.displayMessage || e.message || '请重试')
   } finally {
     paying.value = false
   }
@@ -206,12 +283,14 @@ async function startPayment() {
 
 async function sandboxMockPay() {
   if (!order.value || !isSandboxPaymentPath.value) return
+  feedback.value = null
   paying.value = true
   try {
     await paymentApi.sandboxMockPay(order.value.id)
     await fetchOrder()
+    if (loadState.value === 'success') setFeedback('支付状态已更新', '沙箱支付已完成，订单进入备货流程。', 'success')
   } catch (e) {
-    alert('沙箱支付失败：' + (e.displayMessage || e.message || '请重试'))
+    setFeedback('沙箱支付失败', e.displayMessage || e.message || '请重试')
   } finally {
     paying.value = false
   }
@@ -219,17 +298,47 @@ async function sandboxMockPay() {
 
 async function cancelOrder() {
   if (!order.value) return
-  if (!confirm('确定要取消此订单吗？')) return
+  feedback.value = null
+  cancelDialogOpen.value = true
+}
+
+async function confirmCancelOrder() {
+  if (!order.value || cancelling.value || paying.value) return
   cancelling.value = true
   try {
     await orderApi.cancelOrder(order.value.id, { reason: '用户主动取消' })
+    cancelDialogOpen.value = false
     await fetchOrder()
+    if (loadState.value === 'success') setFeedback('订单已取消', '当前订单已停止处理。', 'success')
   } catch (e) {
-    alert('取消失败：' + (e.message || '请重试'))
+    cancelDialogOpen.value = false
+    setFeedback('取消订单失败', e.displayMessage || e.message || '请重试')
   } finally {
     cancelling.value = false
   }
 }
+
+async function confirmCompleteOrder() {
+  if (!order.value || completing.value) return
+  completing.value = true
+  try {
+    order.value = await orderApi.completeOrder(order.value.id)
+    completeDialogOpen.value = false
+    setFeedback('收货已确认', '感谢你的购买，售后服务可在服务中心查看。', 'success')
+  } catch (error) {
+    completeDialogOpen.value = false
+    setFeedback('确认收货失败', error.displayMessage || error.message || '请重试')
+  } finally {
+    completing.value = false
+  }
+}
+
+watch(() => route.params.id, () => {
+  feedback.value = null
+  cancelDialogOpen.value = false
+  completeDialogOpen.value = false
+  if (userStore.isLoggedIn) fetchOrder()
+})
 
 onMounted(() => {
   if (!userStore.isLoggedIn) {

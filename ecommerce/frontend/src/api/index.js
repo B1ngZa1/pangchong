@@ -6,6 +6,9 @@ import router from '@/router'
 const api = axios.create({
   baseURL: '/api',
   timeout: 10000,
+  // The refresh credential is an HttpOnly cookie; keep it attached to the
+  // same-origin API without exposing it to application JavaScript.
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json'
   }
@@ -47,23 +50,17 @@ api.interceptors.response.use(
 
       const userStore = useUserStore()
 
-      // 尝试刷新 token
-      if (userStore.refreshToken) {
-        try {
-          await userStore.refreshAccessToken()
-          // 重新发送原请求
-          originalRequest.headers.Authorization = `Bearer ${userStore.token}`
-          return api(originalRequest)
-        } catch (refreshError) {
-          // 刷新失败：保留游客购物车，只有受保护页面才跳转登录。
-          userStore.clearSession()
-          redirectToLoginForProtectedRoute()
-          return Promise.reject(refreshError)
-        }
-      } else {
-        // 没有 refresh token：清理会话，但不要打断公开页面。
+      // 尝试通过 HttpOnly refresh cookie 获取新的内存 access token。
+      try {
+        await userStore.refreshAccessToken()
+        // 重新发送原请求
+        originalRequest.headers.Authorization = `Bearer ${userStore.token}`
+        return api(originalRequest)
+      } catch (refreshError) {
+        // 刷新失败：保留游客购物车，只有受保护页面才跳转登录。
         userStore.clearSession()
         redirectToLoginForProtectedRoute()
+        return Promise.reject(refreshError)
       }
     }
 
@@ -85,7 +82,8 @@ export const authApi = {
   register: (data) => api.post('/auth/register', data),
   login: (data) => api.post('/auth/login', data),
   // Refresh uses a bare client so its own 401 can never re-enter this interceptor.
-  refreshToken: (data) => axios.post('/api/auth/refresh', data).then(response => response.data),
+  refreshToken: (data) => axios.post('/api/auth/refresh', data || {}, { withCredentials: true }).then(response => response.data),
+  logout: () => api.post('/auth/logout'),
   getProfile: () => api.get('/auth/me'),
   updateProfile: (data) => api.put('/auth/me', data),
   changePassword: (data) => api.post('/auth/change-password', data),
@@ -115,6 +113,7 @@ export const marketApi = {
 // ============ 购物车 API ============
 
 export const cartApi = {
+  getCommerceSettings: () => api.get('/products/commerce-settings'),
   getCart: (sessionId) => api.get('/cart', { params: { session_id: sessionId } }),
   addToCart: (data, sessionId) => api.post('/cart/items', data, { params: { session_id: sessionId } }),
   updateCartItem: (id, data, sessionId) => api.put(`/cart/items/${id}`, data, { params: { session_id: sessionId } }),
@@ -129,6 +128,7 @@ export const orderApi = {
   createOrder: (data) => api.post('/orders', data),
   getOrders: (params) => api.get('/orders', { params }),
   getOrder: (id) => api.get(`/orders/${id}`),
+  completeOrder: (id) => api.post(`/orders/${id}/complete`),
   cancelOrder: (id, data) => api.post(`/orders/${id}/cancel`, data)
 }
 
@@ -169,6 +169,8 @@ export const adminApi = {
     data.append('file', file)
     return api.post('/admin/assets', data, { headers: { 'Content-Type': 'multipart/form-data' } })
   },
+  listAssets: (params) => api.get('/admin/assets', { params }),
+  deleteAsset: (path) => api.delete(`/admin/assets/${path}`),
 
   // 分类管理
   getCategories: () => api.get('/admin/categories'),

@@ -19,7 +19,12 @@ from ..models.order import Order, OrderItem
 from ..models.cart import CartItem
 from ..core.config import settings
 from ..services.glb import DIY_CASE_CONTRACT, InvalidGlb, inspect_glb
-from ..services.storage import StorageNotConfigured, StorageUploadError, storage_service
+from ..services.storage import (
+    StorageAssetMissing,
+    StorageNotConfigured,
+    StorageUploadError,
+    storage_service,
+)
 
 router = APIRouter(prefix="/admin", tags=["管理员"])
 
@@ -77,6 +82,9 @@ def _serialize_admin_product(product: Product) -> dict:
         "model_3d_rotation": product.model_3d_rotation,
         "asset_license": product.asset_license,
         "asset_source_url": product.asset_source_url,
+        "price_source_name": product.price_source_name,
+        "price_source_url": product.price_source_url,
+        "price_checked_at": product.price_checked_at.isoformat() if product.price_checked_at else None,
         "weight": float(product.weight) if product.weight is not None else None,
         "is_active": product.is_active,
         "is_featured": product.is_featured,
@@ -87,7 +95,7 @@ def _serialize_admin_product(product: Product) -> dict:
 @router.post("/assets", status_code=status.HTTP_201_CREATED)
 async def upload_catalog_asset(
     bucket: Optional[str] = Form(None),
-    model_contract: Optional[str] = Form(None),
+    contract: Optional[str] = Form(None, alias="model_contract"),
     product_id: Optional[UUID] = Form(None),
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
@@ -115,7 +123,7 @@ async def upload_catalog_asset(
     if not data or not _has_valid_signature(data, suffix):
         raise HTTPException(status_code=415, detail="文件内容与扩展名不匹配")
 
-    effective_contract = model_contract
+    effective_contract = contract
     if asset_kind == "model" and product_id:
         product = await db.get(Product, product_id)
         if not product:
@@ -128,7 +136,7 @@ async def upload_catalog_asset(
 
     contract_report = None
     if asset_kind == "model":
-        if model_contract not in {None, "", DIY_CASE_CONTRACT}:
+        if contract not in {None, "", DIY_CASE_CONTRACT}:
             raise HTTPException(status_code=400, detail="不支持的 GLB 节点合同")
         try:
             contract_report = inspect_glb(data)
@@ -162,6 +170,123 @@ async def upload_catalog_asset(
     if contract_report and effective_contract:
         result["node_contract"] = contract_report.to_dict()
     return result
+
+
+# ============ 素材库 ============
+
+async def _build_asset_usage_map(
+    db: AsyncSession,
+    asset_paths: list[str],
+) -> dict[str, list[dict]]:
+    """Map storage object paths to products referencing them by URL."""
+    rows = await db.execute(
+        select(
+            Product.id,
+            Product.name,
+            Product.slug,
+            Product.image_url,
+            Product.images,
+            Product.model_3d_url,
+        )
+    )
+    references: list[tuple[str, dict]] = []
+    for product_id, name, slug, image_url, images, model_3d_url in rows:
+        product_ref = {"id": str(product_id), "name": name, "slug": slug}
+        urls = [image_url, model_3d_url]
+        if isinstance(images, list):
+            urls.extend(url for url in images if isinstance(url, str))
+        for url in {url for url in urls if url}:
+            references.append((url, product_ref))
+
+    usage: dict[str, list[dict]] = {}
+    for asset_path in asset_paths:
+        marker = f"/{asset_path}"
+        used_by = []
+        seen_ids = set()
+        for url, product_ref in references:
+            if marker not in url or product_ref["id"] in seen_ids:
+                continue
+            seen_ids.add(product_ref["id"])
+            used_by.append(product_ref)
+        if used_by:
+            usage[asset_path] = used_by
+    return usage
+
+
+@router.get("/assets")
+async def list_catalog_assets(
+    kind: Optional[str] = Query(None),
+    keyword: Optional[str] = Query(None),
+    db: AsyncSession = Depends(get_db),
+    admin=Depends(get_current_admin),
+):
+    """List uploaded catalog assets together with product references."""
+    del admin
+    if kind not in {None, "", "image", "model"}:
+        raise HTTPException(status_code=400, detail="kind 仅支持 image 或 model")
+
+    try:
+        assets = await storage_service.list_assets()
+    except StorageNotConfigured as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except StorageUploadError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    usage_map = await _build_asset_usage_map(db, [asset.path for asset in assets])
+
+    items = []
+    for asset in assets:
+        if kind and asset.kind != kind:
+            continue
+        if keyword and keyword.lower() not in asset.path.lower():
+            continue
+        item = asset.to_dict()
+        item["used_by"] = usage_map.get(asset.path, [])
+        items.append(item)
+
+    summary = {
+        "total": len(assets),
+        "images": sum(1 for asset in assets if asset.kind == "image"),
+        "models": sum(1 for asset in assets if asset.kind == "model"),
+        "unused": sum(1 for asset in assets if not usage_map.get(asset.path)),
+        "total_size": sum(asset.size for asset in assets),
+    }
+    return {"items": items, "summary": summary}
+
+
+@router.delete("/assets/{asset_path:path}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_catalog_asset(
+    asset_path: str,
+    db: AsyncSession = Depends(get_db),
+    admin=Depends(get_current_admin),
+):
+    """Delete a catalog asset that no product references anymore."""
+    del admin
+    try:
+        assets = await storage_service.list_assets()
+    except StorageNotConfigured as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except StorageUploadError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    asset = next((item for item in assets if item.path == asset_path), None)
+    if not asset:
+        raise HTTPException(status_code=404, detail="素材不存在或已被删除")
+
+    usage_map = await _build_asset_usage_map(db, [asset.path])
+    used_by = usage_map.get(asset.path, [])
+    if used_by:
+        names = "、".join(product["name"] for product in used_by)
+        raise HTTPException(status_code=409, detail=f"素材仍被商品引用（{names}），请先在商品中解除绑定")
+
+    try:
+        await storage_service.delete_asset(bucket=asset.bucket, path=asset.path)
+    except StorageAssetMissing as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except StorageNotConfigured as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except StorageUploadError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
 
 
 # ============ 数据概览 ============
@@ -583,7 +708,7 @@ async def ship_order(
 ):
     """订单发货"""
     result = await db.execute(
-        select(Order).where(Order.id == order_id)
+        select(Order).where(Order.id == order_id).with_for_update()
     )
     order = result.scalar_one_or_none()
     if not order:

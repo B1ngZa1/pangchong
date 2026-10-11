@@ -1,0 +1,87 @@
+name: pr-governance
+
+on:
+  pull_request:
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  validate-solution-and-risk:
+    name: Validate solution and risk update
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR task, solution, scope, risk, evidence and rollback
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = context.payload.pull_request?.body ?? "";
+            const errors = [];
+
+            function field(label) {
+              const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+              const match = body.match(new RegExp(`^-\\s*${escaped}[：:]\\s*(.+)$`, "m"));
+              return match?.[1]?.replace(/`/g, "").trim() ?? "";
+            }
+
+            function section(title) {
+              const escaped = title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+              const match = body.match(new RegExp(`##\\s+${escaped}\\s*\\n([\\s\\S]*?)(?=\\n##\\s+|$)`));
+              return (match?.[1] ?? "")
+                .replace(/<!--[\s\S]*?-->/g, "")
+                .replace(/^-\s*\[[ xX]\].*$/gm, "")
+                .trim();
+            }
+
+            const taskId = field("任务 ID");
+            if (!/^(BE|FE|DATA|OPS|QA|DOC)-\d{3}$/.test(taskId)) {
+              errors.push("任务 ID 必须使用 BE/FE/DATA/OPS/QA/DOC-000 格式。");
+            }
+
+            const riskId = field("关联风险");
+            if (!/^(R-\d{2}|R-none)$/i.test(riskId)) {
+              errors.push("关联风险必须明确填写 R-00 或 R-none，不能保留模板占位符。");
+            }
+
+            for (const title of ["问题与根因", "解决方案与架构边界", "回滚方案"]) {
+              if (section(title).length < 20) {
+                errors.push(`${title}必须提供至少 20 个字符的实质说明。`);
+              }
+            }
+
+            if (!field("实际修改")) {
+              errors.push("必须列出实际修改范围。");
+            }
+            if (!field("明确不修改")) {
+              errors.push("必须列出明确不修改范围。");
+            }
+
+            const verification = section("验证证据");
+            if (verification.length < 20 || verification.includes("# 命令及真实结果")) {
+              errors.push("验证证据必须替换模板内容，填写实际命令和结果。");
+            }
+
+            if (/^R-\d{2}$/i.test(riskId)) {
+              const files = await github.paginate(github.rest.pulls.listFiles, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: context.issue.number,
+                per_page: 100,
+              });
+              const riskFile = "docs/project-management/03-risk-and-acceptance.md";
+              if (!files.some((file) => file.filename === riskFile)) {
+                errors.push(`关联 ${riskId} 时必须在同一 PR 更新 ${riskFile}。`);
+              }
+            }
+
+            if (errors.length > 0) {
+              core.setFailed(errors.map((error) => `- ${error}`).join("\n"));
+            } else {
+              core.info(`PR governance passed for ${taskId} / ${riskId}.`);
+            }

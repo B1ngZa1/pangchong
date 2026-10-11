@@ -37,13 +37,15 @@ class UserLogin(BaseModel):
 class TokenResponse(BaseModel):
     """Token 响应"""
     access_token: str
-    refresh_token: str
+    refresh_token: Optional[str] = None
     token_type: str = "bearer"
 
 
 class TokenRefresh(BaseModel):
     """刷新 Token 请求"""
-    refresh_token: str
+    # Browser clients use the HttpOnly cookie; non-browser clients may keep
+    # sending the legacy body value during the migration window.
+    refresh_token: Optional[str] = None
 
 
 class PasswordChange(BaseModel):

@@ -3,6 +3,9 @@ asyncio_mode = "auto"
 testpaths = ["tests"]
 pythonpath = ["."]
 addopts = "-v --tb=short"
+markers = [
+    "postgres: requires a dedicated PostgreSQL test database",
+]
 
 [tool.mypy]
 strict = false

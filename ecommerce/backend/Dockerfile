@@ -27,5 +27,5 @@ RUN mkdir -p uploads
 # 暴露端口
 EXPOSE 8000
 
-# 启动应用
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# 统一入口先校验环境；开发 Compose 通过 RELOAD=true 保留热重载。
+CMD ["python", "-m", "app.start"]

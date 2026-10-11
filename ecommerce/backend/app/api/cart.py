@@ -88,7 +88,7 @@ def format_cart_item(item: CartItem) -> CartItemResponse:
         product_stock=item.product.stock,
         quantity=item.quantity,
         subtotal=item.product.price * item.quantity,
-        is_in_stock=item.product.stock >= item.quantity
+        is_in_stock=bool(item.product.is_active and item.product.stock >= item.quantity)
     )
 
 
@@ -164,7 +164,7 @@ async def add_to_cart(
         )
 
     # 检查购物车中是否已有该商品
-    query = select(CartItem).where(CartItem.product_id == item_data.product_id)
+    query = select(CartItem).options(selectinload(CartItem.product)).where(CartItem.product_id == item_data.product_id)
     if user_id:
         query = query.where(CartItem.user_id == user_id)
     else:
@@ -245,6 +245,9 @@ async def update_cart_item(
             detail="无权修改此购物车项"
         )
 
+    # A previously saved item may have been deleted or delisted.
+    if not cart_item.product or not cart_item.product.is_active:
+        raise HTTPException(status_code=400, detail="商品不存在或已下架，请从购物车移除")
     # 检查库存
     if cart_item.product.stock < item_data.quantity:
         raise HTTPException(

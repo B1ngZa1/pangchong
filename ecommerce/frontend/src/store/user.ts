@@ -29,19 +29,25 @@ export interface Address {
 }
 
 export const useUserStore = defineStore('user', () => {
-  const token = ref<string>(localStorage.getItem('token') || '')
-  const refreshToken = ref<string>(localStorage.getItem('refreshToken') || '')
+  // Access tokens are intentionally memory-only.  The long-lived refresh
+  // token is issued as an HttpOnly cookie by the API and is never readable by
+  // application JavaScript or persisted in localStorage.
+  const token = ref<string>('')
+  const refreshToken = ref<string>('')
   const user = ref<UserProfile | null>(null)
   const addresses = ref<Address[]>([])
+  const sessionReady = ref(false)
+  let hydrationPromise: Promise<void> | null = null
 
   const isLoggedIn = computed(() => !!token.value)
   const isAdmin = computed(() => user.value?.is_admin || false)
 
-  function setTokens(accessToken: string, refresh: string) {
+  function setTokens(accessToken: string, _refresh?: string) {
     token.value = accessToken
-    refreshToken.value = refresh
-    localStorage.setItem('token', accessToken)
-    localStorage.setItem('refreshToken', refresh)
+    // Never copy the refresh credential into JavaScript memory.  The backend
+    // rotates it through the HttpOnly cookie; this ref remains empty for API
+    // shape compatibility with older callers.
+    refreshToken.value = ''
   }
 
   function clearTokens() {
@@ -49,8 +55,11 @@ export const useUserStore = defineStore('user', () => {
     refreshToken.value = ''
     user.value = null
     addresses.value = []
-    localStorage.removeItem('token')
-    localStorage.removeItem('refreshToken')
+    if (typeof window !== 'undefined') {
+      // Remove credentials written by versions before the cookie migration.
+      localStorage.removeItem('token')
+      localStorage.removeItem('refreshToken')
+    }
   }
 
   function clearSession() {
@@ -60,6 +69,7 @@ export const useUserStore = defineStore('user', () => {
   async function login(credentials: { username: string; password: string }) {
     const data = await authApi.login(credentials)
     setTokens(data.access_token, data.refresh_token)
+    sessionReady.value = true
     await fetchProfile()
     return data
   }
@@ -67,11 +77,13 @@ export const useUserStore = defineStore('user', () => {
   async function register(userData: Record<string, unknown>) {
     const data = await authApi.register(userData)
     setTokens(data.access_token, data.refresh_token)
+    sessionReady.value = true
     await fetchProfile()
     return data
   }
 
   function logout() {
+    void authApi.logout().catch(() => { /* local logout still succeeds */ })
     clearTokens()
     try {
       const cartStore = useCartStore()
@@ -84,20 +96,44 @@ export const useUserStore = defineStore('user', () => {
     try {
       const data = await authApi.getProfile()
       user.value = data as UserProfile
-    } catch {
+    } catch (error) {
       clearTokens()
+      throw error
     }
   }
 
   async function refreshAccessToken() {
-    if (!refreshToken.value) throw new Error('没有 refresh token')
     try {
-      const data = await authApi.refreshToken({ refresh_token: refreshToken.value })
+      const data = await authApi.refreshToken()
       setTokens(data.access_token, data.refresh_token)
       return data
     } catch (error) {
       clearTokens()
       throw error
+    }
+  }
+
+  async function hydrateSession() {
+    if (sessionReady.value) return
+    if (hydrationPromise) return hydrationPromise
+
+    hydrationPromise = (async () => {
+      try {
+        if (!token.value) {
+          await refreshAccessToken()
+        }
+        await fetchProfile()
+      } catch {
+        clearTokens()
+      } finally {
+        sessionReady.value = true
+      }
+    })()
+
+    try {
+      await hydrationPromise
+    } finally {
+      hydrationPromise = null
     }
   }
 
@@ -109,18 +145,23 @@ export const useUserStore = defineStore('user', () => {
 
   async function fetchAddresses() {
     const data = await authApi.getAddresses()
-    addresses.value = data as Address[]
+    // Never let an unexpected empty response corrupt the reactive collection;
+    // retaining the last known list keeps checkout renderable while the API
+    // contract is being diagnosed.
+    if (Array.isArray(data)) addresses.value = data.filter(Boolean) as Address[]
     return data
   }
 
   async function createAddress(addressData: Record<string, unknown>) {
     const data = await authApi.createAddress(addressData)
+    if (data.is_default) addresses.value.forEach(address => { address.is_default = false })
     addresses.value.push(data as Address)
     return data
   }
 
   async function updateAddress(id: string, addressData: Record<string, unknown>) {
     const data = await authApi.updateAddress(id, addressData)
+    if (data.is_default) addresses.value.forEach(address => { address.is_default = false })
     const index = addresses.value.findIndex(a => a.id === id)
     if (index !== -1) addresses.value[index] = data as Address
     return data
@@ -131,14 +172,10 @@ export const useUserStore = defineStore('user', () => {
     addresses.value = addresses.value.filter(a => a.id !== id)
   }
 
-  if (token.value) {
-    fetchProfile()
-  }
-
   return {
     token, refreshToken, user, addresses,
     isLoggedIn, isAdmin,
-    login, register, logout, clearSession, fetchProfile, refreshAccessToken,
+    login, register, logout, clearSession, fetchProfile, refreshAccessToken, hydrateSession,
     updateProfile, fetchAddresses, createAddress, updateAddress, deleteAddress,
   }
 })

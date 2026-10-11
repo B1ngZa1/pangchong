@@ -2,23 +2,19 @@
 胖虫电商系统 - 订单 API
 """
 from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from sqlalchemy.orm import selectinload
 from typing import Optional
 from uuid import UUID
-from datetime import datetime
-import random
-import string
-import uuid
+from datetime import datetime, timezone
 
 from ..core.database import get_db
 from ..core.security import get_current_user, get_current_admin
-from ..core.config import settings
-from ..models.user import User, UserAddress
+from ..models.user import User
 from ..models.product import Product
-from ..models.cart import CartItem
-from ..models.order import Order, OrderItem
+from ..models.order import Order
 from ..schemas.order import (
     OrderCreate,
     OrderResponse,
@@ -27,22 +23,9 @@ from ..schemas.order import (
     OrderShipRequest,
     OrderCancelRequest,
 )
+from ..services.orders import OrderCreationError, OrderService, inventory_from_order_items
 
 router = APIRouter(prefix="/orders", tags=["订单"])
-
-
-def generate_order_no() -> str:
-    """生成订单号：PC + 时间戳 + UUID 片段（避免碰撞）"""
-    now = datetime.now().strftime("%Y%m%d%H%M%S")
-    unique = uuid.uuid4().hex[:8].upper()
-    return f"PC{now}{unique}"
-
-
-def calculate_shipping_fee(amount: float) -> float:
-    """计算运费"""
-    if amount >= settings.FREE_SHIPPING_THRESHOLD:
-        return 0.0
-    return settings.SHIPPING_FEE
 
 
 # ============ 创建订单 ============
@@ -60,150 +43,15 @@ async def create_order(
     - **remark**: 订单备注（可选）
     - **cart_item_ids**: 购物车商品ID列表（可选，为空则结算全部）
     """
-    # 获取收货地址
-    result = await db.execute(
-        select(UserAddress).where(
-            UserAddress.id == order_data.address_id,
-            UserAddress.user_id == current_user.id
-        )
-    )
-    address = result.scalar_one_or_none()
-    if not address:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="收货地址不存在"
-        )
-
-    # 获取购物车商品
-    query = select(CartItem).options(selectinload(CartItem.product)).where(
-        CartItem.user_id == current_user.id
-    )
-    if order_data.cart_item_ids is not None:
-        query = query.where(CartItem.id.in_(order_data.cart_item_ids))
-
-    result = await db.execute(query)
-    cart_items = result.scalars().all()
-    custom_items = order_data.custom_items or []
-
-    if not cart_items and not custom_items:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="购物车为空"
-        )
-
-    # 验证库存并计算金额
-    total_amount = 0
-    order_items = []
-
-    for cart_item in cart_items:
-        product = cart_item.product
-
-        # 检查商品是否上架
-        if not product.is_active:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"商品 {product.name} 已下架"
+    try:
+        return await OrderService(db).create_order(order_data, current_user.id)
+    except OrderCreationError as exc:
+        if exc.payload is not None:
+            return JSONResponse(
+                status_code=exc.status_code,
+                content={"detail": exc.detail, **exc.payload},
             )
-
-        # 检查库存（使用 SELECT FOR UPDATE 防止并发超卖）
-        result = await db.execute(
-            select(Product).where(Product.id == product.id).with_for_update()
-        )
-        product = result.scalar_one()
-
-        if product.stock < cart_item.quantity:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"商品 {product.name} 库存不足，当前库存：{product.stock}"
-            )
-
-        subtotal = float(product.price) * cart_item.quantity
-        total_amount += subtotal
-
-        order_items.append({
-            "item_type": "product",
-            "product": product,
-            "product_name": product.name,
-            "product_image": product.image_url,
-            "product_specs": product.specs,
-            "quantity": cart_item.quantity,
-            "price": float(product.price),
-            "subtotal": subtotal,
-        })
-
-    for custom_item in custom_items:
-        price = float(custom_item.price)
-        subtotal = price * custom_item.quantity
-        total_amount += subtotal
-
-        order_items.append({
-            "item_type": "custom",
-            "product": None,
-            "product_name": custom_item.product_name,
-            "product_image": custom_item.product_image,
-            "product_specs": custom_item.product_specs or {},
-            "quantity": custom_item.quantity,
-            "price": price,
-            "subtotal": subtotal,
-        })
-
-    # 计算运费
-    shipping_fee = calculate_shipping_fee(total_amount)
-    final_amount = total_amount + shipping_fee
-
-    # 创建订单
-    order = Order(
-        order_no=generate_order_no(),
-        user_id=current_user.id,
-        status="pending",
-        total_amount=total_amount,
-        shipping_fee=shipping_fee,
-        discount_amount=0,
-        final_amount=final_amount,
-        recipient_name=address.recipient_name,
-        recipient_phone=address.phone,
-        shipping_address=f"{address.province}{address.city}{address.district}{address.address}",
-        remark=order_data.remark,
-    )
-    db.add(order)
-    await db.flush()
-
-    # 创建订单商品
-    for item_data in order_items:
-        product = item_data["product"]
-        order_item = OrderItem(
-            order_id=order.id,
-            product_id=product.id if product else None,
-            item_type=item_data["item_type"],
-            product_name=item_data["product_name"],
-            product_image=item_data["product_image"],
-            product_specs=item_data["product_specs"],
-            price=item_data["price"],
-            quantity=item_data["quantity"],
-            subtotal=item_data["subtotal"],
-        )
-        db.add(order_item)
-
-        # 扣减库存
-        if product:
-            product.stock -= item_data["quantity"]
-            product.sold_count += item_data["quantity"]
-
-    # 清空购物车中已下单的商品
-    for cart_item in cart_items:
-        await db.delete(cart_item)
-
-    await db.flush()
-
-    # 重新查询订单以获取完整数据
-    result = await db.execute(
-        select(Order)
-        .options(selectinload(Order.items))
-        .where(Order.id == order.id)
-    )
-    order = result.scalar_one()
-
-    return order
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
 
 
 # ============ 获取订单列表 ============
@@ -288,6 +136,7 @@ async def cancel_order(
             Order.id == order_id,
             Order.user_id == current_user.id
         )
+        .with_for_update()
     )
     order = result.scalar_one_or_none()
 
@@ -303,20 +152,46 @@ async def cancel_order(
             detail="当前订单状态不可取消"
         )
 
-    # 恢复库存
-    for item in order.items:
-        if not item.product_id:
-            continue
-        result = await db.execute(select(Product).where(Product.id == item.product_id))
+    # Restore stock from normal-product and server-built DIY snapshots.
+    inventory = inventory_from_order_items(order.items)
+    for product_id in sorted(inventory, key=str):
+        quantity = inventory[product_id]
+        result = await db.execute(select(Product).where(Product.id == product_id).with_for_update())
         product = result.scalar_one_or_none()
         if product:
-            product.stock += item.quantity
-            product.sold_count -= item.quantity
+            product.stock += quantity
+            product.sold_count = max(0, (product.sold_count or 0) - quantity)
 
     # 更新订单状态
     order.status = "cancelled"
     order.remark = f"{order.remark or ''}\n取消原因：{cancel_data.reason or '用户主动取消'}"
 
+    await db.flush()
+    return order
+
+
+@router.post("/{order_id}/complete", response_model=OrderResponse)
+async def complete_order(
+    order_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Let the recipient confirm delivery; repeated confirmations are safe."""
+    result = await db.execute(
+        select(Order)
+        .options(selectinload(Order.items))
+        .where(Order.id == order_id, Order.user_id == current_user.id)
+        .with_for_update()
+    )
+    order = result.scalar_one_or_none()
+    if order is None:
+        raise HTTPException(status_code=404, detail="订单不存在")
+    if order.status == "completed":
+        return order
+    if order.status != "shipped":
+        raise HTTPException(status_code=400, detail="只有已发货的订单才能确认收货")
+    order.status = "completed"
+    order.completed_at = datetime.now(timezone.utc)
     await db.flush()
     return order
 
@@ -335,6 +210,7 @@ async def ship_order(
         select(Order)
         .options(selectinload(Order.items))
         .where(Order.id == order_id)
+        .with_for_update()
     )
     order = result.scalar_one_or_none()
 

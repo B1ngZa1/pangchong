@@ -28,7 +28,7 @@ if config.config_file_name is not None:
 # Import all models so autogenerate can detect them
 from app.core.config import settings
 from app.core.database import Base
-from app.models import user, product, cart, order  # noqa: F401
+from app.models import user, product, cart, order, payment_event  # noqa: F401
 
 target_metadata = Base.metadata
 config.set_main_option("sqlalchemy.url", settings.DATABASE_URL.replace("%", "%%"))

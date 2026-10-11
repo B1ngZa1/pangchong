@@ -79,8 +79,8 @@ cp .env.example .env
 | 前端框架 | Vue 3 (Composition API) · Vite 5 · TypeScript |
 | 状态管理 | Pinia 2 |
 | 路由 | Vue Router 4 |
-| UI | Tailwind CSS 3.4 · 暗黑主题 (#44D62C 主色) |
-| 3D 渲染 | TresJS (Three.js) |
+| UI | Tailwind CSS 3.4 · Reka UI 无障碍原语 · 深色设计令牌 |
+| 3D 渲染 | Three.js · GLTFLoader（按需加载） |
 | HTTP 客户端 | Axios (拦截器 + JWT 自动刷新) |
 | 后端框架 | FastAPI 0.109 (async) |
 | ORM | SQLAlchemy 2.0 (async) |
@@ -88,7 +88,7 @@ cp .env.example .env
 | 数据库 | PostgreSQL 16 |
 | 缓存 | Redis 7 |
 | 认证 | JWT HS256 (access + refresh) · bcrypt |
-| 测试 | Vitest (前端 15 项) · pytest (后端 29 项) |
+| 测试 | Vitest · pytest · 浏览器主路径冒烟 |
 | 部署 | Docker · Docker Compose · Nginx |
 
 ---
@@ -97,6 +97,21 @@ cp .env.example .env
 
 ```
 pangchong/
+├── .github/workflows/                  # GitHub Actions 质量门禁
+├── docs/                                # 全项目文档中心（按职责物理分类）
+│   ├── README.md                        # 文档统一索引
+│   ├── architecture/                    # 系统 · 前端 · 后端 · 网络安全 · 数据
+│   ├── development/                     # 本地开发与调试
+│   ├── deployment/                      # 部署和托管服务
+│   ├── operations/                      # 发布、回滚与运维清单
+│   ├── product/ · 3d/                   # 产品资料与 3D 资产规范
+│   ├── planning/ · audits/              # 优化规划与历史审计
+│   ├── data/ · design-system/           # 核验数据与设计系统
+│   ├── archive/                         # 已被替代、仅供追溯的历史资料
+│   └── project-management/              # 老板策划书与四人任务包
+├── scripts/                             # 目录检查与跨平台质量门禁
+├── tools/catalog/                       # 离线商品采集与数据生成工具
+│
 ├── ecommerce/                           # 电商全栈应用
 │   ├── docker-compose.yml               # 开发环境
 │   ├── docker-compose.prod.yml          # 生产环境
@@ -110,14 +125,15 @@ pangchong/
 │   │   ├── pyproject.toml               # pytest / mypy 配置
 │   │   ├── app/
 │   │   │   ├── main.py                  # FastAPI 入口 + 安全中间件
+│   │   │   ├── cli/                     # 管理员初始化、价格核验导入等命令
 │   │   │   ├── core/                    # config · database · security
 │   │   │   ├── api/                     # auth · products · cart · orders · payment · admin · market
 │   │   │   ├── models/                  # User · Product · Cart · Order
 │   │   │   ├── schemas/                 # Pydantic 请求/响应 Schema
-│   │   │   ├── services/                # 物流 · 支付
+│   │   │   ├── services/                # 物流 · 存储 · 3D 模型服务
 │   │   │   └── utils/                   # 邮件
 │   │   ├── migrations/                  # Alembic 迁移
-│   │   └── tests/                       # pytest (29 tests)
+│   │   └── tests/                       # pytest API / 迁移 / 启动门禁
 │   │
 │   ├── frontend/
 │   │   ├── Dockerfile
@@ -131,25 +147,17 @@ pangchong/
 │   │       ├── components/              # 通用组件 · 3D 查看器 · 配置面板
 │   │       ├── views/                   # 页面 + admin/ + user/
 │   │       ├── utils/                   # 支付工具
-│   │       └── __tests__/               # Vitest (15 tests)
+│   │       └── __tests__/               # Vitest 组件与流程测试
 │   │
 │   ├── database/
 │   │   ├── init.sql                     # 建表 (9 张表)
 │   │   ├── seed.sql                     # 96 商品 · 14 分类 · 测试账号
 │   │   └── components.sql               # 80+ DIY 配件数据
 │   │
-│   ├── docker/nginx/                    # Nginx 配置 + SSL
-│   └── docs/                            # 架构 · 部署 · 检查清单
+│   └── docker/nginx/                    # Nginx 反向代理配置
 │
-├── docs/                                # 产品文档
-│   ├── 3d-pc-builder-plan.md            # 3D PC Builder 技术方案
-│   ├── team-work-plan.md                 # 五人团队分工与 Git 协作方案
-│   ├── tech-stack-optimization.md       # 技术栈优化方案
-│   ├── products.md                      # 整机产品目录
-│   └── diy-parts.md                     # DIY 配件库
-│
-├── diy_parts.py                         # DIY 配件数据脚本
-└── scraper.py                           # 商品数据爬虫 (京东/抖音)
+├── CONTRIBUTING.md                      # 协作与完成定义
+└── .editorconfig                        # 文本格式约定
 ```
 
 ---
@@ -176,12 +184,17 @@ pangchong/
 
 ### 安全
 
-- JWT 双 Token (access 30min + refresh 7d)
-- bcrypt 密码哈希 + 复杂度校验 (大写+数字)
-- 请求体大小限制 (10MB)
-- 安全响应头 (HSTS · X-Frame-Options · X-XSS-Protection · Referrer-Policy · Permissions-Policy)
-- CORS 白名单
-- SQL 注入防护 (ORM 参数化查询)
+- **当前已有**：JWT 双 Token、bcrypt 密码哈希、CORS 白名单、请求体大小限制、基础安全响应头、ORM 参数化查询和生产弱配置预检。
+- **生产阻断项**：可用的 HTTPS/443 配置、CSRF、统一限流、CSP 和 Host 校验；浏览器 refresh token 已改为 HttpOnly Cookie，但撤销/设备会话、真实商户沙箱/生产验收仍需完成。
+- 完整现状、端口矩阵和上线门禁见[网络与安全基线](docs/architecture/network-security.md)。
+
+### 架构文档
+
+- [系统总览](docs/architecture/system-overview.md)
+- [前端架构](docs/architecture/frontend.md)
+- [后端架构](docs/architecture/backend.md)
+- [数据与存储](docs/architecture/data-and-storage.md)
+- [发布检查清单](docs/operations/release-checklist.md)
 
 ---
 
@@ -204,13 +217,25 @@ pangchong/
 ## 测试
 
 ```bash
-# 前端 (Vitest + jsdom)
-cd ecommerce/frontend
-npx vitest run       # 2 files · 15 tests
+# Windows：在项目根目录执行全部质量门禁
+.\scripts\quality-check.ps1
 
-# 后端 (pytest + pytest-asyncio)
-cd ecommerce/backend
-python -m pytest     # 3 files · 29 tests
+# 也可显式指定已安装后端依赖的 Python 3.11+ 环境
+.\scripts\quality-check.ps1 -PythonExecutable C:\path\to\python.exe
+
+# macOS / Linux
+bash scripts/quality-check.sh
+
+# 或指定已准备好的 Python 3.11+ 环境
+PYTHON_BIN=/path/to/python bash scripts/quality-check.sh
+
+# 前端单独执行：类型检查、测试与生产构建
+cd ecommerce/frontend
+npm run check
+
+# 后端单独执行：API、迁移与生产启动门禁测试
+cd ../backend
+python -m pytest
 ```
 
 ---
@@ -225,10 +250,14 @@ python -m pytest     # 3 files · 29 tests
 
 ---
 
-## 待规划
+## 本地演示已包含
 
-- [ ] 3D PC Builder 交互式装机
-- [ ] 支付宝正式环境对接
-- [ ] 快递鸟物流追踪上线
-- [ ] CI/CD 流水线
-- [ ] 邮件通知系统
+- 交互式 DIY 装机页：3D 预览按路由加载；不支持或加载失败时保留可结算的清单模式。
+- 支付宝 RSA2 适配、回调验签与支付事件幂等；真实商户联调仍需在受控环境完成。
+- 前端类型检查、单元测试、生产构建，以及后端测试和 Alembic 单头检查。
+
+## 生产上线前仍需完成
+
+- 对接已签约的物流和邮件服务。
+- 配置真实 HTTPS 证书、CSP、Host 校验、限流、备份恢复和告警。
+- 完成真实商户、经营主体与合规材料的验收。完整 Go / No-Go 条件见[风险登记与上线验收门槛](docs/project-management/03-risk-and-acceptance.md)。

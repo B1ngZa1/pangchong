@@ -1,33 +1,32 @@
 <template>
   <div class="card p-6">
+    <DsAlert
+      v-if="feedback"
+      class="mb-4"
+      :tone="feedback.tone"
+      :title="feedback.title"
+      :description="feedback.description"
+      dismissible
+      @dismiss="feedback = null"
+    />
+
     <div class="flex items-center justify-between mb-6">
       <h2 class="text-xl font-bold">收货地址</h2>
-      <button v-if="!showForm" @click="openCreate"
-        class="px-4 py-2 bg-primary-500 text-dark-950 text-sm font-semibold rounded-lg hover:bg-primary-400 transition-colors">
-        <i class="fas fa-plus mr-1"></i>添加地址
-      </button>
+      <DsButton v-if="!showForm" type="button" @click="openCreate">添加地址</DsButton>
     </div>
 
     <!-- 加载状态 -->
-    <div v-if="loading" class="text-center py-8">
-      <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-500 mx-auto"></div>
-    </div>
+    <DsAsyncState v-if="loading" state="loading" loading-label="正在加载收货地址" />
 
     <!-- 空状态 -->
-    <div v-else-if="addresses.length === 0 && !showForm" class="text-center py-12">
-      <div class="text-5xl mb-4 opacity-30">📍</div>
-      <p class="text-dark-400 mb-2">暂无收货地址</p>
-      <p class="text-dark-600 text-sm mb-6">添加地址后即可快速下单</p>
-      <button @click="openCreate"
-        class="px-6 py-2.5 bg-primary-500 text-dark-950 font-semibold rounded-lg hover:bg-primary-400 transition-colors">
-        添加第一个地址
-      </button>
-    </div>
+    <DsAsyncState v-else-if="addresses.length === 0 && !showForm" state="empty" empty-title="暂无收货地址" empty-description="添加地址后即可快速下单">
+      <template #action><DsButton type="button" @click="openCreate">添加第一个地址</DsButton></template>
+    </DsAsyncState>
 
     <!-- 地址列表 -->
-    <div v-else-if="!showForm" class="space-y-3">
+    <div v-else-if="!showForm && addresses.length > 0" class="space-y-3">
       <div v-for="addr in addresses" :key="addr.id"
-        class="p-4 bg-dark-900 rounded-xl border transition-all"
+        class="p-4 bg-dark-900 rounded-xl border transition-colors"
         :class="addr.is_default ? 'border-primary-500/50' : 'border-dark-800'">
         <div class="flex items-start justify-between">
           <div class="flex-1">
@@ -43,12 +42,9 @@
             <p v-if="addr.postal_code" class="text-dark-600 text-xs mt-0.5">邮编：{{ addr.postal_code }}</p>
           </div>
           <div class="flex items-center gap-3 ml-4">
-            <button v-if="!addr.is_default" @click="setDefault(addr)"
-              class="text-xs text-dark-500 hover:text-primary-500 transition-colors">设为默认</button>
-            <button @click="openEdit(addr)"
-              class="text-xs text-dark-500 hover:text-primary-500 transition-colors">编辑</button>
-            <button @click="deleteAddr(addr)"
-              class="text-xs text-dark-500 hover:text-red-400 transition-colors">删除</button>
+            <DsButton v-if="!addr.is_default" variant="ghost" size="sm" type="button" @click="setDefault(addr)">设为默认</DsButton>
+            <DsButton variant="ghost" size="sm" type="button" @click="openEdit(addr)">编辑</DsButton>
+            <DsButton variant="danger" size="sm" type="button" @click="deleteAddr(addr)">删除</DsButton>
           </div>
         </div>
       </div>
@@ -58,40 +54,23 @@
     <div v-if="showForm" class="mt-2">
       <div class="flex items-center justify-between mb-4">
         <h3 class="font-bold">{{ editingId ? '编辑地址' : '添加新地址' }}</h3>
-        <button @click="closeForm" class="text-dark-500 hover:text-white text-sm">
-          <i class="fas fa-times"></i>
-        </button>
+        <DsButton variant="ghost" size="sm" type="button" @click="closeForm">取消</DsButton>
       </div>
 
       <AddressForm v-model="form" :errors="formErrors" ref="addressFormRef" />
 
       <div class="flex gap-3 mt-2">
-        <button @click="handleSubmit" :disabled="saving"
-          class="px-6 py-2.5 bg-primary-500 text-dark-950 text-sm font-semibold rounded-lg hover:bg-primary-400 transition-colors disabled:opacity-50">
-          {{ saving ? '保存中...' : (editingId ? '更新地址' : '保存地址') }}
-        </button>
-        <button @click="closeForm"
-          class="px-6 py-2.5 bg-dark-800 text-dark-300 text-sm rounded-lg hover:bg-dark-700 transition-colors">
-          取消
-        </button>
+        <DsButton :loading="saving" type="button" @click="handleSubmit">{{ editingId ? '更新地址' : '保存地址' }}</DsButton>
+        <DsButton variant="ghost" type="button" @click="closeForm">取消</DsButton>
       </div>
     </div>
 
-    <!-- 删除确认弹窗 -->
-    <Teleport to="body">
-      <div v-if="showDeleteModal" class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-        <div class="bg-dark-900 rounded-2xl border border-dark-700 p-6 w-[90vw] max-w-sm shadow-2xl">
-          <h3 class="text-lg font-bold mb-2">确认删除</h3>
-          <p class="text-dark-400 text-sm mb-6">确定要删除此收货地址吗？</p>
-          <div class="flex gap-3 justify-end">
-            <button @click="showDeleteModal = false"
-              class="px-5 py-2 rounded-lg text-sm bg-dark-800 text-dark-300 hover:bg-dark-700">取消</button>
-            <button @click="confirmDelete"
-              class="px-5 py-2 rounded-lg text-sm bg-red-500 text-white hover:bg-red-600">删除</button>
-          </div>
-        </div>
-      </div>
-    </Teleport>
+    <DsDialog v-model:open="showDeleteModal" title="确认删除" description="删除后无法恢复，请确认是否继续。" size="sm">
+      <template #footer>
+        <DsButton variant="ghost" type="button" @click="showDeleteModal = false">取消</DsButton>
+        <DsButton variant="danger" type="button" @click="confirmDelete">删除</DsButton>
+      </template>
+    </DsDialog>
   </div>
 </template>
 
@@ -99,6 +78,7 @@
 import { ref, onMounted } from 'vue'
 import { useUserStore } from '@/store/user'
 import AddressForm from '@/components/AddressForm.vue'
+import { DsAlert, DsAsyncState, DsButton, DsDialog } from '@/design-system'
 
 const userStore = useUserStore()
 
@@ -111,6 +91,7 @@ const showDeleteModal = ref(false)
 const deletingAddr = ref(null)
 const addressFormRef = ref(null)
 const formErrors = ref({})
+const feedback = ref(null)
 
 const defaultForm = {
   recipient_name: '',
@@ -131,7 +112,7 @@ async function fetchAddresses() {
     await userStore.fetchAddresses()
     addresses.value = userStore.addresses || []
   } catch (e) {
-    console.error('加载地址失败:', e)
+    feedback.value = { tone: 'danger', title: '地址加载失败', description: e.displayMessage || e.message || '请稍后重试。' }
   } finally {
     loading.value = false
   }
@@ -188,9 +169,7 @@ async function handleSubmit() {
     addresses.value = userStore.addresses || []
   } catch (e) {
     const detail = e.response?.data?.detail
-    if (typeof detail === 'string') {
-      alert(detail)
-    } else if (Array.isArray(detail)) {
+    if (Array.isArray(detail)) {
       // Pydantic validation errors
       const fieldErrors = {}
       detail.forEach(err => {
@@ -199,7 +178,7 @@ async function handleSubmit() {
       })
       formErrors.value = fieldErrors
     } else {
-      alert('操作失败，请重试')
+      feedback.value = { tone: 'danger', title: '地址保存失败', description: detail || e.displayMessage || e.message || '请稍后重试。' }
     }
   } finally {
     saving.value = false
@@ -211,7 +190,7 @@ async function setDefault(addr) {
     await userStore.updateAddress(addr.id, { is_default: true })
     addresses.value = userStore.addresses || []
   } catch (e) {
-    alert('设置失败')
+    feedback.value = { tone: 'danger', title: '默认地址设置失败', description: e.displayMessage || e.message || '请稍后重试。' }
   }
 }
 
@@ -226,7 +205,7 @@ async function confirmDelete() {
     await userStore.deleteAddress(deletingAddr.value.id)
     addresses.value = userStore.addresses || []
   } catch (e) {
-    alert('删除失败')
+    feedback.value = { tone: 'danger', title: '地址删除失败', description: e.displayMessage || e.message || '请稍后重试。' }
   } finally {
     showDeleteModal.value = false
     deletingAddr.value = null

@@ -51,7 +51,7 @@
       </div>
 
       <div class="mt-8 flex flex-col items-start justify-between gap-3 border-t border-dark-800 pt-6 text-xs text-dark-500 md:flex-row md:items-center">
-        <p>© {{ new Date().getFullYear() }} PANGCHONG. All rights reserved.</p>
+        <p>© {{ new Date().getFullYear() }} PANGCHONG. 保留所有权利。</p>
         <div class="flex flex-wrap gap-6">
           <router-link to="/services#privacy" class="transition-colors hover:text-white">隐私政策</router-link>
           <router-link to="/services#user-agreement" class="transition-colors hover:text-white">用户协议</router-link>

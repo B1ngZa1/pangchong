@@ -180,6 +180,12 @@ const routes = [
         meta: { title: '商品管理' }
       },
       {
+        path: 'assets',
+        name: 'AdminAssets',
+        component: () => import('@/views/admin/Assets.vue'),
+        meta: { title: '素材库' }
+      },
+      {
         path: 'users',
         name: 'AdminUsers',
         component: () => import('@/views/admin/Users.vue'),
@@ -214,24 +220,36 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   // 设置页面标题
   document.title = `${to.meta.title || '胖虫科技'} - 胖虫科技`
+  // Public catalog and DIY routes can render while the cookie session is
+  // restored. Protected, guest, cart, and checkout routes still wait so their
+  // access and cart identity decisions use the restored session.
+  const userStore = useUserStore()
+  const session = userStore.hydrateSession()
+  const needsSession = to.meta.requiresAuth || to.meta.requiresAdmin || to.meta.guest
+    || to.name === 'Cart' || to.name === 'Checkout'
+  if (needsSession) await session
 
-  // 管理员访问首页时重定向到管理后台
+  // A returning admin still reaches the dashboard after background restore.
+  // isReady() ensures the initial public navigation has committed first.
   if (to.name === 'Home') {
-    const userStore = useUserStore()
-    if (userStore.isLoggedIn) {
+    if (userStore.isAdmin) {
+      next({ name: 'AdminDashboard' })
+      return
+    }
+    void session.then(async () => {
+      await router.isReady()
+      if (router.currentRoute.value.name !== 'Home' || !userStore.isLoggedIn) return
       try {
         if (!userStore.user) await userStore.fetchProfile()
         if (userStore.isAdmin) {
-          next({ name: 'AdminDashboard' })
-          return
+          await router.replace({ name: 'AdminDashboard' })
         }
       } catch { /* ignore */ }
-    }
+    }).catch(() => { /* anonymous sessions keep the public home page */ })
   }
 
   // 检查是否需要登录
   if (to.meta.requiresAuth || to.meta.requiresAdmin) {
-    const userStore = useUserStore()
     if (!userStore.isLoggedIn) {
       next({
         name: 'Login',
@@ -261,7 +279,6 @@ router.beforeEach(async (to, from, next) => {
 
   // 检查是否是游客页面（已登录用户不应访问登录/注册页）
   if (to.meta.guest) {
-    const userStore = useUserStore()
     if (userStore.isLoggedIn) {
       next({ name: 'Home' })
       return

@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useCartStore } from '@/store/cart'
-import { cartApi } from '@/api'
+import { useUserStore } from '@/store/user'
+import { authApi, cartApi } from '@/api'
 
 describe('Cart Store', () => {
   beforeEach(() => {
@@ -95,6 +96,25 @@ describe('Cart Store', () => {
     expect(cart.isCustomItem(cart.items[1])).toBe(true)
   })
 
+  it('waits for session restoration before choosing the cart identity', async () => {
+    let finishRefresh!: (value: { access_token: string }) => void
+    vi.spyOn(authApi, 'refreshToken').mockReturnValue(new Promise(resolve => {
+      finishRefresh = resolve
+    }))
+    vi.spyOn(authApi, 'getProfile').mockResolvedValue({ id: 'buyer-1', username: 'buyer' })
+    const getCart = vi.spyOn(cartApi, 'getCart').mockResolvedValue({ items: [] })
+
+    const cart = useCartStore()
+    const fetch = cart.fetchCart()
+    expect(getCart).not.toHaveBeenCalled()
+
+    finishRefresh({ access_token: 'restored-access' })
+    await fetch
+
+    expect(useUserStore().isLoggedIn).toBe(true)
+    expect(getCart).toHaveBeenCalledWith(undefined)
+  })
+
   it('updates local custom item quantity without calling the backend', async () => {
     const cart = useCartStore()
     cart.addCustomItem({
@@ -160,12 +180,13 @@ describe('Cart Store', () => {
     expect(cart.subtotal).toBe(2500)
   })
 
-  it('applies valid coupon', () => {
+  it('does not invent a discount for an unverified coupon', () => {
     const cart = useCartStore()
     cart.addLocalItem({ id: 't1', name: 'A', price: 4000 }, 1)
     const result = cart.applyCoupon('PANGGU888')
-    expect(result.success).toBe(true)
-    expect(cart.coupon.discount).toBe(200)
+    expect(result.success).toBe(false)
+    expect(result.message).toContain('暂无可用优惠码')
+    expect(cart.coupon.discount).toBe(0)
   })
 
   it('rejects invalid coupon', () => {
@@ -174,28 +195,24 @@ describe('Cart Store', () => {
     expect(result.success).toBe(false)
   })
 
-  it('rejects coupon below minimum amount', () => {
+  it('uses the server-configured shipping rule instead of guessing from a region', () => {
     const cart = useCartStore()
-    cart.addLocalItem({ id: 't1', name: 'A', price: 500 }, 1)
-    const result = cart.applyCoupon('PANGGU888')
-    expect(result.success).toBe(false)
-  })
-
-  it('calculates shipping cost by region', () => {
-    const cart = useCartStore()
-    expect(cart.shippingCost).toBe(0) // 江浙沪 default
+    cart.addLocalItem({ id: 't1', name: 'A', price: 200 }, 1)
+    expect(cart.shippingCost).toBe(10)
     cart.setShippingRegion('其他地区')
-    expect(cart.shippingCost).toBe(20)
+    expect(cart.shippingCost).toBe(10)
     cart.setShippingRegion('西藏新疆')
-    expect(cart.shippingCost).toBe(50)
+    expect(cart.shippingCost).toBe(10)
+    cart.commerceSettings.free_shipping_threshold = 200
+    expect(cart.shippingCost).toBe(0)
   })
 
-  it('calculates total amount with discount and shipping', () => {
+  it('calculates total amount from the displayed price and shipping configuration', () => {
     const cart = useCartStore()
-    cart.addLocalItem({ id: 't1', name: 'A', price: 4000 }, 1)
+    cart.addLocalItem({ id: 't1', name: 'A', price: 200 }, 1)
     cart.setShippingRegion('其他地区')
     cart.applyCoupon('PANGGU888')
-    expect(cart.totalAmount).toBe(4000 + 20 - 200)
+    expect(cart.totalAmount).toBe(200 + 10)
   })
 
   it('removes item from cart', async () => {

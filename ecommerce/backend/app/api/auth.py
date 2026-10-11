@@ -1,13 +1,15 @@
 """
 胖虫电商系统 - 认证 API
 """
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, or_
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime
+from typing import Optional
 
 from ..core.database import get_db
+from ..core.config import settings
 from ..core.security import (
     verify_password,
     get_password_hash,
@@ -32,10 +34,49 @@ from ..schemas.user import (
 router = APIRouter(prefix="/auth", tags=["认证"])
 
 
+def _set_refresh_cookie(response: Response, refresh_token: str) -> None:
+    """Keep the long-lived credential out of JavaScript-readable storage."""
+    response.set_cookie(
+        key=settings.AUTH_REFRESH_COOKIE_NAME,
+        value=refresh_token,
+        max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
+        httponly=True,
+        secure=settings.AUTH_COOKIE_SECURE,
+        samesite=settings.AUTH_COOKIE_SAMESITE,
+        path="/api/auth",
+    )
+
+
+def _clear_refresh_cookie(response: Response) -> None:
+    response.delete_cookie(
+        key=settings.AUTH_REFRESH_COOKIE_NAME,
+        httponly=True,
+        secure=settings.AUTH_COOKIE_SECURE,
+        samesite=settings.AUTH_COOKIE_SAMESITE,
+        path="/api/auth",
+    )
+
+
+def _token_response(tokens: dict[str, str], request: Request) -> dict[str, Optional[str]]:
+    """Return cookie-first auth data; require an explicit legacy opt-in."""
+    if request.headers.get("x-token-transport", "").casefold() == "body":
+        return tokens
+    return {
+        "access_token": tokens["access_token"],
+        "refresh_token": None,
+        "token_type": tokens["token_type"],
+    }
+
+
 # ============ 注册 ============
 
 @router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
-async def register(user_data: UserRegister, db: AsyncSession = Depends(get_db)):
+async def register(
+    user_data: UserRegister,
+    request: Request,
+    response: Response,
+    db: AsyncSession = Depends(get_db),
+):
     """
     用户注册
 
@@ -89,13 +130,19 @@ async def register(user_data: UserRegister, db: AsyncSession = Depends(get_db)):
 
     # 生成 Token
     tokens = create_tokens(str(user.id))
-    return tokens
+    _set_refresh_cookie(response, tokens["refresh_token"])
+    return _token_response(tokens, request)
 
 
 # ============ 登录 ============
 
 @router.post("/login", response_model=TokenResponse)
-async def login(login_data: UserLogin, db: AsyncSession = Depends(get_db)):
+async def login(
+    login_data: UserLogin,
+    request: Request,
+    response: Response,
+    db: AsyncSession = Depends(get_db),
+):
     """
     用户登录
 
@@ -127,19 +174,29 @@ async def login(login_data: UserLogin, db: AsyncSession = Depends(get_db)):
 
     # 生成 Token
     tokens = create_tokens(str(user.id))
-    return tokens
+    _set_refresh_cookie(response, tokens["refresh_token"])
+    return _token_response(tokens, request)
 
 
 # ============ 刷新 Token ============
 
 @router.post("/refresh", response_model=TokenResponse)
-async def refresh_token(token_data: TokenRefresh, db: AsyncSession = Depends(get_db)):
+async def refresh_token(
+    request: Request,
+    response: Response,
+    token_data: Optional[TokenRefresh] = Body(default=None),
+    db: AsyncSession = Depends(get_db),
+):
     """
     刷新访问 Token
 
     - **refresh_token**: 刷新 Token
     """
-    payload = verify_token(token_data.refresh_token, token_type="refresh")
+    # Cookie auth is the production path.  The body remains accepted as a
+    # short-lived compatibility bridge for existing non-browser clients.
+    supplied_token = token_data.refresh_token if token_data else None
+    refresh_value = supplied_token or request.cookies.get(settings.AUTH_REFRESH_COOKIE_NAME)
+    payload = verify_token(refresh_value or "", token_type="refresh")
     if not payload:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -164,7 +221,15 @@ async def refresh_token(token_data: TokenRefresh, db: AsyncSession = Depends(get
 
     # 生成新的 Token
     tokens = create_tokens(user_id)
-    return tokens
+    _set_refresh_cookie(response, tokens["refresh_token"])
+    return _token_response(tokens, request)
+
+
+@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
+async def logout(response: Response) -> Response:
+    """Revoke the browser refresh session cookie."""
+    _clear_refresh_cookie(response)
+    return response
 
 
 # ============ 获取当前用户信息 ============

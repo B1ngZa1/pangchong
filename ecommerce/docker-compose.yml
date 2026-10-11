@@ -50,15 +50,21 @@ services:
     environment:
       # Defense/local mode is intentionally pinned to the bundled PostgreSQL.
       # Remote DATABASE_URL values belong in docker-compose.prod.yml or manual runs.
+      - APP_ENV=development
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-pangchong}:${POSTGRES_PASSWORD:-pangchong_dev_password}@postgres:5432/${POSTGRES_DB:-pangchong_ecommerce}
       - REDIS_URL=redis://:${REDIS_PASSWORD:-pangchong_dev_redis}@redis:6379/0
       - SECRET_KEY=${SECRET_KEY:-change-me-local-dev-secret}
       - DEBUG=${DEBUG:-true}
+      - RELOAD=${RELOAD:-true}
+      - WEB_CONCURRENCY=1
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-["http://localhost:3000","http://localhost","http://localhost:80"]}
       - ALIPAY_APP_ID=${ALIPAY_APP_ID:-}
       - ALIPAY_PRIVATE_KEY=${ALIPAY_PRIVATE_KEY:-}
       - ALIPAY_PUBLIC_KEY=${ALIPAY_PUBLIC_KEY:-}
       - ALIPAY_SANDBOX=${ALIPAY_SANDBOX:-true}
+      - ALIPAY_NOTIFY_URL=${ALIPAY_NOTIFY_URL:-}
+      - ALIPAY_RETURN_URL=${ALIPAY_RETURN_URL:-}
+      - ALIPAY_SELLER_ID=${ALIPAY_SELLER_ID:-}
       - SMTP_USER=${SMTP_USER:-}
       - SMTP_PASSWORD=${SMTP_PASSWORD:-}
       - ASSET_STORAGE_BACKEND=local

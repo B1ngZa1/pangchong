@@ -9,6 +9,15 @@
     font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
 
+  html {
+    color-scheme: dark;
+    scroll-behavior: smooth;
+  }
+
+  :where(h1, h2, h3, h4, h5, h6, [id]) {
+    scroll-margin-top: 6rem;
+  }
+
   ::selection {
     @apply bg-primary-500 text-dark-950;
   }
@@ -30,10 +39,30 @@
   }
 }
 
+/* The contrast mode is intentionally global so legacy Tailwind pages receive
+ * the same accessibility treatment as design-system components during migration. */
+[data-theme='high-contrast'] body {
+  background: var(--pc-color-dark-950);
+  color: var(--pc-color-dark-50);
+}
+
+[data-theme='high-contrast'] :where(.text-dark-300, .text-dark-400, .text-dark-500, .text-dark-600) {
+  color: var(--pc-color-dark-100) !important;
+}
+
+[data-theme='high-contrast'] :where(.border-dark-700, .border-dark-800, .border-white\/10) {
+  border-color: var(--pc-color-dark-500) !important;
+}
+
+[data-theme='high-contrast'] :where(a, button, input, select, textarea):focus-visible {
+  outline: 3px solid var(--pc-color-brand-300);
+  outline-offset: 3px;
+}
+
 /* 组件样式 */
 @layer components {
   .btn {
-    @apply inline-flex items-center justify-center px-6 py-3 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-dark-950 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center px-6 py-3 rounded-lg font-medium transition-colors duration-[var(--pc-motion-duration-normal)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-dark-950 disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn-primary {
@@ -53,7 +82,7 @@
   }
 
   .card {
-    @apply bg-dark-900 border border-dark-700 rounded-lg overflow-hidden transition-all duration-300 hover:border-primary-500/50 hover:shadow-lg hover:shadow-primary-500/10;
+    @apply bg-dark-900 border border-dark-700 rounded-lg overflow-hidden transition-[border-color,box-shadow] duration-[var(--pc-motion-duration-slow)] hover:border-primary-500/50 hover:shadow-lg hover:shadow-primary-500/10;
   }
 
   .badge {
@@ -76,15 +105,15 @@
 /* 动画 */
 @layer utilities {
   .animate-fade-in {
-    animation: fadeIn 0.3s ease-in-out;
+    animation: fadeIn var(--pc-motion-duration-slow) var(--pc-motion-ease-standard);
   }
 
   .animate-slide-up {
-    animation: slideUp 0.3s ease-out;
+    animation: slideUp var(--pc-motion-duration-slow) var(--pc-motion-ease-exit);
   }
 
   .animate-slide-down {
-    animation: slideDown 0.3s ease-out;
+    animation: slideDown var(--pc-motion-duration-slow) var(--pc-motion-ease-standard);
   }
 }
 
@@ -105,20 +134,37 @@
 
 /* Toast 通知 */
 .toast-enter-active {
-  animation: slideDown 0.3s ease-out;
+  animation: slideDown var(--pc-motion-duration-slow) var(--pc-motion-ease-standard);
 }
 
 .toast-leave-active {
-  animation: slideUp 0.3s ease-in reverse;
+  animation: slideUp var(--pc-motion-duration-slow) var(--pc-motion-ease-exit) reverse;
 }
 
 /* 页面过渡 */
 .page-enter-active,
 .page-leave-active {
-  transition: opacity 0.2s ease;
+  transition: opacity var(--pc-motion-duration-normal) var(--pc-motion-ease-standard);
 }
 
 .page-enter-from,
 .page-leave-to {
   opacity: 0;
+}
+
+/* Every shared motion path must remain usable when motion is reduced. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+  }
 }

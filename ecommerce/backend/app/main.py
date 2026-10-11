@@ -1,6 +1,6 @@
-"""
-胖虫电商系统 - FastAPI 应用入口
-"""
+"""胖虫电商系统 - FastAPI 应用入口。"""
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -15,6 +15,23 @@ from .core.config import settings
 from .core.database import init_db, close_db
 from .api import api_router
 
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    """Create shared resources before serving requests and release them on shutdown."""
+    # Production schema changes are applied by the dedicated Compose migration
+    # job. Keep create_all only as a local/test convenience for direct runs.
+    if settings.APP_ENV != "production":
+        await init_db()
+    os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
+    print(f"Pangchong API v{settings.APP_VERSION} started")
+    try:
+        yield
+    finally:
+        await close_db()
+        print("Pangchong API stopped")
+
+
 # 创建 FastAPI 应用
 app = FastAPI(
     title=settings.APP_NAME,
@@ -22,6 +39,7 @@ app = FastAPI(
     description="胖虫科技电商系统 API",
     docs_url="/docs",
     redoc_url="/redoc",
+    lifespan=lifespan,
 )
 
 # ============ 中间件 ============
@@ -86,27 +104,6 @@ async def global_exception_handler(request: Request, exc: Exception):
             "message": str(exc) if settings.DEBUG else "请联系管理员"
         }
     )
-
-
-# ============ 生命周期事件 ============
-
-@app.on_event("startup")
-async def startup_event():
-    """应用启动时执行"""
-    # 初始化数据库
-    await init_db()
-
-    # 创建上传目录
-    os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
-
-    print(f"🚀 {settings.APP_NAME} v{settings.APP_VERSION} 启动成功")
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """应用关闭时执行"""
-    await close_db()
-    print(f"👋 {settings.APP_NAME} 已关闭")
 
 
 # ============ 注册路由 ============

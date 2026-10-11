@@ -1,0 +1,258 @@
+{
+  "$schema": "https://design-tokens.github.io/community-group/format/",
+  "color": {
+    "brand": {
+      "50": { "$type": "color", "$value": "#f0fdf4" },
+      "100": { "$type": "color", "$value": "#dcfce7" },
+      "200": { "$type": "color", "$value": "#bbf7d0" },
+      "300": { "$type": "color", "$value": "#86efac" },
+      "400": { "$type": "color", "$value": "#4ade80" },
+      "500": { "$type": "color", "$value": "#44d62c", "$description": "PANGCHONG 虫翼绿，主行动与品牌强调色" },
+      "600": { "$type": "color", "$value": "#2ba81a" },
+      "700": { "$type": "color", "$value": "#15803d" },
+      "800": { "$type": "color", "$value": "#166534" },
+      "900": { "$type": "color", "$value": "#14532d" }
+    },
+    "dark": {
+      "50": { "$type": "color", "$value": "#f8fafc" },
+      "100": { "$type": "color", "$value": "#f1f5f9" },
+      "200": { "$type": "color", "$value": "#e2e8f0" },
+      "300": { "$type": "color", "$value": "#cbd5e1" },
+      "400": { "$type": "color", "$value": "#94a3b8" },
+      "500": { "$type": "color", "$value": "#64748b" },
+      "600": { "$type": "color", "$value": "#475569" },
+      "700": { "$type": "color", "$value": "#334155" },
+      "800": { "$type": "color", "$value": "#1e293b" },
+      "900": { "$type": "color", "$value": "#0f172a" },
+      "950": { "$type": "color", "$value": "#020617", "$description": "全局画布背景" }
+    },
+    "red": {
+      "400": { "$type": "color", "$value": "#f87171" },
+      "500": { "$type": "color", "$value": "#ef4444" },
+      "900": { "$type": "color", "$value": "#7f1d1d" }
+    },
+    "amber": {
+      "300": { "$type": "color", "$value": "#fcd34d" },
+      "500": { "$type": "color", "$value": "#f59e0b" },
+      "900": { "$type": "color", "$value": "#78350f" }
+    },
+    "blue": {
+      "300": { "$type": "color", "$value": "#93c5fd" },
+      "500": { "$type": "color", "$value": "#3b82f6" },
+      "900": { "$type": "color", "$value": "#1e3a8a" }
+    },
+    "semantic": {
+      "background": {
+        "canvas": { "$type": "color", "$value": "{color.dark.950}" },
+        "surface": { "$type": "color", "$value": "{color.dark.900}" },
+        "elevated": { "$type": "color", "$value": "{color.dark.800}" },
+        "accent": { "$type": "color", "$value": "{color.brand.500}" },
+        "danger": { "$type": "color", "$value": "{color.red.900}" },
+        "warning": { "$type": "color", "$value": "{color.amber.900}" },
+        "info": { "$type": "color", "$value": "{color.blue.900}" }
+      },
+      "text": {
+        "primary": { "$type": "color", "$value": "{color.dark.50}" },
+        "secondary": { "$type": "color", "$value": "{color.dark.300}" },
+        "muted": { "$type": "color", "$value": "{color.dark.400}" },
+        "subtle": { "$type": "color", "$value": "{color.dark.500}" },
+        "inverse": { "$type": "color", "$value": "{color.dark.950}" },
+        "accent": { "$type": "color", "$value": "{color.brand.500}" },
+        "danger": { "$type": "color", "$value": "{color.red.400}" },
+        "warning": { "$type": "color", "$value": "{color.amber.300}" },
+        "info": { "$type": "color", "$value": "{color.blue.300}" }
+      },
+      "border": {
+        "subtle": { "$type": "color", "$value": "{color.dark.800}" },
+        "default": { "$type": "color", "$value": "{color.dark.700}" },
+        "strong": { "$type": "color", "$value": "{color.dark.600}" },
+        "accent": { "$type": "color", "$value": "{color.brand.500}" },
+        "danger": { "$type": "color", "$value": "{color.red.500}" },
+        "warning": { "$type": "color", "$value": "{color.amber.500}" },
+        "focus": { "$type": "color", "$value": "{color.brand.300}" }
+      },
+      "action": {
+        "primary": { "$type": "color", "$value": "{color.brand.500}" },
+        "primary-hover": { "$type": "color", "$value": "{color.brand.400}" },
+        "primary-active": { "$type": "color", "$value": "{color.brand.600}" },
+        "secondary": { "$type": "color", "$value": "{color.dark.800}" },
+        "secondary-hover": { "$type": "color", "$value": "{color.dark.700}" },
+        "disabled": { "$type": "color", "$value": "{color.dark.700}" }
+      }
+    },
+    "theme": {
+        "home": {
+          "deep": { "$type": "color", "$value": "#030b13", "$description": "首页深色渐变中间层" },
+          "stage": { "$type": "color", "$value": "#071016", "$description": "首页商品媒体背景" },
+          "cyan": { "$type": "color", "$value": "#0e7490", "$description": "首页冷色氛围光" }
+        },
+        "store": {
+          "canvas": { "$type": "color", "$value": "#f5f5f7", "$description": "门店浅色主题画布" },
+          "text": { "$type": "color", "$value": "#1d1d1f", "$description": "门店浅色主题主文字" },
+          "muted": { "$type": "color", "$value": "#6e6e73", "$description": "门店浅色主题辅助文字" },
+          "surface": { "$type": "color", "$value": "#ffffff", "$description": "门店浅色主题卡片" },
+          "border": { "$type": "color", "$value": "#e8e8ed", "$description": "门店浅色主题边框" },
+          "action": { "$type": "color", "$value": "#0071e3", "$description": "门店浅色主题主行动" },
+          "link": { "$type": "color", "$value": "#0066cc", "$description": "门店浅色主题链接" }
+        },
+        "service": {
+          "canvas": { "$type": "color", "$value": "#050505", "$description": "服务中心深色画布" },
+          "hero": { "$type": "color", "$value": "#20262a", "$description": "服务中心 Hero 氛围层" },
+          "rail": { "$type": "color", "$value": "#101010", "$description": "服务中心导航与收束表面" },
+          "surface": { "$type": "color", "$value": "#151515", "$description": "服务中心默认卡片表面" },
+          "surface-hover": { "$type": "color", "$value": "#1d1d1f", "$description": "服务中心悬停表面" },
+          "category-hover": { "$type": "color", "$value": "#161616", "$description": "服务分类悬停表面" },
+          "search": { "$type": "color", "$value": "#141416", "$description": "服务搜索输入表面" },
+          "contact": { "$type": "color", "$value": "#000000", "$description": "服务联系区表面" },
+          "border-subtle": { "$type": "color", "$value": "#1c1c1f", "$description": "服务中心弱分隔线" },
+          "border": { "$type": "color", "$value": "#262629", "$description": "服务中心默认边框" },
+          "divider": { "$type": "color", "$value": "#1f1f22", "$description": "服务分类分隔线" },
+          "divider-strong": { "$type": "color", "$value": "#2a2a2d", "$description": "服务联系区分隔线" },
+          "control-border": { "$type": "color", "$value": "#3a3a3d", "$description": "服务中心次级控件边框" },
+          "control": { "$type": "color", "$value": "#4a4a4f", "$description": "服务中心开关边框" },
+          "text-primary": { "$type": "color", "$value": "#ffffff", "$description": "服务中心高优先级文字" },
+          "text-secondary": { "$type": "color", "$value": "#f5f5f7", "$description": "服务中心正文强调文字" },
+          "text-body": { "$type": "color", "$value": "#d1d1d6", "$description": "服务中心正文文字" },
+          "text-muted": { "$type": "color", "$value": "#a1a1aa", "$description": "服务中心辅助文字" },
+          "text-subtle": { "$type": "color", "$value": "#8e8e93", "$description": "服务中心弱化文字" },
+          "text-category": { "$type": "color", "$value": "#9b9ba1", "$description": "服务分类辅助文字" },
+          "text-legal": { "$type": "color", "$value": "#c7c7cc", "$description": "服务条款正文文字" },
+          "spark": { "$type": "color", "$value": "#38bdf8", "$description": "服务中心冷色氛围光" },
+          "focus-glow": { "$type": "color", "$value": "#14b8a6", "$description": "服务中心搜索聚焦氛围光" },
+          "print-canvas": { "$type": "color", "$value": "#ffffff", "$description": "服务中心打印画布" },
+          "print-text": { "$type": "color", "$value": "#111827", "$description": "服务中心打印正文文字" },
+          "print-border": { "$type": "color", "$value": "#d1d5db", "$description": "服务中心打印边框" }
+        }
+      }
+  },
+  "space": {
+    "0": { "$type": "dimension", "$value": "0" },
+    "1": { "$type": "dimension", "$value": "0.25rem" },
+    "2": { "$type": "dimension", "$value": "0.5rem" },
+    "3": { "$type": "dimension", "$value": "0.75rem" },
+    "4": { "$type": "dimension", "$value": "1rem" },
+    "5": { "$type": "dimension", "$value": "1.25rem" },
+    "6": { "$type": "dimension", "$value": "1.5rem" },
+    "8": { "$type": "dimension", "$value": "2rem" },
+    "10": { "$type": "dimension", "$value": "2.5rem" },
+    "12": { "$type": "dimension", "$value": "3rem" },
+    "16": { "$type": "dimension", "$value": "4rem" },
+    "20": { "$type": "dimension", "$value": "5rem" },
+    "24": { "$type": "dimension", "$value": "6rem" }
+  },
+  "size": {
+    "control": {
+      "sm": { "$type": "dimension", "$value": "2rem" },
+      "md": { "$type": "dimension", "$value": "2.5rem" },
+      "lg": { "$type": "dimension", "$value": "3rem" },
+      "touch": { "$type": "dimension", "$value": "2.75rem", "$description": "最小触控目标" }
+    },
+    "content": {
+      "sm": { "$type": "dimension", "$value": "40rem" },
+      "md": { "$type": "dimension", "$value": "64rem" },
+      "lg": { "$type": "dimension", "$value": "80rem" }
+    }
+  },
+  "layout": {
+    "commerce": {
+      "max": { "$type": "dimension", "$value": "80rem", "$description": "商城内容区最大宽度" }
+    },
+    "workbench": {
+      "nav": { "$type": "dimension", "$value": "14rem", "$description": "工作台左侧导航宽度" },
+      "inspector": { "$type": "dimension", "$value": "20rem", "$description": "工作台右侧检查器宽度" },
+      "gap": { "$type": "dimension", "$value": "1rem", "$description": "工作台三栏间距" },
+      "canvas-min": { "$type": "dimension", "$value": "28rem", "$description": "工作台画布最小宽度" }
+    }
+  },
+  "density": {
+    "comfortable": {
+      "gap": { "$type": "dimension", "$value": "1.5rem", "$description": "商城浏览模式的内容间距" },
+      "padding": { "$type": "dimension", "$value": "1.5rem", "$description": "商城浏览模式的容器内边距" }
+    },
+    "compact": {
+      "gap": { "$type": "dimension", "$value": "0.75rem", "$description": "配置工作台的紧凑间距" },
+      "padding": { "$type": "dimension", "$value": "0.75rem", "$description": "配置工作台的紧凑内边距" }
+    }
+  },
+  "radius": {
+    "none": { "$type": "dimension", "$value": "0" },
+    "sm": { "$type": "dimension", "$value": "0.25rem" },
+    "md": { "$type": "dimension", "$value": "0.5rem" },
+    "lg": { "$type": "dimension", "$value": "0.75rem" },
+    "xl": { "$type": "dimension", "$value": "1rem" },
+    "full": { "$type": "dimension", "$value": "9999px" }
+  },
+  "font": {
+    "family": {
+      "sans": { "$type": "fontFamily", "$value": "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', sans-serif" },
+      "mono": { "$type": "fontFamily", "$value": "'SFMono-Regular', Consolas, 'Liberation Mono', monospace" }
+    },
+    "size": {
+      "xs": { "$type": "dimension", "$value": "0.75rem" },
+      "sm": { "$type": "dimension", "$value": "0.875rem" },
+      "md": { "$type": "dimension", "$value": "1rem" },
+      "lg": { "$type": "dimension", "$value": "1.125rem" },
+      "xl": { "$type": "dimension", "$value": "1.25rem" },
+      "2xl": { "$type": "dimension", "$value": "1.5rem" },
+      "3xl": { "$type": "dimension", "$value": "1.875rem" },
+      "4xl": { "$type": "dimension", "$value": "2.25rem" },
+      "display": { "$type": "dimension", "$value": "clamp(3rem, 7vw, 5.75rem)" }
+    },
+    "lineHeight": {
+      "tight": { "$type": "number", "$value": "1.15" },
+      "normal": { "$type": "number", "$value": "1.5" },
+      "relaxed": { "$type": "number", "$value": "1.75" }
+    },
+    "weight": {
+      "regular": { "$type": "fontWeight", "$value": "400" },
+      "medium": { "$type": "fontWeight", "$value": "500" },
+      "semibold": { "$type": "fontWeight", "$value": "600" },
+      "bold": { "$type": "fontWeight", "$value": "700" },
+      "black": { "$type": "fontWeight", "$value": "900" }
+    }
+  },
+  "shadow": {
+    "sm": { "$type": "shadow", "$value": "0 1px 2px rgb(0 0 0 / 0.24)" },
+    "md": { "$type": "shadow", "$value": "0 10px 30px rgb(0 0 0 / 0.28)" },
+    "lg": { "$type": "shadow", "$value": "0 24px 64px rgb(0 0 0 / 0.4)" },
+    "focus": { "$type": "shadow", "$value": "0 0 0 3px rgb(134 239 172 / 0.32)" }
+  },
+  "opacity": {
+    "status": { "$type": "number", "$value": "0.42" },
+    "disabled": { "$type": "number", "$value": "0.64" },
+    "muted": { "$type": "number", "$value": "0.56" },
+    "overlay": { "$type": "number", "$value": "0.74" }
+  },
+  "motion": {
+    "duration": {
+      "fast": { "$type": "duration", "$value": "120ms" },
+      "micro": { "$type": "duration", "$value": "160ms", "$description": "服务中心、导航等高频微交互时长" },
+      "normal": { "$type": "duration", "$value": "200ms" },
+      "slow": { "$type": "duration", "$value": "320ms" },
+      "prominent": { "$type": "duration", "$value": "450ms", "$description": "商品媒体和重点视觉状态过渡时长" },
+      "ambient": { "$type": "duration", "$value": "700ms", "$description": "首页氛围层和背景状态过渡时长" },
+      "spin": { "$type": "duration", "$value": "800ms", "$description": "装饰性加载 spinner 周期" },
+      "loading": { "$type": "duration", "$value": "700ms", "$description": "按钮和图标按钮 loading spinner 周期" },
+      "shimmer": { "$type": "duration", "$value": "1400ms", "$description": "Skeleton 内容占位 shimmer 周期" }
+    },
+    "ease": {
+      "standard": { "$type": "cubicBezier", "$value": "cubic-bezier(0.2, 0, 0, 1)" },
+      "exit": { "$type": "cubicBezier", "$value": "cubic-bezier(0.4, 0, 1, 1)" },
+      "linear": { "$type": "cubicBezier", "$value": "linear" }
+    }
+  },
+  "breakpoint": {
+    "sm": { "$type": "dimension", "$value": "640px" },
+    "md": { "$type": "dimension", "$value": "768px" },
+    "lg": { "$type": "dimension", "$value": "1024px" },
+    "xl": { "$type": "dimension", "$value": "1280px" }
+  },
+  "zIndex": {
+    "base": { "$type": "number", "$value": "0" },
+    "sticky": { "$type": "number", "$value": "40" },
+    "navigation": { "$type": "number", "$value": "50" },
+    "overlay": { "$type": "number", "$value": "900" },
+    "modal": { "$type": "number", "$value": "1000" },
+    "toast": { "$type": "number", "$value": "1100" }
+  }
+}

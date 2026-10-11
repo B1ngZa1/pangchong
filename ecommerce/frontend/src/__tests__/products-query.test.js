@@ -157,6 +157,19 @@ describe('Products query-driven filters', () => {
     wrapper.unmount()
   })
 
+  it('gives the catalog sort control a programmatic label', async () => {
+    const { wrapper } = await mountProducts()
+    const sortSelect = wrapper.get('select')
+    const label = wrapper.get('label')
+
+    expect(label.text()).toContain('排序方式')
+    expect(sortSelect.attributes('id')).toBe(label.attributes('for'))
+    await sortSelect.setValue('price-asc')
+    expect(sortSelect.element.value).toBe('price-asc')
+
+    wrapper.unmount()
+  })
+
   it('refetches when a catalog query parameter changes', async () => {
     const { router, wrapper } = await mountProducts({ category: 'desktop' })
     vi.mocked(api.get).mockClear()

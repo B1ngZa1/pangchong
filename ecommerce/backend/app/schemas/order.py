@@ -19,21 +19,43 @@ class OrderStatus(str, Enum):
     REFUNDED = "refunded"
 
 
+class DiyPartReference(BaseModel):
+    """A client reference to one server-catalog product in a DIY slot."""
+    model_config = ConfigDict(extra="forbid")
+
+    slot_id: str = Field(..., min_length=1, max_length=50)
+    product_id: UUID
+    quantity: int = Field(1, ge=1, le=99)
+
+
+class DiyConfigurationReference(BaseModel):
+    """Versioned DIY references; descriptive and monetary fields are forbidden."""
+    model_config = ConfigDict(extra="forbid")
+
+    configuration_id: str = Field(..., min_length=1, max_length=100)
+    version: int = Field(..., ge=1)
+    variant_id: str = Field(..., min_length=1, max_length=50)
+    material_id: str = Field(..., min_length=1, max_length=50)
+    parts: List[DiyPartReference] = Field(..., min_length=1, max_length=32)
+
+
 class CustomOrderItemCreate(BaseModel):
-    """本地定制商品下单快照"""
-    product_name: str = Field(..., min_length=1, max_length=200)
-    product_image: Optional[str] = Field(None, max_length=500)
-    product_specs: Optional[Dict[str, Any]] = None
-    price: Decimal = Field(..., gt=0)
+    """A DIY order item containing references only, never client pricing."""
+    model_config = ConfigDict(extra="forbid")
+
+    configuration: DiyConfigurationReference
     quantity: int = Field(..., ge=1, le=99)
 
 
 class OrderCreate(BaseModel):
     """创建订单请求"""
+    model_config = ConfigDict(extra="forbid")
+
     address_id: UUID = Field(..., description="收货地址ID")
     remark: Optional[str] = Field(None, max_length=500, description="订单备注")
     cart_item_ids: Optional[List[UUID]] = Field(None, description="购物车商品ID列表，为空则结算全部")
-    custom_items: Optional[List[CustomOrderItemCreate]] = Field(None, description="本地定制商品快照")
+    custom_items: Optional[List[CustomOrderItemCreate]] = Field(None, description="DIY configuration references")
+    idempotency_key: Optional[UUID] = Field(None, description="Stable key reused when retrying the same submit")
 
 
 class OrderItemResponse(BaseModel):
@@ -44,6 +66,8 @@ class OrderItemResponse(BaseModel):
     product_name: str
     product_image: Optional[str]
     product_specs: Optional[Dict[str, Any]] = None
+    configuration_id: Optional[str] = None
+    configuration_version: Optional[int] = None
     price: Decimal
     quantity: int
     subtotal: Decimal

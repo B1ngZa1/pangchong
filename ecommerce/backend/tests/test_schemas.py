@@ -116,17 +116,38 @@ class TestAddress:
 class TestCustomOrderItem:
     def test_valid_custom_item(self):
         data = CustomOrderItemCreate(
-            product_name="Custom PC Build",
-            price=12999,
+            configuration={
+                "configuration_id": "diy-pc",
+                "version": 1,
+                "variant_id": "black",
+                "material_id": "matte",
+                "parts": [{
+                    "slot_id": "cpu",
+                    "product_id": "11111111-1111-1111-1111-111111111111",
+                    "quantity": 1,
+                }],
+            },
             quantity=1,
-            product_specs={"CPU": "Ryzen 9", "GPU": "RTX 5090"},
         )
-        assert data.product_name == "Custom PC Build"
-        assert data.product_specs["CPU"] == "Ryzen 9"
+        assert data.configuration.configuration_id == "diy-pc"
+        assert data.configuration.parts[0].slot_id == "cpu"
 
-    def test_rejects_zero_price(self):
+    def test_rejects_client_price(self):
         with pytest.raises(ValidationError):
-            CustomOrderItemCreate(product_name="Custom PC Build", price=0, quantity=1)
+            CustomOrderItemCreate(
+                configuration={
+                    "configuration_id": "diy-pc",
+                    "version": 1,
+                    "variant_id": "black",
+                    "material_id": "matte",
+                    "parts": [{
+                        "slot_id": "cpu",
+                        "product_id": "11111111-1111-1111-1111-111111111111",
+                    }],
+                },
+                quantity=1,
+                price="0.01",
+            )
 
 
 class TestProductAssetMetadata:

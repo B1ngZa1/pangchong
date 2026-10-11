@@ -8,23 +8,6 @@ const SESSION_KEY = 'cart_session_id'
 const LOCAL_CART_KEY = 'pangchong_local_cart'
 const SELECTED_KEY = 'pangchong_cart_selected'
 
-interface CouponInfo {
-  minAmount: number
-  discount: number
-  desc: string
-}
-
-const COUPONS: Record<string, CouponInfo> = {
-  'PANGGU888': { minAmount: 3000, discount: 200, desc: '满3000减200' },
-  'DIY2026': { minAmount: 5000, discount: 500, desc: '满5000减500' },
-}
-
-const SHIPPING_RATES: Record<string, number> = {
-  '江浙沪': 0,
-  '其他地区': 20,
-  '西藏新疆': 50,
-}
-
 export interface CartItem {
   id: string
   product_id: string
@@ -168,29 +151,41 @@ function isLocalOrCustomItem(item: Pick<CartItem, 'id' | 'item_type'>): boolean 
 export const useCartStore = defineStore('cart', () => {
   const items = ref<CartItem[]>([])
   const loading = ref(false)
-  const coupon = ref<CouponState>(loadCoupon())
+  const loadError = ref('')
+  const coupon = ref<CouponState>({ code: null, discount: 0 })
+  const commerceSettings = ref({ shipping_fee: 10, free_shipping_threshold: 299, currency: 'CNY', payment_mode: 'sandbox' })
   const shippingRegion = ref('江浙沪')
   const sessionId = ref(getSessionId())
 
   const totalItems = computed(() => items.value.reduce((s, i) => s + i.quantity, 0))
-  const selectedItems = computed(() => items.value.filter(i => i.selected && i.stock > 0))
+  const selectedItems = computed(() => items.value.filter(i => i.selected && i.stock > 0 && i.is_in_stock !== false))
   const selectedCount = computed(() => selectedItems.value.reduce((s, i) => s + i.quantity, 0))
   const allSelected = computed(() => items.value.length > 0 && items.value.every(i => i.selected || i.stock <= 0))
   const subtotal = computed(() => selectedItems.value.reduce((s, i) => s + Number(i.price) * i.quantity, 0))
-  const shippingCost = computed(() => SHIPPING_RATES[shippingRegion.value] ?? 20)
-  const discountAmount = computed(() => {
-    const c = coupon.value
-    if (!c.code || !c.discount) return 0
-    if (subtotal.value >= (COUPONS[c.code]?.minAmount || 0)) return c.discount
-    return 0
-  })
+  const shippingCost = computed(() => selectedCount.value === 0 || subtotal.value >= commerceSettings.value.free_shipping_threshold ? 0 : commerceSettings.value.shipping_fee)
+  const discountAmount = computed(() => 0)
   const totalAmount = computed(() => Math.max(0, subtotal.value + shippingCost.value - discountAmount.value))
   const isEmpty = computed(() => items.value.length === 0)
+
+  async function fetchCommerceSettings() {
+    // Keep default estimates available during a temporary settings outage.
+    if (typeof cartApi.getCommerceSettings !== 'function') return
+    try {
+      const data = await cartApi.getCommerceSettings()
+      if (Number.isFinite(Number(data?.shipping_fee)) && Number.isFinite(Number(data?.free_shipping_threshold))) {
+        commerceSettings.value = { ...data, shipping_fee: Number(data.shipping_fee), free_shipping_threshold: Number(data.free_shipping_threshold) }
+      }
+    } catch { /* The confirmed order always uses the server's final amount. */ }
+  }
 
   async function fetchCart() {
     const userStore = useUserStore()
     loading.value = true
+    loadError.value = ''
     try {
+      // App mounts before public-route session restoration completes. Wait to
+      // choose the authenticated or anonymous cart, without delaying the page.
+      await Promise.all([userStore.hydrateSession(), fetchCommerceSettings()])
       const sid = userStore.isLoggedIn ? undefined : sessionId.value
       const data = await cartApi.getCart(sid) as { items?: BackendCartItem[] }
       const backendItems = (data.items || []).map(mapCartItem)
@@ -199,9 +194,9 @@ export const useCartStore = defineStore('cart', () => {
       )
       items.value = [...backendItems, ...localItems]
     } catch {
-      console.warn('fetchCart failed')
+      loadError.value = '购物车同步失败，请检查网络后重试。已保留当前商品。'
       const localItems = loadLocalCart()
-      if (localItems.length > 0) items.value = localItems
+      if (items.value.length === 0 && localItems.length > 0) items.value = localItems
     } finally {
       loading.value = false
     }
@@ -226,8 +221,10 @@ export const useCartStore = defineStore('cart', () => {
   async function updateQuantity(itemId: string, quantity: number) {
     const item = items.value.find(i => i.id === itemId)
     if (!item) return
-    const newQty = Math.max(1, Math.min(99, Math.min(quantity, item.stock)))
+    if (!Number.isFinite(quantity) || item.stock <= 0) return
+    const newQty = Math.max(1, Math.min(99, Math.min(Math.floor(quantity), item.stock)))
     if (newQty === item.quantity) return
+    const previousQuantity = item.quantity
     item.quantity = newQty
 
     if (isLocalOrCustomItem(item)) {
@@ -241,7 +238,7 @@ export const useCartStore = defineStore('cart', () => {
     try {
       await cartApi.updateCartItem(itemId, { quantity: newQty }, sid)
     } catch {
-      await fetchCart()
+      item.quantity = previousQuantity
       throw new Error('更新数量失败')
     }
   }
@@ -269,15 +266,16 @@ export const useCartStore = defineStore('cart', () => {
   async function removeItem(itemId: string) {
     const userStore = useUserStore()
     const sid = userStore.isLoggedIn ? undefined : sessionId.value
-    items.value = items.value.filter(i => i.id !== itemId)
     if (itemId.startsWith('local_')) {
+      items.value = items.value.filter(i => i.id !== itemId)
       saveLocalCart(items.value.filter(i => i.id.startsWith('local_')))
       persistSelectedState()
     } else {
       try {
         await cartApi.removeCartItem(itemId, sid)
+        items.value = items.value.filter(i => i.id !== itemId)
+        persistSelectedState()
       } catch {
-        await fetchCart()
         throw new Error('删除失败')
       }
     }
@@ -287,23 +285,17 @@ export const useCartStore = defineStore('cart', () => {
     const userStore = useUserStore()
     const sid = userStore.isLoggedIn ? undefined : sessionId.value
     const toRemove = items.value.filter(i => i.selected)
-    items.value = items.value.filter(i => !i.selected)
-    persistSelectedState()
     const results = await Promise.allSettled(
       toRemove.map(i => {
         if (i.id.startsWith('local_')) return Promise.resolve()
         return cartApi.removeCartItem(i.id, sid)
       })
     )
-    const hasFailure = results.some(r => r.status === 'rejected')
-    if (hasFailure) {
-      await fetchCart()
-    } else {
-      const localItems = loadLocalCart().filter(li =>
-        !toRemove.some(r => r.product_id === li.product_id)
-      )
-      saveLocalCart(localItems)
-    }
+    const removedIds = new Set(toRemove.filter((_, index) => results[index].status === 'fulfilled').map(item => item.id))
+    items.value = items.value.filter(item => !removedIds.has(item.id))
+    saveLocalCart(loadLocalCart().filter(item => !removedIds.has(item.id)))
+    persistSelectedState()
+    if (results.some(result => result.status === 'rejected')) throw new Error('部分商品删除失败，已保留未删除的商品，请重试')
   }
 
   function removeLocalItems(itemIds: string[]) {
@@ -341,14 +333,7 @@ export const useCartStore = defineStore('cart', () => {
   }
 
   function applyCoupon(code: string) {
-    const upper = code.trim().toUpperCase()
-    const c = COUPONS[upper]
-    if (!c) return { success: false, message: '优惠码无效或已过期' }
-    if (subtotal.value < c.minAmount) {
-      return { success: false, message: `订单金额需满¥${c.minAmount}才可使用此优惠码` }
-    }
-    coupon.value = { code: upper, discount: c.discount }
-    return { success: true, message: `已应用优惠：${c.desc}` }
+    return { success: false, message: '当前暂无可用优惠码，商品以页面售价结算' }
   }
 
   function removeCoupon() {
@@ -360,7 +345,7 @@ export const useCartStore = defineStore('cart', () => {
   }
 
   function getShippingRates() {
-    return Object.entries(SHIPPING_RATES).map(([name, cost]) => ({ name, cost }))
+    return [{ name: '标准配送', cost: commerceSettings.value.shipping_fee }]
   }
 
   function isInCart(productId: string) {
@@ -426,6 +411,7 @@ export const useCartStore = defineStore('cart', () => {
     items.value = []
     coupon.value = { code: null, discount: 0 }
     shippingRegion.value = '江浙沪'
+    loadError.value = ''
     try {
       localStorage.removeItem(LOCAL_CART_KEY)
       localStorage.removeItem(SELECTED_KEY)
@@ -434,10 +420,10 @@ export const useCartStore = defineStore('cart', () => {
   }
 
   return {
-    items, loading, coupon, shippingRegion, sessionId,
+    items, loading, loadError, commerceSettings, coupon, shippingRegion, sessionId,
     totalItems, selectedItems, selectedCount, allSelected,
     subtotal, shippingCost, discountAmount, totalAmount, isEmpty,
-    fetchCart, addToCart, addItem, addLocalItem, addCustomItem, updateQuantity,
+    fetchCart, fetchCommerceSettings, addToCart, addItem, addLocalItem, addCustomItem, updateQuantity,
     toggleSelect, toggleSelectAll,
     removeLocalItems,
     removeItem, removeSelected, clearCart,

@@ -1,38 +1,48 @@
 <template>
   <div class="min-h-screen bg-dark-950 py-8">
     <div class="max-w-4xl mx-auto px-4">
-      <h1 class="text-3xl font-bold mb-8">我的订单</h1>
+      <p class="text-xs uppercase tracking-[0.25em] text-primary-500 mb-3">我的装备进度</p>
+      <h1 class="text-3xl font-bold mb-3">我的订单</h1>
+      <p class="text-sm text-dark-400 mb-8">每一次升级的进度，都在这里。</p>
 
-      <div v-if="loading" class="flex justify-center py-20">
-        <div class="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary-500"></div>
+      <div class="mb-4 flex gap-2 overflow-x-auto pb-2" role="group" aria-label="订单状态筛选">
+        <button v-for="s in statusFilters" :key="s.value"
+          @click="currentStatus = s.value; currentPage = 1; fetchOrders()"
+          class="shrink-0 rounded-full px-4 py-1.5 text-xs font-medium whitespace-nowrap transition-colors"
+          :class="currentStatus === s.value ? 'bg-primary-500 text-dark-950' : 'bg-dark-800 text-dark-400 hover:text-dark-200'"
+          :aria-pressed="currentStatus === s.value">
+          {{ s.label }}
+        </button>
       </div>
 
-      <div v-else-if="orders.length === 0" class="text-center py-20">
-        <div class="text-7xl mb-6 opacity-30">📦</div>
-        <p class="text-dark-400 text-xl mb-2">暂无订单</p>
-        <p class="text-dark-600 text-sm mb-8">快去挑选心仪的配件吧</p>
-        <router-link to="/products" class="inline-block px-8 py-3 bg-primary-500 text-dark-950 font-semibold rounded-xl hover:bg-primary-400 transition-colors">
-          去购物
-        </router-link>
-      </div>
+      <DsAsyncState
+        :state="requestState"
+        loading-label="正在加载订单"
+        :empty-title="currentStatus ? '暂无' + statusText(currentStatus) + '订单' : '暂无订单'"
+        :empty-description="currentStatus ? '试试其他状态，或查看全部订单。' : '去挑选心仪的配件，完成第一笔配置。'"
+        error-title="订单加载失败"
+        :error-description="requestError"
+        retry-label="重试加载订单"
+        @retry="fetchOrders"
+      >
+        <template #action>
+          <DsButton v-if="requestState === 'empty' && currentStatus" variant="secondary" size="sm" type="button" @click="currentStatus = ''; currentPage = 1; fetchOrders()">查看全部订单</DsButton>
+          <DsButton v-else-if="requestState === 'empty'" variant="primary" size="sm" type="button" @click="router.push('/products')">
+            去购物
+          </DsButton>
+          <DsButton v-else-if="requestState === 'error'" variant="secondary" size="sm" type="button" @click="fetchOrders">
+            重试加载订单
+          </DsButton>
+        </template>
 
-      <div v-else class="space-y-4">
-        <!-- 状态筛选 -->
-        <div class="flex gap-2 mb-4 overflow-x-auto pb-2">
-          <button v-for="s in statusFilters" :key="s.value"
-            @click="currentStatus = s.value; fetchOrders()"
-            class="px-4 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors"
-            :class="currentStatus === s.value ? 'bg-primary-500 text-dark-950' : 'bg-dark-800 text-dark-400 hover:text-dark-200'">
-            {{ s.label }}
-          </button>
-        </div>
+        <div class="space-y-4">
 
         <router-link v-for="order in ordersWithPreview" :key="order.id" :to="`/orders/${order.id}`"
           class="block bg-dark-900 rounded-2xl border border-dark-800 p-6 hover:border-primary-500/30 transition-colors">
-          <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center gap-4">
-              <span class="text-dark-400 text-sm">订单号：{{ order.order_no }}</span>
-              <span class="text-dark-600 text-sm">{{ formatDate(order.created_at) }}</span>
+          <div class="flex flex-wrap items-start justify-between gap-3 mb-4">
+            <div class="min-w-0 flex flex-col gap-1">
+              <span class="text-dark-300 text-sm break-all">订单号：{{ order.order_no }}</span>
+              <span class="text-dark-400 text-xs">{{ formatDate(order.created_at) }}</span>
             </div>
             <span class="text-xs px-3 py-1 rounded-full font-medium" :class="statusClass(order.status)">
               {{ statusText(order.status) }}
@@ -73,7 +83,7 @@
 
           <div class="flex items-center justify-between pt-3 border-t border-dark-800">
             <div class="flex items-center gap-2 text-sm">
-              <span class="text-dark-400">{{ order.items?.length || 0 }} 件商品</span>
+              <span class="text-dark-400">{{ (order.items || []).reduce((count, item) => count + Number(item.quantity || 0), 0) }} 件商品</span>
               <span v-if="hasCustomItems(order)"
                 class="inline-flex items-center rounded-full border border-primary-500/40 bg-primary-500/10 px-2 py-0.5 text-[10px] font-medium text-primary-500">
                 含定制
@@ -84,15 +94,16 @@
         </router-link>
 
         <!-- 分页 -->
-        <div v-if="totalPages > 1" class="flex justify-center gap-2 mt-6">
-          <button v-for="p in totalPages" :key="p"
-            @click="currentPage = p; fetchOrders()"
-            class="w-9 h-9 rounded-lg text-sm font-medium transition-colors"
-            :class="currentPage === p ? 'bg-primary-500 text-dark-950' : 'bg-dark-800 text-dark-400 hover:text-dark-200'">
-            {{ p }}
-          </button>
+        <DsPagination
+          v-if="totalPages > 1"
+          v-model:page="currentPage"
+          class="mt-6"
+          :total-pages="totalPages"
+          :disabled="loading"
+          @change="fetchOrders"
+        />
         </div>
-      </div>
+      </DsAsyncState>
     </div>
   </div>
 </template>
@@ -102,6 +113,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/store/user'
 import { orderApi } from '@/api'
+import { DsAsyncState, DsButton, DsPagination } from '@/design-system'
 import { buildOrderCustomPreview, isCustomOrderItem } from '@/utils/orderSpecs'
 
 const router = useRouter()
@@ -109,10 +121,13 @@ const userStore = useUserStore()
 
 const orders = ref([])
 const loading = ref(true)
+const requestState = ref('loading')
+const requestError = ref('')
 const currentPage = ref(1)
 const pageSize = 20
 const total = ref(0)
 const currentStatus = ref('')
+let requestId = 0
 
 const totalPages = computed(() => Math.ceil(total.value / pageSize))
 const ordersWithPreview = computed(() => orders.value.map(order => ({
@@ -145,18 +160,26 @@ const isCustomItem = isCustomOrderItem
 const hasCustomItems = (order) => (order.items || []).some(isCustomItem)
 
 async function fetchOrders() {
+  const activeRequest = ++requestId
   loading.value = true
+  requestState.value = 'loading'
+  requestError.value = ''
   try {
     const params = { page: currentPage.value, page_size: pageSize }
     if (currentStatus.value) params.status = currentStatus.value
     const data = await orderApi.getOrders(params)
+    if (activeRequest !== requestId) return
     orders.value = data.items || []
     total.value = data.total || 0
+    requestState.value = orders.value.length ? 'success' : 'empty'
   } catch (e) {
-    console.error('获取订单失败:', e)
+    if (activeRequest !== requestId) return
     orders.value = []
+    total.value = 0
+    requestError.value = '订单服务暂时不可用，请检查网络后重试。'
+    requestState.value = 'error'
   } finally {
-    loading.value = false
+    if (activeRequest === requestId) loading.value = false
   }
 }
 

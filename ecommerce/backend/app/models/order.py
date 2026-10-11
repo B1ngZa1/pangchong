@@ -1,7 +1,7 @@
 """
 胖虫电商系统 - 订单模型
 """
-from sqlalchemy import Column, String, Boolean, DateTime, Text, Integer, Numeric, ForeignKey, CheckConstraint
+from sqlalchemy import Column, String, Boolean, DateTime, Text, Integer, Numeric, ForeignKey, CheckConstraint, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -18,6 +18,8 @@ class Order(Base):
     order_no = Column(String(32), unique=True, nullable=False, index=True)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="RESTRICT"), nullable=False, index=True)
     status = Column(String(20), nullable=False, default="pending", index=True)
+    idempotency_key = Column(UUID(as_uuid=True), nullable=True)
+    request_fingerprint = Column(String(64), nullable=True)
 
     # 金额信息
     total_amount = Column(Numeric(10, 2), nullable=False)
@@ -51,6 +53,7 @@ class Order(Base):
     # 关联
     user = relationship("User", back_populates="orders")
     items = relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")
+    payment_events = relationship("PaymentEvent", back_populates="order", cascade="all, delete-orphan")
 
     # 状态约束
     __table_args__ = (
@@ -58,6 +61,7 @@ class Order(Base):
             "status IN ('pending', 'paid', 'shipped', 'completed', 'cancelled', 'refunded')",
             name="valid_order_status"
         ),
+        UniqueConstraint("user_id", "idempotency_key", name="uq_orders_user_idempotency_key"),
     )
 
     def __repr__(self):
@@ -98,6 +102,8 @@ class OrderItem(Base):
     product_name = Column(String(200), nullable=False)  # 商品名称快照
     product_image = Column(String(500))  # 商品图片快照
     product_specs = Column(JSONB)
+    configuration_id = Column(String(100))
+    configuration_version = Column(Integer)
     price = Column(Numeric(10, 2), nullable=False)  # 下单时价格
     quantity = Column(Integer, nullable=False)
     subtotal = Column(Numeric(10, 2), nullable=False)  # 小计

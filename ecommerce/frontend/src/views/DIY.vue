@@ -3,85 +3,202 @@
     <div class="max-w-7xl mx-auto px-4">
       <div class="mb-8 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p class="text-xs font-semibold uppercase tracking-[0.28em] text-primary-500">PANGCHONG DIY LAB</p>
+          <p class="text-xs font-semibold uppercase tracking-[0.28em] text-primary-500">PANGCHONG 装机实验室</p>
           <h1 class="mt-3 text-3xl font-bold text-white md:text-4xl">DIY 装机配置器</h1>
           <p class="mt-3 max-w-3xl text-sm leading-6 text-dark-300">
-            选择八大件时实时查看配件信息、兼容性、整机功耗、机箱冗余、价格走势和 3DMark 估算。
+            选择八大件，实时核对兼容性、功耗、机箱空间与价格走势，并查看性能估算。
           </p>
         </div>
-        <div class="grid grid-cols-3 gap-2 text-center text-xs text-dark-400">
-          <div class="rounded-lg border border-dark-800 bg-dark-900 px-4 py-3">
-            <p class="text-lg font-bold text-white">{{ selectedCount }}/{{ steps.length }}</p>
-            <p>已选配件</p>
-          </div>
-          <div class="rounded-lg border border-dark-800 bg-dark-900 px-4 py-3">
-            <p class="text-lg font-bold text-primary-500">{{ totalPower }}W</p>
-            <p>估算功耗</p>
-          </div>
-          <div class="rounded-lg border border-dark-800 bg-dark-900 px-4 py-3">
-            <p class="text-lg font-bold text-white">{{ estimated3DMark.toLocaleString() }}</p>
-            <p>3DMark</p>
-          </div>
-        </div>
+        <DsBuildSummary
+          class="w-full lg:max-w-2xl"
+          eyebrow="当前配置"
+          title="装机摘要"
+          :price="totalPrice"
+          :compatibility="compatibilitySummary.label"
+          :compatibility-tone="compatibilitySummary.tone"
+          :power="totalPower"
+          :performance="estimated3DMark"
+        >
+          <template #footer>
+            <p class="mt-3 text-xs text-dark-400">已选 {{ selectedCount }} / {{ steps.length }} 件配件</p>
+          </template>
+        </DsBuildSummary>
       </div>
 
-      <div class="mb-10 overflow-x-auto pb-2">
-        <div class="flex min-w-max items-center justify-center gap-2 sm:gap-4">
-          <div
-            v-for="(step, i) in steps"
-            :key="step.key"
-            class="flex cursor-pointer items-center gap-2 text-sm transition-colors"
-            :class="currentStep >= i ? 'text-primary-500' : 'text-dark-500'"
-            @click="currentStep = i"
-          >
-            <div
-              class="flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold transition-colors"
-              :class="currentStep >= i ? 'bg-primary-500 text-dark-950' : 'bg-dark-800'"
+      <DsStepIndicator
+        v-model="currentStep"
+        :steps="steps"
+        aria-label="DIY 装机步骤"
+      />
+
+      <section class="mb-8" aria-labelledby="diy-workbench-title">
+        <div class="mb-3 flex flex-col gap-3 rounded-lg border border-dark-800 bg-dark-900 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p id="diy-workbench-title" class="text-sm font-semibold text-white">装机工作台</p>
+            <p class="mt-1 text-xs text-dark-400">3D 预览用于理解外观和装配位置；配置、核价与交易仍以清单为准。</p>
+          </div>
+          <div class="inline-flex self-start rounded-lg border border-dark-700 bg-dark-950 p-1" aria-label="装机工作台模式">
+            <button
+              class="rounded-md px-3 py-1.5 text-xs font-semibold transition-colors disabled:cursor-wait disabled:opacity-60"
+              :class="viewerMode === '3d' ? 'bg-primary-500 text-dark-950' : 'text-dark-300 hover:text-white'"
+              :disabled="viewerState === 'retrying'"
+              data-testid="diy-3d-mode-button"
+              @click="open3dMode"
             >
-              <span v-if="selected[i]">&#10003;</span>
-              <span v-else>{{ i + 1 }}</span>
-            </div>
-            <span class="hidden md:inline">{{ step.label }}</span>
-            <div v-if="i < steps.length - 1" class="h-px w-6 sm:w-10" :class="currentStep > i ? 'bg-primary-500' : 'bg-dark-800'"></div>
+              {{ viewerState === 'failed' ? '重试 3D' : viewerState === 'retrying' ? '正在重试 3D' : '3D 工作台' }}
+            </button>
+            <button
+              class="rounded-md px-3 py-1.5 text-xs font-semibold transition-colors"
+              :class="viewerMode === 'list' ? 'bg-white text-dark-950' : 'text-dark-300 hover:text-white'"
+              data-testid="diy-list-mode-button"
+              @click="openListMode"
+            >
+              配置清单
+            </button>
           </div>
         </div>
-      </div>
 
-      <section class="mb-8 grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px]">
-        <Suspense>
-          <Product3DViewer
-            :model-url="activeModelUrl"
-            :model-scale="activeCaseModel.scale"
-            :model-position="activeCaseModel.position"
-            :model-rotation="activeCaseModel.rotation"
-            :asset-license="activeCaseModel.license"
-            :asset-source-url="activeCaseModel.sourceUrl"
-            :selected-variant="activeVariant"
-            :selected-material="activeMaterial"
-            :auto-rotate="autoRotate"
-            :camera-preset="cameraPreset"
-            :reset-key="viewerResetKey"
-            :parts="viewerParts"
-          />
-          <template #fallback>
-            <div class="flex min-h-[360px] items-center justify-center rounded-lg border border-dark-800 bg-dark-900 sm:min-h-[430px] lg:min-h-[520px]">
-              <div class="text-center">
-                <div class="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-2 border-dark-700 border-t-primary-500"></div>
-                <p class="text-sm text-dark-300">正在准备 3D 装机视图</p>
+        <div
+          v-if="viewerMode === 'list'"
+          class="rounded-lg border border-dark-800 bg-dark-900 p-4 md:p-6"
+          data-testid="diy-list-mode"
+        >
+          <div
+            v-if="viewerFailure"
+            class="mb-5 flex flex-col gap-4 rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-4 sm:flex-row sm:items-start sm:justify-between"
+            role="status"
+            aria-live="polite"
+            data-testid="diy-viewer-fallback"
+          >
+            <div>
+              <p class="font-semibold text-yellow-100">{{ viewerFailure.title }}</p>
+              <p class="mt-1 text-sm leading-6 text-yellow-100/80">{{ viewerFailure.message }}</p>
+              <p v-if="viewerFailure.missingNodes?.length" class="mt-2 text-xs text-yellow-200/70">
+                缺少节点：{{ viewerFailure.missingNodes.join('、') }}
+              </p>
+              <p v-if="viewerFailure.emptyNodes?.length" class="mt-1 text-xs text-yellow-200/70">
+                空节点：{{ viewerFailure.emptyNodes.join('、') }}
+              </p>
+            </div>
+            <button
+              class="flex-shrink-0 rounded-lg border border-yellow-300/40 px-4 py-2 text-xs font-semibold text-yellow-100 transition-colors hover:bg-yellow-300/10 disabled:cursor-wait disabled:opacity-60"
+              :disabled="viewerState === 'retrying'"
+              data-testid="diy-viewer-retry"
+              @click="retryViewer"
+            >
+              {{ viewerState === 'retrying' ? '后台重试中…' : '重试 3D（清单保持可用）' }}
+            </button>
+          </div>
+
+          <div class="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-[0.18em] text-primary-500">当前配置</p>
+              <h2 class="mt-2 text-xl font-bold text-white">当前配置清单</h2>
+              <p class="mt-1 text-sm text-dark-400">点击任一行可继续选择或更换配件。</p>
+            </div>
+            <span class="self-start rounded border px-3 py-1.5 text-xs font-semibold" :class="compatibilitySummary.className" data-testid="diy-list-compatibility">
+              {{ compatibilitySummary.label }}
+            </span>
+          </div>
+
+          <div class="overflow-hidden rounded-lg border border-dark-800">
+            <button
+              v-for="(step, i) in steps"
+              :key="step.key"
+              class="diy-config-row grid w-full gap-2 border-b border-dark-800 bg-dark-950 px-4 py-3 text-left transition-colors last:border-b-0 hover:bg-dark-900 sm:items-center"
+              :class="currentStep === i ? 'ring-1 ring-inset ring-primary-500/40' : ''"
+              :data-testid="`diy-list-part-${step.key}`"
+              @click="currentStep = i"
+            >
+              <span class="text-sm font-semibold text-dark-300">{{ step.label }}</span>
+              <span v-if="selected[i]" class="min-w-0 truncate text-sm text-white">{{ selected[i].name }}</span>
+              <span v-else class="text-sm text-dark-600">尚未选择</span>
+              <span v-if="selected[i]" class="text-sm font-semibold text-primary-500 sm:text-right">¥{{ money(selected[i].price) }}</span>
+              <span v-else class="text-xs text-dark-600 sm:text-right">—</span>
+              <span class="text-xs font-semibold text-primary-400 sm:text-right">{{ selected[i] ? '更换' : '选择' }}</span>
+            </button>
+          </div>
+
+          <div class="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+            <div class="rounded-lg border border-dark-800 bg-dark-950 p-4">
+              <p class="text-sm font-semibold text-white">兼容性状态</p>
+              <div class="mt-3 grid gap-2 sm:grid-cols-2">
+                <div v-for="check in compatibilityChecks" :key="check.key" class="rounded border border-dark-800 px-3 py-2 text-xs text-dark-300">
+                  <p class="font-semibold">{{ check.title }} · {{ check.level === 'ok' ? '通过' : check.level === 'warn' ? '需处理' : '待验证' }}</p>
+                  <p class="mt-1 leading-5 text-dark-500">{{ check.message }}</p>
+                </div>
               </div>
             </div>
-          </template>
-        </Suspense>
-        <ProductConfiguratorPanel
-          v-model:selected-variant="selectedVariant"
-          v-model:selected-material="selectedMaterial"
-          v-model:auto-rotate="autoRotate"
-          v-model:camera-preset="cameraPreset"
-          :variants="colorOptions"
-          :materials="materialOptions"
-          :camera-presets="cameraPresets"
-          @reset-camera="resetViewerCamera"
-        />
+
+            <div class="rounded-lg border border-primary-500/25 bg-primary-500/[0.06] p-4">
+              <div class="flex items-end justify-between gap-3">
+                <div>
+                  <p class="text-xs text-dark-400">当前核价总计</p>
+                  <p class="mt-1 text-2xl font-bold text-primary-500" data-testid="diy-list-total">¥{{ money(totalPrice) }}</p>
+                </div>
+                <p class="text-right text-xs text-dark-400">{{ selectedCount }} / {{ steps.length }} 件</p>
+              </div>
+              <p class="mt-3 text-xs leading-5 text-dark-400" data-testid="diy-list-price-status">{{ diyPriceVerificationLabel }}</p>
+              <div class="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
+                <button
+                  class="rounded-lg bg-primary-500 px-4 py-2.5 text-sm font-semibold text-dark-950 transition-colors hover:bg-primary-400 disabled:cursor-not-allowed disabled:bg-dark-800 disabled:text-dark-500"
+                  :disabled="!isComplete"
+                  data-testid="diy-list-add-cart"
+                  @click="addToCart"
+                >
+                  {{ isComplete ? '整套加入购物车' : '完成选件后加入购物车' }}
+                </button>
+                <button
+                  class="rounded-lg border border-primary-500 px-4 py-2.5 text-sm font-semibold text-primary-400 transition-colors hover:bg-primary-500/10 disabled:cursor-not-allowed disabled:border-dark-700 disabled:text-dark-600"
+                  :disabled="!isComplete"
+                  data-testid="diy-list-checkout"
+                  @click="checkoutNow"
+                >
+                  加入并前往结算
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="viewerMode === '3d' || viewerState === 'retrying'" class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px]">
+          <Suspense>
+            <Product3DViewer
+              v-if="viewerState !== 'failed'"
+              :key="viewerAttemptKey"
+              :model-url="activeModelUrl"
+              :model-scale="activeCaseModel.scale"
+              :model-position="activeCaseModel.position"
+              :model-rotation="activeCaseModel.rotation"
+              :asset-license="activeCaseModel.license"
+              :asset-source-url="activeCaseModel.sourceUrl"
+              :selected-variant="activeVariant"
+              :selected-material="activeMaterial"
+              :auto-rotate="autoRotate"
+              :camera-preset="cameraPreset"
+              :reset-key="viewerResetKey"
+              :parts="viewerParts"
+              :active="viewerMode === '3d' || viewerState === 'retrying'"
+              @failure="handleViewerFailure"
+              @ready="handleViewerReady"
+            />
+            <template #fallback>
+              <div class="flex min-h-[360px] items-center justify-center rounded-lg border border-dark-800 bg-dark-900 sm:min-h-[430px] lg:min-h-[520px]">
+                <DsAsyncState state="loading" loading-label="正在准备 3D 装机视图" />
+              </div>
+            </template>
+          </Suspense>
+          <ProductConfiguratorPanel
+            v-model:selected-variant="selectedVariant"
+            v-model:selected-material="selectedMaterial"
+            v-model:auto-rotate="autoRotate"
+            v-model:camera-preset="cameraPreset"
+            :variants="colorOptions"
+            :materials="materialOptions"
+            :camera-presets="cameraPresets"
+            @reset-camera="resetViewerCamera"
+          />
+        </div>
       </section>
 
       <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
@@ -97,47 +214,33 @@
             </div>
 
             <div class="mb-5 grid gap-3 md:grid-cols-4">
-              <label class="block">
-                <span class="text-xs text-dark-500">关键词</span>
-                <input
-                  v-model="filters.keyword"
-                  class="mt-1 w-full rounded-lg border border-dark-700 bg-dark-950 px-3 py-2 text-sm text-white outline-none transition-colors placeholder:text-dark-600 focus:border-primary-500"
-                  placeholder="型号 / 规格"
-                >
-              </label>
-              <label class="block">
-                <span class="text-xs text-dark-500">品牌</span>
-                <select
-                  v-model="filters.brand"
-                  class="mt-1 w-full rounded-lg border border-dark-700 bg-dark-950 px-3 py-2 text-sm text-white outline-none transition-colors focus:border-primary-500"
-                >
-                  <option value="">全部品牌</option>
-                  <option v-for="brand in availableBrands" :key="brand" :value="brand">{{ brand }}</option>
-                </select>
-              </label>
-              <label class="block">
-                <span class="text-xs text-dark-500">{{ currentSpecFilter.label }}</span>
-                <select
-                  v-model="filters.specValue"
-                  class="mt-1 w-full rounded-lg border border-dark-700 bg-dark-950 px-3 py-2 text-sm text-white outline-none transition-colors focus:border-primary-500"
-                >
-                  <option value="">全部{{ currentSpecFilter.label }}</option>
-                  <option v-for="value in availableSpecValues" :key="value" :value="value">{{ value }}</option>
-                </select>
-              </label>
-              <label class="block">
-                <span class="text-xs text-dark-500">排序</span>
-                <select
-                  v-model="filters.sort"
-                  class="mt-1 w-full rounded-lg border border-dark-700 bg-dark-950 px-3 py-2 text-sm text-white outline-none transition-colors focus:border-primary-500"
-                >
-                  <option value="default">默认</option>
-                  <option value="price-asc">价格从低到高</option>
-                  <option value="price-desc">价格从高到低</option>
-                  <option value="power-asc">功耗从低到高</option>
-                  <option value="space-asc">尺寸从小到大</option>
-                </select>
-              </label>
+              <DsField v-model="filters.keyword" label="关键词" placeholder="型号 / 规格" />
+              <DsField
+                v-model="filters.brand"
+                as="select"
+                label="品牌"
+                placeholder="全部品牌"
+                :options="availableBrands.map(brand => ({ value: brand, label: brand }))"
+              />
+              <DsField
+                v-model="filters.specValue"
+                as="select"
+                :label="currentSpecFilter.label"
+                :placeholder="'全部' + currentSpecFilter.label"
+                :options="availableSpecValues.map(value => ({ value, label: value }))"
+              />
+              <DsField
+                v-model="filters.sort"
+                as="select"
+                label="排序"
+                :options="[
+                  { value: 'default', label: '默认' },
+                  { value: 'price-asc', label: '价格从低到高' },
+                  { value: 'price-desc', label: '价格从高到低' },
+                  { value: 'power-asc', label: '功耗从低到高' },
+                  { value: 'space-asc', label: '尺寸从小到大' },
+                ]"
+              />
             </div>
 
             <div v-if="selected[currentStep]" class="mb-5 rounded-lg border border-primary-500/30 bg-primary-500/10 p-4">
@@ -157,72 +260,45 @@
               </div>
             </div>
 
-            <div v-if="loading" class="flex justify-center py-16">
-              <div class="h-10 w-10 animate-spin rounded-full border-b-2 border-t-2 border-primary-500"></div>
-            </div>
-
-            <div v-else-if="filteredProducts.length === 0" class="rounded-lg border border-dashed border-dark-700 py-16 text-center text-dark-500">
-              <p class="text-sm">没有匹配的配件，换个品牌或规格试试。</p>
-            </div>
-
-            <div v-else class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <article
+            <DsAsyncState
+              v-else
+              :state="categoryState"
+              loading-label="正在加载配件"
+              empty-title="没有匹配的配件"
+              empty-description="换个品牌或规格试试，或清除筛选后继续浏览。"
+              error-title="配件加载失败"
+              error-description="商品服务暂时不可用；可以重试，或先查看已保存的配置清单。"
+              retry-label="重试加载配件"
+              @retry="retryCurrentCategory"
+            >
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <DsDiyPartPicker
                 v-for="product in filteredProducts"
                 :key="product.id"
-                class="cursor-pointer rounded-lg border p-4 transition-all duration-200"
-                :class="isSelected(product)
-                  ? 'border-primary-500 bg-primary-500/10 shadow-lg shadow-primary-500/10'
-                  : 'border-dark-800 bg-dark-950 hover:border-dark-600'"
-                @click="selectItem(product)"
-              >
-                <div class="flex gap-3">
-                  <div class="flex h-20 w-20 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg bg-dark-900">
-                    <img :src="product.image_url || fallbackImage" :alt="product.name" class="h-full w-full object-contain" loading="lazy" @error="handleImageError">
-                  </div>
-                  <div class="min-w-0 flex-1">
-                    <div class="flex items-start justify-between gap-3">
-                      <div class="min-w-0">
-                        <p class="text-xs text-dark-500">{{ product.brand || '未知品牌' }}</p>
-                        <h3 class="mt-1 line-clamp-2 text-sm font-semibold text-white">{{ product.name }}</h3>
-                      </div>
-                      <div class="text-right">
-                        <p class="font-bold text-primary-500">¥{{ money(product.price) }}</p>
-                        <p v-if="product.original_price && Number(product.original_price) > Number(product.price)" class="text-xs text-dark-600 line-through">¥{{ money(product.original_price) }}</p>
-                      </div>
-                    </div>
-                    <p class="mt-2 line-clamp-2 text-xs leading-5 text-dark-500">{{ product.description }}</p>
-                    <PriceProvenance :product="product" compact class="mt-3" />
-                  </div>
-                </div>
-
-                <div class="mt-4 grid grid-cols-2 gap-2 text-xs text-dark-300">
-                  <span v-for="item in specPairs(product, 6)" :key="item.key" class="rounded border border-white/10 bg-white/[0.03] px-2 py-1">
-                    {{ item.label }}: {{ item.value }}
-                  </span>
-                </div>
-
-                <div class="mt-4 flex items-center justify-between border-t border-dark-800 pt-3 text-xs">
-                  <span :class="selectionAdvice(product).level === 'warn' ? 'text-yellow-400' : 'text-dark-400'">{{ selectionAdvice(product).text }}</span>
-                  <span v-if="isSelected(product)" class="font-semibold text-primary-500">已选择</span>
-                </div>
-              </article>
-            </div>
+                :product="product"
+                :selected="isSelected(product)"
+                :specs="specPairs(product, 6)"
+                :selection-advice="selectionAdvice(product)"
+                :fallback-image="fallbackImage"
+                @select="selectItem"
+              />
+              </div>
+            </DsAsyncState>
 
             <div class="mt-8 flex justify-between">
-              <button
-                class="rounded-lg bg-dark-800 px-5 py-2 text-sm text-dark-300 transition-colors hover:bg-dark-700 disabled:opacity-30"
+              <DsButton
+                variant="secondary"
                 :disabled="currentStep === 0"
                 @click="prevStep"
               >
                 上一步
-              </button>
-              <button
-                class="rounded-lg bg-primary-500 px-5 py-2 text-sm font-semibold text-dark-950 transition-colors hover:bg-primary-400 disabled:opacity-30"
+              </DsButton>
+              <DsButton
                 :disabled="currentStep === steps.length - 1"
                 @click="nextStep"
               >
                 下一步
-              </button>
+              </DsButton>
             </div>
           </div>
         </div>
@@ -268,14 +344,9 @@
                 <p class="mt-3 text-xs leading-5 text-dark-500">{{ diyPriceVerificationLabel }}</p>
               </div>
 
-              <button
-                class="mt-5 w-full rounded-lg py-3 text-sm font-semibold transition-all"
-                :class="isComplete ? 'bg-primary-500 text-dark-950 hover:bg-primary-400' : 'bg-dark-800 text-dark-500'"
-                :disabled="!isComplete"
-                @click="addToCart"
-              >
-                {{ isComplete ? '整套加入购物车' : '请完成所有配件选择' }}
-              </button>
+                <DsButton block class="mt-5" :disabled="!isComplete" @click="addToCart">
+                  {{ isComplete ? '整套加入购物车' : '请完成所有配件选择' }}
+                </DsButton>
             </section>
 
             <section class="rounded-lg border border-dark-800 bg-dark-900 p-5">
@@ -355,13 +426,14 @@
 </template>
 
 <script setup>
-import { computed, defineAsyncComponent, onMounted, reactive, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api, { marketApi } from '@/api'
 import { useCartStore } from '@/store/cart'
 import { useNotifyStore } from '@/store/notify'
 import ProductConfiguratorPanel from '@/components/ProductConfiguratorPanel.vue'
 import PriceProvenance from '@/components/PriceProvenance.vue'
+import { DsAsyncState, DsBuildSummary, DsButton, DsDiyPartPicker, DsField, DsStepIndicator } from '@/design-system'
 import {
   cameraPresets,
   materialOptions,
@@ -372,6 +444,7 @@ import {
   getTraceablePricePoints,
   summarizePriceProvenance,
 } from '@/utils/priceProvenance'
+import { DIY_VIEWER_LOAD_TIMEOUT_MS, getDiyViewerFailure } from '@/utils/diyViewerResilience'
 
 const router = useRouter()
 const route = useRoute()
@@ -429,11 +502,13 @@ const specLabels = {
 const currentStep = ref(stepIndexFromPart(route.query.part))
 const selected = ref({})
 const allProducts = ref({})
-const loading = ref(true)
+const categoryLoadStates = ref({})
+const categoryRequests = new Map()
 const priceHistory = ref([])
 const priceHistorySource = ref('unavailable')
 const priceHistoryLoading = ref(false)
 const priceHistoryError = ref(false)
+let priceHistoryRequestId = 0
 const filters = reactive({
   keyword: '',
   brand: '',
@@ -445,6 +520,12 @@ const selectedMaterial = ref('matte')
 const autoRotate = ref(true)
 const cameraPreset = ref('front')
 const viewerResetKey = ref(0)
+const viewerAttemptKey = ref(0)
+const viewerMode = ref('3d')
+const viewerState = ref('loading')
+const viewerFailure = ref(null)
+const viewerRetryRequested = ref(false)
+let viewerBudgetTimeoutId
 
 const currentSpecFilter = computed(() => ({
   key: steps[currentStep.value].specKey,
@@ -519,6 +600,13 @@ const filteredProducts = computed(() => {
     if (filters.sort === 'space-asc') return productSize(a) - productSize(b)
     return 0
   })
+})
+
+const categoryState = computed(() => {
+  const state = categoryLoadStates.value[steps[currentStep.value].catId]
+  if (!state || state === 'loading') return 'loading'
+  if (state === 'error') return 'error'
+  return filteredProducts.value.length ? 'success' : 'empty'
 })
 
 const totalPower = computed(() => {
@@ -619,6 +707,30 @@ const compatibilityChecks = computed(() => {
   ))
 
   return checks
+})
+
+const compatibilitySummary = computed(() => {
+  const warnings = compatibilityChecks.value.filter(check => check.level === 'warn').length
+  const pending = compatibilityChecks.value.filter(check => check.level === 'pending').length
+  if (warnings > 0) {
+    return {
+      label: `${warnings} 项兼容风险`,
+      tone: 'warning',
+      className: 'border-yellow-500/30 bg-yellow-500/10 text-yellow-300',
+    }
+  }
+  if (pending > 0) {
+    return {
+      label: `${pending} 项待验证`,
+      tone: 'info',
+      className: 'border-dark-700 bg-dark-950 text-dark-400',
+    }
+  }
+  return {
+    label: '已选配置通过当前检查',
+    tone: 'positive',
+    className: 'border-primary-500/30 bg-primary-500/10 text-primary-300',
+  }
 })
 
 const selectedPriceTarget = computed(() => selected.value[currentStep.value] || Object.values(selected.value)[0])
@@ -761,20 +873,12 @@ function selectionAdvice(product) {
   return checks.length ? { level: 'warn', text: checks[0] } : { level: 'ok', text: '规格信息已展示，可加入配置比较' }
 }
 
-function handleImageError(event) {
-  const image = event.target
-  if (image instanceof HTMLImageElement && !image.src.endsWith(fallbackImage)) {
-    image.src = fallbackImage
-  }
-}
-
 function isSelected(product) {
   return selected.value[currentStep.value]?.id === product.id
 }
 
 function selectItem(product) {
   selected.value[currentStep.value] = product
-  refreshPriceHistory()
 }
 
 function removeCurrent() {
@@ -801,6 +905,62 @@ function clearAll() {
 
 function resetViewerCamera() {
   viewerResetKey.value += 1
+}
+
+function handleViewerFailure(failure) {
+  clearViewerBudget()
+  viewerFailure.value = getDiyViewerFailure(failure?.reason, failure)
+  viewerState.value = 'failed'
+  viewerRetryRequested.value = false
+  viewerMode.value = 'list'
+}
+
+function handleViewerReady() {
+  clearViewerBudget()
+  const shouldOpenViewer = viewerRetryRequested.value
+  viewerState.value = 'ready'
+  viewerFailure.value = null
+  viewerRetryRequested.value = false
+  if (shouldOpenViewer) viewerMode.value = '3d'
+}
+
+function retryViewer() {
+  if (viewerState.value === 'retrying') return
+  viewerState.value = 'retrying'
+  viewerRetryRequested.value = true
+  viewerAttemptKey.value += 1
+  startViewerBudget()
+}
+
+function startViewerBudget() {
+  clearViewerBudget()
+  viewerBudgetTimeoutId = window.setTimeout(() => {
+    if (!['loading', 'retrying'].includes(viewerState.value)) return
+    handleViewerFailure({
+      reason: 'load-timeout',
+      elapsedMs: DIY_VIEWER_LOAD_TIMEOUT_MS,
+      stage: 'viewer-shell',
+    })
+  }, DIY_VIEWER_LOAD_TIMEOUT_MS)
+}
+
+function clearViewerBudget() {
+  if (!viewerBudgetTimeoutId) return
+  window.clearTimeout(viewerBudgetTimeoutId)
+  viewerBudgetTimeoutId = undefined
+}
+
+function open3dMode() {
+  if (viewerState.value === 'failed') {
+    retryViewer()
+    return
+  }
+  viewerMode.value = '3d'
+}
+
+function openListMode() {
+  viewerMode.value = 'list'
+  viewerRetryRequested.value = false
 }
 
 function buildConfigName() {
@@ -835,6 +995,7 @@ function buildDiySnapshot() {
 
   return {
     type: 'diy_pc',
+    configuration_id: 'diy-pc',
     version: 1,
     created_at: new Date().toISOString(),
     parts,
@@ -912,7 +1073,7 @@ function clipText(text, limit) {
   return text.length > limit ? `${text.slice(0, limit - 1)}…` : text
 }
 
-async function addToCart() {
+async function addConfiguredItem(destination) {
   if (!isComplete.value) return
   const blocking = compatibilityChecks.value.filter(check => check.level === 'warn')
   if (blocking.length > 0) {
@@ -937,42 +1098,69 @@ async function addToCart() {
   })
 
   notify.show('DIY 整机配置已作为一件定制商品加入购物车', 'success')
-  router.push('/cart')
+  router.push(destination)
+}
+
+async function addToCart() {
+  return addConfiguredItem('/cart')
+}
+
+async function checkoutNow() {
+  return addConfiguredItem('/checkout')
 }
 
 async function loadCategoryProducts(catId) {
-  if (allProducts.value[catId]) return
-  try {
-    const res = await api.get('/products', { params: { category_id: catId, page: 1, page_size: 100, sort_by: 'price', sort_order: 'asc' } })
-    allProducts.value[catId] = res?.items || []
-  } catch (e) {
-    console.error(`Failed to load category ${catId}:`, e)
-    allProducts.value[catId] = []
-  }
+  if (categoryLoadStates.value[catId] === 'success') return
+  if (categoryRequests.has(catId)) return categoryRequests.get(catId)
+
+  categoryLoadStates.value[catId] = 'loading'
+  const request = (async () => {
+    try {
+      const res = await api.get('/products', { params: { category_id: catId, page: 1, page_size: 100, sort_by: 'price', sort_order: 'asc' } })
+      allProducts.value[catId] = res?.items || []
+      categoryLoadStates.value[catId] = 'success'
+    } catch (e) {
+      console.warn(`Failed to load category ${catId}:`, e)
+      categoryLoadStates.value[catId] = 'error'
+    } finally {
+      categoryRequests.delete(catId)
+    }
+  })()
+  categoryRequests.set(catId, request)
+  return request
+}
+
+async function retryCurrentCategory() {
+  const catId = steps[currentStep.value].catId
+  await loadCategoryProducts(catId)
 }
 
 async function refreshPriceHistory() {
+  const requestId = ++priceHistoryRequestId
   const target = selectedPriceTarget.value
+  priceHistory.value = []
+  priceHistorySource.value = 'unavailable'
+  priceHistoryError.value = false
   if (!target) {
-    priceHistory.value = []
-    priceHistorySource.value = 'unavailable'
-    priceHistoryError.value = false
+    priceHistoryLoading.value = false
     return
   }
   priceHistoryLoading.value = true
   priceHistoryError.value = false
   try {
     const res = await marketApi.getPriceHistory(target.id, 30)
+    if (requestId !== priceHistoryRequestId) return
     const points = getTraceablePricePoints(res.points)
     priceHistory.value = points
     priceHistorySource.value = points.length > 0 ? (res.source || 'unavailable') : 'unavailable'
   } catch (e) {
-    console.error('Failed to load price history:', e)
+    if (requestId !== priceHistoryRequestId) return
+    console.warn('Failed to load price history:', e)
     priceHistory.value = []
     priceHistorySource.value = 'unavailable'
     priceHistoryError.value = true
   } finally {
-    priceHistoryLoading.value = false
+    if (requestId === priceHistoryRequestId) priceHistoryLoading.value = false
   }
 }
 
@@ -982,13 +1170,10 @@ watch(currentStep, async (step) => {
   filters.specValue = ''
   filters.sort = 'default'
   const catId = steps[step].catId
-  if (!allProducts.value[catId]) {
-    loading.value = true
-    await loadCategoryProducts(catId)
-    loading.value = false
-  }
-  refreshPriceHistory()
+  await loadCategoryProducts(catId)
 })
+
+watch(() => selectedPriceTarget.value?.id, refreshPriceHistory)
 
 watch(() => route.query.part, (part) => {
   const nextStep = stepIndexFromPart(part)
@@ -998,8 +1183,17 @@ watch(() => route.query.part, (part) => {
 })
 
 onMounted(async () => {
-  loading.value = true
-  await loadCategoryProducts(steps[0].catId)
-  loading.value = false
+  if (viewerState.value === 'loading') startViewerBudget()
+  await loadCategoryProducts(steps[currentStep.value].catId)
 })
+
+onBeforeUnmount(clearViewerBudget)
 </script>
+
+<style scoped>
+@media (min-width: 640px) {
+  .diy-config-row {
+    grid-template-columns: 150px minmax(0, 1fr) 110px 72px;
+  }
+}
+</style>

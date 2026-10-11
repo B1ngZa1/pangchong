@@ -47,7 +47,7 @@ async def init_db():
     """初始化数据库（创建表）"""
     async with engine.begin() as conn:
         # 导入所有模型以确保它们被注册
-        from ..models import user, product, cart, order
+        from ..models import user, product, cart, order, payment_event
         await conn.run_sync(Base.metadata.create_all)
 
 

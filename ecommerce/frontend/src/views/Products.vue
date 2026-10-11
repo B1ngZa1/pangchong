@@ -6,8 +6,8 @@
       <span class="text-primary-500">{{ currentCategoryName }}</span>
     </div>
 
-    <div class="flex flex-col lg:flex-row">
-      <aside class="sticky top-20 hidden h-[calc(100vh-80px)] w-64 min-w-[256px] overflow-y-auto border-r border-dark-800 bg-dark-900 lg:block">
+    <div class="mx-auto flex max-w-[1440px] flex-col lg:flex-row">
+      <aside class="sticky top-16 hidden h-[calc(100vh-64px)] w-56 min-w-[224px] overflow-y-auto border-r border-dark-800 bg-dark-900 lg:block">
         <div class="p-4">
           <h3 class="mb-4 px-2 text-xs uppercase tracking-[0.18em] text-dark-500">产品分类</h3>
 
@@ -17,7 +17,6 @@
           >
             <span class="h-2 w-2 rounded-full bg-primary-500/80" />
             <span>全部商品</span>
-            <span class="ml-auto rounded-full bg-white/5 px-2 py-0.5 text-xs text-dark-500">{{ totalCount }}</span>
           </button>
 
           <button
@@ -49,106 +48,114 @@
         </button>
       </div>
 
-      <main class="flex-1 p-6 lg:p-8 lg:pt-6">
+      <section class="min-w-0 flex-1 px-4 py-8 sm:px-6 lg:px-8" aria-label="商品目录">
         <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 class="text-2xl font-bold text-white lg:text-3xl">{{ currentCategoryName }}</h1>
-            <p class="mt-1 text-sm text-dark-500">共 {{ products.length }} 件商品</p>
+            <p v-if="requestState === 'success' || requestState === 'empty'" class="mt-2 text-sm text-dark-400">共 {{ totalCount }} 件商品 · 找到适合你的性能之选</p>
+            <p v-else-if="requestState === 'error'" class="mt-1 text-sm text-red-300">商品数据暂不可用</p>
           </div>
-          <select v-model="sortBy" class="rounded-lg border border-dark-700 bg-dark-900 px-3 py-2 text-sm text-dark-300 outline-none focus:border-primary-500">
-            <option value="default">默认排序</option>
-            <option value="price-asc">价格从低到高</option>
-            <option value="price-desc">价格从高到低</option>
-            <option value="name">按名称排序</option>
-          </select>
+          <DsField
+            v-model="sortBy"
+            class="w-full sm:w-48"
+            as="select"
+            label="排序方式"
+            :options="sortOptions"
+            @update:model-value="changeSort"
+          />
         </div>
 
-        <div v-if="loading" class="flex justify-center py-20">
-          <div class="h-12 w-12 animate-spin rounded-full border-b-2 border-t-2 border-primary-500" />
+        <div v-if="hasFilters" class="mb-6 flex flex-wrap items-center gap-3 text-sm">
+          <span class="rounded-md border border-dark-700 bg-dark-900 px-3 py-2 text-dark-300">{{ activeFilterLabel }}</span>
+          <button type="button" class="px-2 py-2 text-primary-400 hover:text-primary-300" @click="clearFilters">清除筛选</button>
         </div>
 
-        <div v-else-if="products.length === 0" class="rounded-lg border border-dark-800 bg-dark-900 p-10 text-center">
-          <p class="text-dark-400">当前分类暂无商品，请切换其他分类查看。</p>
-        </div>
+        <DsAsyncState
+          :state="requestState"
+          :error-description="requestError"
+          empty-title="没有找到符合条件的商品"
+          empty-description="试试其他关键词，或清除筛选继续浏览。"
+          @retry="fetchProducts"
+        >
+          <template #action>
+            <DsButton v-if="requestState === 'empty'" variant="secondary" size="sm" type="button" @click="clearFilters">
+              查看全部商品
+            </DsButton>
+            <DsButton v-else-if="requestState === 'error'" variant="secondary" size="sm" type="button" @click="fetchProducts">
+              重新加载
+            </DsButton>
+          </template>
 
-        <div v-else class="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-          <article
-            v-for="product in sortedProducts"
+          <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+          <DsProductCard
+            v-for="product in products"
             :key="product.id"
-            class="group cursor-pointer overflow-hidden rounded-lg border border-dark-800 bg-dark-900 transition-all duration-300 hover:-translate-y-0.5 hover:border-primary-500/65 hover:shadow-[0_12px_40px_rgba(0,0,0,0.36)]"
-            @click="$router.push(`/products/${product.slug}`)"
+            :product="product"
+            :category-label="getCatName(product.category_id) || '未分类'"
+            :fallback-image="getFallbackImage(product.category_id)"
+            @select="$router.push(`/products/${product.slug}`)"
           >
-            <div class="relative aspect-[4/3] overflow-hidden bg-dark-800">
-              <img
-                :src="product.image_url || getFallbackImage(product.category_id)"
-                :alt="product.name"
-                loading="lazy"
-                class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-                @error="handleImageError($event, product.category_id)"
-              >
-              <span v-if="product.is_featured" class="absolute left-3 top-3 rounded border border-primary-500/60 bg-dark-950/75 px-2 py-1 text-[11px] font-medium text-primary-400">推荐</span>
-              <span v-if="isDiscounted(product)" class="absolute right-3 top-3 rounded border border-red-400/45 bg-dark-950/75 px-2 py-1 text-[11px] font-medium text-red-300">特惠</span>
-            </div>
-            <div class="p-4">
-              <p class="mb-1 text-[11px] uppercase tracking-[0.16em] text-primary-500">{{ getCatName(product.category_id) || '未分类' }}</p>
-              <h3 class="mb-2 line-clamp-2 text-sm font-semibold text-white transition-colors group-hover:text-primary-400">{{ product.name }}</h3>
-              <p class="mb-3 line-clamp-2 text-xs text-dark-500">{{ product.description || '高性能整机与配件，支持定制。' }}</p>
-              <div v-if="product.specs" class="mb-3 flex flex-wrap gap-1.5">
-                <span v-for="(val, key) in firstSpecs(product.specs)" :key="key" class="rounded bg-white/5 px-2 py-0.5 text-[11px] text-dark-300">{{ val }}</span>
+            <template #actions="{ product: cardProduct }">
+              <div class="flex shrink-0 gap-2" @click.stop>
+                <DsButton variant="primary" size="sm" type="button" :loading="addingIds.has(cardProduct.id)" :disabled="cardProduct.stock <= 0" @click.stop="addToCart(cardProduct)">{{ cardProduct.stock <= 0 ? '暂时缺货' : '加入购物车' }}</DsButton>
+                <DsButton variant="secondary" size="sm" type="button" @click.stop="$router.push(`/products/${cardProduct.slug}`)">详情</DsButton>
               </div>
-              <div class="flex items-center justify-between">
-                <div>
-                  <span class="text-lg font-semibold text-primary-500">¥{{ Number(product.price).toLocaleString() }}</span>
-                  <span v-if="isDiscounted(product)" class="ml-2 text-xs text-dark-600 line-through">¥{{ Number(product.original_price).toLocaleString() }}</span>
-                </div>
-                <div class="flex gap-2">
-                  <button class="rounded-md border border-primary-500 px-3 py-1.5 text-xs font-semibold text-primary-500 transition-all hover:bg-primary-500 hover:text-dark-950" @click.stop="addToCart(product)">加入购物车</button>
-                  <button class="rounded-md border border-dark-600 px-3 py-1.5 text-xs font-semibold text-dark-300 transition-all hover:border-primary-500 hover:text-primary-400" @click.stop="$router.push(`/products/${product.slug}`)">详情</button>
-                </div>
-              </div>
-              <PriceProvenance :product="product" compact class="mt-3 border-t border-dark-800 pt-3" />
-            </div>
-          </article>
-        </div>
+            </template>
+            <template #provenance="{ product: cardProduct }">
+              <PriceProvenance :product="cardProduct" compact class="mt-3 border-t border-dark-800 pt-3" />
+            </template>
+          </DsProductCard>
+          </div>
+        </DsAsyncState>
 
-        <div v-if="totalPages > 1" class="mt-8 flex justify-center gap-2">
-          <button
-            v-for="p in totalPages"
-            :key="p"
-            @click="page = p; fetchProducts()"
-            :class="[
-              'rounded-md px-4 py-2 text-sm transition-colors',
-              page === p ? 'bg-primary-500 font-semibold text-dark-950' : 'bg-dark-800 text-dark-300 hover:bg-dark-700'
-            ]"
-          >
-            {{ p }}
-          </button>
-        </div>
-      </main>
+        <DsPagination
+          v-if="totalPages > 1"
+          :page="page"
+          class="mt-8"
+          :total-pages="totalPages"
+          :disabled="loading"
+          @change="changePage"
+        />
+      </section>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import api from '@/api'
 import { useCartStore, useNotifyStore } from '@/store'
 import PriceProvenance from '@/components/PriceProvenance.vue'
+import { DsAsyncState, DsButton, DsField, DsPagination, DsProductCard } from '@/design-system'
 import { buildProductListParams, getCatalogQueryLabel, resolveCategoryId } from '@/utils/productCatalogFilters'
 
 const route = useRoute()
+const router = useRouter()
 const cartStore = useCartStore()
 const notify = useNotifyStore()
 
 const loading = ref(true)
+const requestState = ref('loading')
+const requestError = ref('')
 const sortBy = ref('default')
+const sortOptions = [
+  { value: 'default', label: '默认排序' },
+  { value: 'price-asc', label: '价格从低到高' },
+  { value: 'price-desc', label: '价格从高到低' },
+  { value: 'name', label: '按名称排序' },
+]
 const currentCatId = ref(null)
 const categories = ref([])
 const products = ref([])
 const page = ref(1)
 const totalPages = ref(1)
 const totalCount = ref(0)
+const addingIds = ref(new Set())
+let requestId = 0
+let ready = false
+const hasFilters = computed(() => Boolean(currentCatId.value || route.query.keyword || route.query.scene || route.query.tag))
+const activeFilterLabel = computed(() => [currentCatId.value && getCatName(currentCatId.value), getCatalogQueryLabel(route.query)].filter(Boolean).join(' / '))
 
 const FALLBACK_IMAGES = {
   default: '/assets/pangchong-product-fallback.png',
@@ -166,17 +173,9 @@ const currentCategoryName = computed(() => {
   return getCatalogQueryLabel(route.query) || '全部商品'
 })
 
-const sortedProducts = computed(() => {
-  const items = [...products.value]
-  if (sortBy.value === 'price-asc') items.sort((a, b) => Number(a.price) - Number(b.price))
-  else if (sortBy.value === 'price-desc') items.sort((a, b) => Number(b.price) - Number(a.price))
-  else if (sortBy.value === 'name') items.sort((a, b) => a.name.localeCompare(b.name))
-  return items
-})
-
 function categoryClass(active) {
   return [
-    'mb-1 flex w-full items-center gap-3 rounded-md border-l-2 px-3 py-2.5 text-left text-sm transition-all',
+    'mb-1 flex w-full items-center gap-3 rounded-md border-l-2 px-3 py-2.5 text-left text-sm transition-colors',
     active
       ? 'border-primary-500 bg-primary-500/10 text-primary-500'
       : 'border-transparent text-dark-300 hover:bg-white/[0.02] hover:text-white'
@@ -185,7 +184,7 @@ function categoryClass(active) {
 
 function mobileCatClass(active) {
   return [
-    'shrink-0 rounded-full px-4 py-2 text-xs transition-all',
+    'shrink-0 rounded-full px-4 py-2 text-xs transition-colors',
     active
       ? 'bg-primary-500 font-semibold text-dark-950'
       : 'bg-dark-800 text-dark-300'
@@ -201,41 +200,42 @@ function getFallbackImage(catId) {
   return FALLBACK_IMAGES[catId] || FALLBACK_IMAGES.default
 }
 
-function handleImageError(event, catId) {
-  const fallback = getFallbackImage(catId)
-  if (event.target.src.endsWith(fallback)) return
-  event.target.src = fallback
-}
-
-function firstSpecs(specs) {
-  if (!specs || typeof specs !== 'object') return {}
-  const keys = Object.keys(specs).slice(0, 4)
-  const result = {}
-  keys.forEach(k => { result[k] = specs[k] })
-  return result
-}
-
-function isDiscounted(product) {
-  return product.original_price && Number(product.original_price) > Number(product.price)
-}
-
 async function addToCart(product) {
+  if (addingIds.value.has(product.id) || product.stock <= 0) return
+  addingIds.value.add(product.id)
   try {
     await cartStore.addToCart(product.id, 1)
     notify.show(`已将「${product.name}」加入购物车`, 'success')
   } catch (e) {
     notify.show(`添加失败：${e.displayMessage || e.message || '请重试'}`, 'error')
+  } finally {
+    addingIds.value.delete(product.id)
   }
 }
 
 function switchCategory(catId) {
-  currentCatId.value = catId
-  page.value = 1
-  fetchProducts()
+  const { category, page: oldPage, scene, tag, ...rest } = route.query
+  const cat = categories.value.find(item => item.id === catId)
+  router.push({ path: '/products', query: { ...rest, ...(catId ? { category: cat?.slug || catId } : {}) } })
+}
+
+function clearFilters() {
+  router.push({ path: '/products', query: sortBy.value === 'default' ? {} : { sort: sortBy.value } })
+}
+
+function changeSort(value) {
+  router.push({ query: { ...route.query, sort: value === 'default' ? undefined : value, page: undefined } })
+}
+
+function changePage(value) {
+  router.push({ query: { ...route.query, page: value > 1 ? value : undefined } })
 }
 
 function syncCategoryFromRoute() {
   currentCatId.value = resolveCategoryId(route.query.category, categories.value)
+  sortBy.value = sortOptions.some(option => option.value === route.query.sort) ? route.query.sort : 'default'
+  const requestedPage = Number(route.query.page)
+  page.value = Number.isSafeInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1
 }
 
 async function fetchCategories() {
@@ -243,45 +243,61 @@ async function fetchCategories() {
     const res = await api.get('/products/categories')
     categories.value = Array.isArray(res) ? res : (res?.data || [])
   } catch (e) {
-    console.error('fetchCategories error:', e)
+    console.warn('fetchCategories unavailable:', e)
   }
 }
 
 async function fetchProducts() {
+  const currentRequest = ++requestId
   loading.value = true
+  requestState.value = 'loading'
+  requestError.value = ''
   try {
     const params = buildProductListParams({
       page: page.value,
       currentCatId: currentCatId.value,
       query: route.query
     })
+    if (sortBy.value === 'price-asc' || sortBy.value === 'price-desc') {
+      params.sort_by = 'price'
+      params.sort_order = sortBy.value === 'price-asc' ? 'asc' : 'desc'
+    } else if (sortBy.value === 'name') {
+      params.sort_by = 'name'
+      params.sort_order = 'asc'
+    }
     const res = await api.get('/products', { params })
+    if (currentRequest !== requestId) return
     products.value = res?.items || []
     totalPages.value = res?.pages || 1
-    if (!currentCatId.value) totalCount.value = res?.total || 0
+    totalCount.value = res?.total || 0
+    if (page.value > totalPages.value) {
+      router.replace({ query: { ...route.query, page: totalPages.value > 1 ? totalPages.value : undefined } })
+      return
+    }
+    requestState.value = products.value.length ? 'success' : 'empty'
   } catch (e) {
-    console.error('fetchProducts error:', e)
+    if (currentRequest !== requestId) return
     products.value = []
+    totalPages.value = 1
+    requestError.value = '商品服务暂时不可用，请检查网络后重试。'
+    requestState.value = 'error'
     notify.show('商品加载失败，请稍后重试', 'error')
   } finally {
-    loading.value = false
+    if (currentRequest === requestId) loading.value = false
   }
 }
 
-watch(() => [
-  route.query.keyword,
-  route.query.tag,
-  route.query.scene,
-  route.query.category
-], () => {
+watch(() => route.query, () => {
+  if (!ready) return
   syncCategoryFromRoute()
-  page.value = 1
   fetchProducts()
 })
 
 onMounted(async () => {
   await fetchCategories()
+  ready = true
   syncCategoryFromRoute()
   await fetchProducts()
 })
+onBeforeUnmount(() => { requestId++; ready = false })
 </script>

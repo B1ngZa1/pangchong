@@ -1,11 +1,11 @@
 <template>
-  <nav class="relative sticky top-0 z-50 border-b border-white/10 bg-dark-950/82 shadow-[0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-2xl" @mouseleave="activeMenu = null">
-    <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-      <router-link to="/" class="flex items-center gap-3">
+  <nav class="app-navbar-shell relative sticky top-0 z-50" @mouseleave="activeMenu = null">
+    <div class="app-navbar__inner mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <router-link to="/" class="app-navbar__brand flex items-center gap-3">
         <span class="inline-flex h-7 w-7 items-center justify-center rounded-md border border-primary-500/60 bg-primary-500/10">
           <span class="h-3 w-3 rounded-sm bg-primary-500" />
         </span>
-        <span class="text-base font-semibold tracking-[0.16em] text-white">PANGCHONG</span>
+        <span class="app-navbar__wordmark text-base font-semibold tracking-[0.16em] text-white">PANGCHONG</span>
       </router-link>
 
       <div class="hidden h-full items-center gap-7 md:flex">
@@ -19,7 +19,8 @@
           <router-link
             :to="item.to"
             :data-qa="item.name === '商店' ? 'nav-shop-link' : null"
-            class="relative flex h-full items-center text-sm text-dark-300 transition-colors after:absolute after:bottom-0 after:left-0 after:h-px after:w-full after:origin-center after:scale-x-0 after:bg-primary-500 after:transition-transform after:duration-200 hover:text-white hover:after:scale-x-100"
+            :aria-current="isNavItemActive(item) ? 'page' : undefined"
+            class="relative flex h-full items-center text-sm text-dark-300 transition-colors after:absolute after:bottom-0 after:left-0 after:h-px after:w-full after:origin-center after:scale-x-0 after:bg-primary-500 after:transition-transform after:duration-[var(--pc-motion-duration-normal)] hover:text-white hover:after:scale-x-100"
             active-class="text-primary-500"
           >
             {{ item.name }}
@@ -27,7 +28,7 @@
         </div>
       </div>
 
-      <div class="flex items-center gap-2 sm:gap-4" @mouseenter="activeMenu = null">
+      <div class="app-navbar__actions flex items-center gap-2 sm:gap-4" @mouseenter="activeMenu = null">
         <form class="navbar-search" @submit.prevent="handleSearch">
           <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-5.5-5.5m2.5-5.5a8 8 0 11-16 0 8 8 0 0116 0z" />
@@ -46,15 +47,20 @@
           </button>
         </form>
 
-        <button
+        <DsIconButton
+          ref="mobileSearchTrigger"
+          label="搜索商品"
+          class="mobile-search-trigger"
+          aria-controls="mobile-search-panel"
+          :aria-expanded="showSearch"
           @click="toggleSearch"
-          class="rounded-md p-2 text-dark-300 transition-colors hover:bg-dark-800 hover:text-white lg:hidden"
-          aria-label="搜索商品"
         >
           <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-5.5-5.5m2.5-5.5a8 8 0 11-16 0 8 8 0 0116 0z" />
           </svg>
-        </button>
+        </DsIconButton>
+
+        <DsContrastToggle />
 
         <router-link
           to="/cart"
@@ -72,30 +78,25 @@
           </span>
         </router-link>
 
-        <div v-if="userStore.isLoggedIn" class="relative">
-          <button
-            @click="showUserMenu = !showUserMenu"
-            class="flex items-center gap-2 rounded-md p-2 text-dark-300 transition-colors hover:bg-dark-800 hover:text-white"
-            aria-label="用户菜单"
-          >
-            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
-            <span class="hidden text-sm sm:inline">{{ userStore.user?.nickname || '用户' }}</span>
-          </button>
-
-          <transition name="dropdown">
-            <div
-              v-if="showUserMenu"
-              class="absolute right-0 mt-2 w-44 overflow-hidden rounded-lg border border-dark-700 bg-dark-900 shadow-xl"
+        <DsMenu v-if="userStore.isLoggedIn" v-model:open="showUserMenu" label="用户菜单" class="app-navbar__user-menu">
+          <template #trigger="{ triggerProps }">
+            <button
+              v-bind="triggerProps"
+              class="flex items-center gap-2 rounded-md p-2 text-dark-300 transition-colors hover:bg-dark-800 hover:text-white"
+              aria-label="用户菜单"
             >
-              <router-link to="/orders" class="menu-item" @click="showUserMenu = false">我的订单</router-link>
-              <router-link to="/user/profile" class="menu-item" @click="showUserMenu = false">个人中心</router-link>
-              <router-link v-if="userStore.isAdmin" to="/admin/dashboard" class="menu-item text-primary-400" @click="showUserMenu = false">管理后台</router-link>
-              <button @click="handleLogout" class="menu-item w-full text-left text-red-400">退出登录</button>
-            </div>
-          </transition>
-        </div>
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              <span class="hidden text-sm sm:inline">{{ userStore.user?.nickname || '用户' }}</span>
+            </button>
+          </template>
+
+          <router-link to="/orders" role="menuitem" class="menu-item">我的订单</router-link>
+          <router-link to="/user/profile" role="menuitem" class="menu-item">个人中心</router-link>
+          <router-link v-if="userStore.isAdmin" to="/admin/dashboard" role="menuitem" class="menu-item text-primary-400">管理后台</router-link>
+          <button type="button" role="menuitem" @click="handleLogout" class="menu-item w-full text-left text-red-400">退出登录</button>
+        </DsMenu>
 
         <div v-else class="hidden items-center gap-2 sm:flex">
           <router-link to="/login" class="px-3 py-2 text-sm text-dark-300 transition-colors hover:text-white">登录</router-link>
@@ -103,9 +104,12 @@
         </div>
 
         <button
+          ref="mobileMenuTrigger"
           @click="toggleMobileMenu"
           class="rounded-md p-2 text-dark-300 transition-colors hover:bg-dark-800 hover:text-white md:hidden"
           aria-label="移动端菜单"
+          aria-controls="mobile-navigation"
+          :aria-expanded="showMobileMenu"
         >
           <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path v-if="!showMobileMenu" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
@@ -119,35 +123,37 @@
       <div
         v-if="activeNav?.children"
         data-qa="navbar-fog"
-        class="pointer-events-none fixed inset-x-0 bottom-0 top-16 hidden bg-dark-950/[0.42] backdrop-blur-[6px] md:block"
+        class="app-navbar__fog pointer-events-none fixed inset-x-0 bottom-0 top-16 hidden md:block"
       />
     </transition>
 
     <transition name="mega">
-      <div v-if="activeNav?.children" data-qa="navbar-mega" class="absolute left-0 right-0 top-full hidden overflow-hidden border-t border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(2,6,23,0.9))] shadow-[0_28px_80px_rgba(0,0,0,0.46)] backdrop-blur-2xl md:block">
+      <div v-if="activeNav?.children" data-qa="navbar-mega" class="app-navbar__mega absolute left-0 right-0 top-full hidden overflow-hidden md:block">
         <div class="mx-auto grid max-w-7xl grid-cols-[1.08fr_1fr_1fr] gap-8 px-4 py-7 sm:px-6 lg:px-8">
-          <div class="rounded-lg border border-white/10 bg-white/[0.035] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-md">
+          <div class="app-navbar__mega-primary rounded-lg p-5">
             <p class="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-dark-500">{{ activeNav.eyebrow }}</p>
             <div class="space-y-1">
               <router-link
                 v-for="child in activeNav.children"
                 :key="child.name"
                 :to="child.to"
-                class="block rounded-md px-3 py-2 text-2xl font-semibold leading-tight text-white transition-colors hover:bg-white/[0.06] hover:text-primary-400 hover:backdrop-blur-md"
+                :aria-current="isNavItemActive(child) ? 'page' : undefined"
+                class="app-navbar__mega-link app-navbar__mega-link--featured block rounded-md px-3 py-2 text-2xl font-semibold leading-tight text-white transition-colors"
               >
                 {{ child.name }}
               </router-link>
             </div>
           </div>
 
-          <div v-for="group in activeNav.groups" :key="group.title" class="rounded-lg border border-white/[0.07] bg-white/[0.025] p-5">
+          <div v-for="group in activeNav.groups" :key="group.title" class="app-navbar__mega-group rounded-lg p-5">
             <p class="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-dark-500">{{ group.title }}</p>
             <div class="space-y-1">
               <router-link
                 v-for="link in group.links"
                 :key="link.name"
-                :to="link.to"
-                class="block rounded-md px-3 py-2 text-sm font-medium text-dark-300 transition-colors hover:bg-white/[0.055] hover:text-white hover:backdrop-blur-md"
+                  :to="link.to"
+                  :aria-current="isNavItemActive(link) ? 'page' : undefined"
+                  class="app-navbar__mega-link block rounded-md px-3 py-2 text-sm font-medium text-dark-300 transition-colors"
               >
                 {{ link.name }}
               </router-link>
@@ -158,36 +164,32 @@
     </transition>
 
     <transition name="slide-down">
-      <div v-if="showSearch" class="border-t border-dark-800 bg-dark-900/95">
+      <div v-if="showSearch" id="mobile-search-panel" ref="mobileSearchPanel" class="border-t border-dark-800 bg-dark-900/95">
         <div class="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
-          <div class="relative">
-            <input
-              v-model="searchQuery"
-              type="text"
-              placeholder="搜索产品、型号或关键词"
-              class="input pr-10"
-              @keyup.enter="handleSearch"
-            >
-            <button
-              @click="handleSearch"
-              class="absolute right-3 top-1/2 -translate-y-1/2 text-dark-400 transition-colors hover:text-white"
-              aria-label="提交搜索"
-            >
-              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-5.5-5.5m2.5-5.5a8 8 0 11-16 0 8 8 0 0116 0z" />
-              </svg>
-            </button>
-          </div>
+          <DsSearchField
+            v-model="searchQuery"
+            label="搜索产品、型号或关键词"
+            placeholder="输入产品、型号或关键词"
+            @submit="handleSearch"
+          />
         </div>
       </div>
     </transition>
 
     <transition name="slide-down">
-      <div v-if="showMobileMenu" class="border-t border-dark-800 bg-dark-900 md:hidden">
+      <div
+        v-if="showMobileMenu"
+        id="mobile-navigation"
+        ref="mobileMenuPanel"
+        class="border-t border-dark-800 bg-dark-900 md:hidden"
+        role="region"
+        aria-label="移动端导航"
+      >
         <div class="space-y-3 px-4 py-4">
           <div v-for="item in navItems" :key="item.name">
             <router-link
               :to="item.to"
+              :aria-current="isNavItemActive(item) ? 'page' : undefined"
               class="block rounded-md px-3 py-2 text-sm font-medium text-dark-200 transition-colors hover:bg-dark-800 hover:text-white"
               active-class="bg-dark-800 text-primary-500"
               @click="showMobileMenu = false"
@@ -199,6 +201,7 @@
                 v-for="child in item.children"
                 :key="child.name"
                 :to="child.to"
+                :aria-current="isNavItemActive(child) ? 'page' : undefined"
                 class="rounded-md px-3 py-2 text-xs text-dark-400 hover:bg-dark-800 hover:text-white"
                 @click="showMobileMenu = false"
               >
@@ -215,25 +218,53 @@
 </template>
 
 <script setup>
-import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
+import { computed, nextTick, ref, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore, useCartStore } from '@/store'
+import { DsContrastToggle, DsIconButton, DsMenu, DsSearchField } from '@/design-system'
 
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
 const cartStore = useCartStore()
 
+const isNavItemActive = (item) => {
+  if (!item?.to || item.activeMode === 'never') return false
+
+  const target = router.resolve(item.to)
+  const isSamePathOrDescendant = route.path === target.path || (target.path !== '/' && route.path.startsWith(`${target.path}/`))
+
+  if (item.activeMode === 'path') return isSamePathOrDescendant
+  if (item.activeMode === 'base') {
+    return isSamePathOrDescendant && Object.keys(route.query).length === 0 && !route.hash
+  }
+  if (item.activeMode === 'query') {
+    return route.path === target.path && Object.keys(route.query).length > 0
+  }
+
+  if (route.path !== target.path || route.hash !== target.hash) return false
+  const targetQuery = target.query || {}
+  const currentQuery = route.query || {}
+  const targetKeys = Object.keys(targetQuery)
+  const currentKeys = Object.keys(currentQuery)
+  return targetKeys.length === currentKeys.length && targetKeys.every((key) => JSON.stringify(targetQuery[key]) === JSON.stringify(currentQuery[key]))
+}
+
 const showSearch = ref(false)
 const showUserMenu = ref(false)
 const showMobileMenu = ref(false)
 const activeMenu = ref(null)
 const searchQuery = ref('')
+const mobileMenuTrigger = ref(null)
+const mobileMenuPanel = ref(null)
+const mobileSearchTrigger = ref(null)
+const mobileSearchPanel = ref(null)
 
 const navItems = [
   {
     name: '商店',
     to: '/products',
+    activeMode: 'base',
     eyebrow: '探索商店',
     children: [
       { name: '全部产品', to: '/products' },
@@ -244,7 +275,7 @@ const navItems = [
       {
         title: '购买方式',
         links: [
-          { name: '选购商品', to: '/products' },
+          { name: '选购商品', to: '/products', activeMode: 'never' },
           { name: 'DIY 装机', to: '/diy' },
           { name: '购物车', to: '/cart' }
         ]
@@ -262,6 +293,7 @@ const navItems = [
   {
     name: '电脑整机',
     to: '/products',
+    activeMode: 'query',
     eyebrow: '选择整机',
     children: [
       { name: '游戏本', to: '/products?category=gaming-laptop' },
@@ -291,6 +323,7 @@ const navItems = [
   {
     name: 'DIY 配件',
     to: '/diy',
+    activeMode: 'path',
     eyebrow: '探索 DIY 配件',
     children: [
       { name: 'CPU', to: '/diy?part=cpu' },
@@ -324,6 +357,7 @@ const navItems = [
   {
     name: '服务支持',
     to: '/services',
+    activeMode: 'path',
     eyebrow: '获得支持',
     children: [
       { name: '技术支持', to: '/services#tech-support' },
@@ -344,7 +378,7 @@ const navItems = [
         title: '门店',
         links: [
           { name: '武汉线下门店', to: '/store' },
-          { name: '售后咨询', to: '/services#tech-support' },
+          { name: '售后咨询', to: '/services#tech-support', activeMode: 'never' },
           { name: '订单中心', to: '/orders' }
         ]
       }
@@ -360,6 +394,61 @@ watch(() => route.fullPath, () => {
   showMobileMenu.value = false
   activeMenu.value = null
 })
+
+function mobileMenuFocusables() {
+  return [...mobileMenuPanel.value?.querySelectorAll('a[href], button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])') || []]
+}
+
+async function closeMobileMenu({ restoreFocus = true } = {}) {
+  const shouldRestoreFocus = restoreFocus && mobileMenuPanel.value?.contains(document.activeElement)
+  showMobileMenu.value = false
+  if (shouldRestoreFocus) {
+    await nextTick()
+    mobileMenuTrigger.value?.focus()
+  }
+}
+
+async function closeMobileSearch({ restoreFocus = true } = {}) {
+  const shouldRestoreFocus = restoreFocus && mobileSearchPanel.value?.contains(document.activeElement)
+  showSearch.value = false
+  if (shouldRestoreFocus) {
+    await nextTick()
+    mobileSearchTrigger.value?.$el?.focus?.()
+  }
+}
+
+async function handleDocumentKeydown(event) {
+  if (event.key === 'Escape') {
+    if (showMobileMenu.value) {
+      event.preventDefault()
+      closeMobileMenu()
+      return
+    }
+    if (showSearch.value) {
+      event.preventDefault()
+      await closeMobileSearch()
+      return
+    }
+    if (showUserMenu.value) {
+      event.preventDefault()
+      showUserMenu.value = false
+    }
+    return
+  }
+
+  if (event.key !== 'Tab' || !showMobileMenu.value) return
+  const items = mobileMenuFocusables()
+  if (!items.length) return
+  const first = items[0]
+  const last = items[items.length - 1]
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault()
+    last.focus()
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault()
+    first.focus()
+  }
+}
 
 function handleSearch() {
   const keyword = searchQuery.value.trim()
@@ -387,23 +476,72 @@ function handleLogout() {
   router.push('/')
 }
 
-function handleOutsideClick(e) {
-  if (!(e.target instanceof HTMLElement)) return
-  if (!e.target.closest('.relative')) {
-    showUserMenu.value = false
-  }
-}
+watch(showMobileMenu, async (isOpen) => {
+  if (!isOpen) return
+  await nextTick()
+  mobileMenuFocusables()[0]?.focus()
+})
+
+watch(showSearch, async (isOpen) => {
+  if (!isOpen) return
+  await nextTick()
+  mobileSearchPanel.value?.querySelector('input, button, [tabindex]:not([tabindex="-1"])')?.focus()
+})
 
 onMounted(() => {
-  document.addEventListener('click', handleOutsideClick)
+  document.addEventListener('keydown', handleDocumentKeydown)
 })
 
 onUnmounted(() => {
-  document.removeEventListener('click', handleOutsideClick)
+  document.removeEventListener('keydown', handleDocumentKeydown)
 })
 </script>
 
 <style scoped>
+.app-navbar-shell {
+  border-bottom: 1px solid rgb(var(--pc-color-dark-50-rgb) / 0.1);
+  background: rgb(var(--pc-color-dark-950-rgb) / 0.82);
+  box-shadow: 0 1px 0 rgb(var(--pc-color-dark-50-rgb) / 0.04);
+  backdrop-filter: blur(20px);
+}
+
+.app-navbar__fog {
+  background: rgb(var(--pc-color-dark-950-rgb) / 0.42);
+  backdrop-filter: blur(6px);
+}
+
+.app-navbar__mega {
+  border-top: 1px solid rgb(var(--pc-color-dark-50-rgb) / 0.1);
+  background: linear-gradient(180deg, rgb(var(--pc-color-dark-900-rgb) / 0.94), rgb(var(--pc-color-dark-950-rgb) / 0.9));
+  box-shadow: 0 28px 80px rgb(var(--pc-color-dark-950-rgb) / 0.46);
+  backdrop-filter: blur(20px);
+}
+
+.app-navbar__mega-primary {
+  border: 1px solid rgb(var(--pc-color-dark-50-rgb) / 0.1);
+  background: rgb(var(--pc-color-dark-50-rgb) / 0.035);
+  box-shadow: inset 0 1px 0 rgb(var(--pc-color-dark-50-rgb) / 0.05);
+  backdrop-filter: blur(12px);
+}
+
+.app-navbar__mega-group {
+  border: 1px solid rgb(var(--pc-color-dark-50-rgb) / 0.07);
+  background: rgb(var(--pc-color-dark-50-rgb) / 0.025);
+}
+
+.app-navbar__mega-link:hover,
+.app-navbar__mega-link:focus-visible {
+  background: rgb(var(--pc-color-dark-50-rgb) / 0.055);
+  color: var(--pc-color-dark-50);
+  backdrop-filter: blur(8px);
+}
+
+.app-navbar__mega-link--featured:hover,
+.app-navbar__mega-link--featured:focus-visible {
+  background: rgb(var(--pc-color-dark-50-rgb) / 0.06);
+  color: var(--pc-color-brand-400);
+}
+
 .menu-item {
   @apply block px-4 py-2 text-sm text-dark-300 transition-colors hover:bg-dark-800 hover:text-white;
 }
@@ -414,17 +552,17 @@ onUnmounted(() => {
   height: 38px;
   align-items: center;
   gap: 8px;
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  border-radius: 8px;
-  background: rgba(15, 23, 42, 0.48);
+  border: 1px solid rgb(var(--pc-color-dark-400-rgb) / 0.18);
+  border-radius: var(--pc-radius-md);
+  background: rgb(var(--pc-color-dark-900-rgb) / 0.48);
   padding: 0 11px;
-  color: #94a3b8;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  color: var(--pc-color-dark-400);
+  box-shadow: inset 0 1px 0 rgb(var(--pc-color-dark-50-rgb) / 0.035);
 }
 
 .navbar-search:focus-within {
-  border-color: rgba(68, 214, 44, 0.55);
-  color: #44d62c;
+  border-color: rgb(var(--pc-color-brand-500-rgb) / 0.55);
+  color: var(--pc-color-brand-500);
 }
 
 .navbar-search input {
@@ -433,12 +571,12 @@ onUnmounted(() => {
   border: 0;
   outline: 0;
   background: transparent;
-  color: #f8fafc;
-  font-size: 13px;
+  color: var(--pc-color-dark-50);
+  font-size: var(--pc-font-size-sm);
 }
 
 .navbar-search input::placeholder {
-  color: #64748b;
+  color: var(--pc-color-dark-500);
 }
 
 .navbar-search button {
@@ -450,16 +588,16 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--pc-radius-sm);
   background: transparent;
-  color: #94a3b8;
-  transition: background-color 0.16s ease, color 0.16s ease;
+  color: var(--pc-color-dark-400);
+  transition: background-color var(--pc-motion-duration-fast) var(--pc-motion-ease-standard), color var(--pc-motion-duration-fast) var(--pc-motion-ease-standard);
 }
 
 .navbar-search button:hover,
 .navbar-search button:focus-visible {
-  background: rgba(68, 214, 44, 0.14);
-  color: #44d62c;
+  background: rgb(var(--pc-color-brand-500-rgb) / 0.14);
+  color: var(--pc-color-brand-500);
   outline: 0;
 }
 
@@ -473,7 +611,18 @@ onUnmounted(() => {
   stroke-width: 2;
 }
 
+@media (max-width: 639px) {
+  .app-navbar__inner { gap: var(--pc-space-2); padding-inline: var(--pc-space-3); }
+  .app-navbar__brand { min-width: 0; flex: 1 1 auto; gap: var(--pc-space-2); }
+  .app-navbar__wordmark { overflow: hidden; font-size: var(--pc-font-size-sm); letter-spacing: .1em; text-overflow: ellipsis; white-space: nowrap; }
+  .app-navbar__actions { flex: 0 0 auto; gap: var(--pc-space-1); }
+  .app-navbar__actions > * { flex: 0 0 auto; }
+}
+
 @media (min-width: 1024px) {
+  .mobile-search-trigger {
+    display: none;
+  }
   .navbar-search {
     display: flex;
   }
@@ -483,7 +632,7 @@ onUnmounted(() => {
 .dropdown-leave-active,
 .slide-down-enter-active,
 .slide-down-leave-active {
-  transition: all 0.2s ease;
+  transition: opacity var(--pc-motion-duration-normal) var(--pc-motion-ease-standard), transform var(--pc-motion-duration-normal) var(--pc-motion-ease-standard);
 }
 
 .dropdown-enter-from,
@@ -496,7 +645,7 @@ onUnmounted(() => {
 
 .mega-enter-active,
 .mega-leave-active {
-  transition: opacity 0.18s ease, filter 0.18s ease;
+  transition: opacity var(--pc-motion-duration-fast) var(--pc-motion-ease-standard), filter var(--pc-motion-duration-fast) var(--pc-motion-ease-standard);
 }
 
 .mega-enter-from,
@@ -507,7 +656,7 @@ onUnmounted(() => {
 
 .nav-fog-enter-active,
 .nav-fog-leave-active {
-  transition: opacity 0.18s ease, backdrop-filter 0.18s ease;
+  transition: opacity var(--pc-motion-duration-fast) var(--pc-motion-ease-standard), backdrop-filter var(--pc-motion-duration-fast) var(--pc-motion-ease-standard);
 }
 
 .nav-fog-enter-from,

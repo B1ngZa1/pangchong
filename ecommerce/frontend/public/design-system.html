@@ -1,0 +1,1482 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="/pangchong-favicon.svg">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="PANGCHONG 胖虫电脑前端 UI 设计系统、组件规范与页面模板参考。">
+  <title>PANGCHONG UI Design System</title>
+  <link rel="stylesheet" href="/design-system.tokens.css">
+  <style>
+    :root {
+      --pc-color-brand-50: #f0fdf4;
+      --pc-color-brand-100: #dcfce7;
+      --pc-color-brand-200: #bbf7d0;
+      --pc-color-brand-300: #86efac;
+      --pc-color-brand-400: #4ade80;
+      --pc-color-brand-500: #44d62c;
+      --pc-color-brand-600: #2ba81a;
+      --pc-color-brand-700: #15803d;
+      --pc-color-brand-800: #166534;
+      --pc-color-brand-900: #14532d;
+      --pc-color-dark-50: #f8fafc;
+      --pc-color-dark-100: #f1f5f9;
+      --pc-color-dark-200: #e2e8f0;
+      --pc-color-dark-300: #cbd5e1;
+      --pc-color-dark-400: #94a3b8;
+      --pc-color-dark-500: #64748b;
+      --pc-color-dark-600: #475569;
+      --pc-color-dark-700: #334155;
+      --pc-color-dark-800: #1e293b;
+      --pc-color-dark-900: #0f172a;
+      --pc-color-dark-950: #020617;
+      --pc-color-red-400: #f87171;
+      --pc-color-red-500: #ef4444;
+      --pc-color-amber-300: #fcd34d;
+      --pc-color-amber-500: #f59e0b;
+      --pc-color-blue-300: #93c5fd;
+      --pc-color-blue-500: #3b82f6;
+      --pc-canvas: var(--pc-color-dark-950);
+      --pc-surface: var(--pc-color-dark-900);
+      --pc-elevated: var(--pc-color-dark-800);
+      --pc-text-primary: var(--pc-color-dark-50);
+      --pc-text-secondary: var(--pc-color-dark-300);
+      --pc-text-muted: var(--pc-color-dark-400);
+      --pc-border-subtle: var(--pc-color-dark-800);
+      --pc-border-default: var(--pc-color-dark-700);
+      --pc-border-strong: var(--pc-color-dark-600);
+      --pc-space-1: .25rem;
+      --pc-space-2: .5rem;
+      --pc-space-3: .75rem;
+      --pc-space-4: 1rem;
+      --pc-space-5: 1.25rem;
+      --pc-space-6: 1.5rem;
+      --pc-space-8: 2rem;
+      --pc-space-10: 2.5rem;
+      --pc-space-12: 3rem;
+      --pc-space-16: 4rem;
+      --pc-radius-sm: .25rem;
+      --pc-radius-md: .5rem;
+      --pc-radius-lg: .75rem;
+      --pc-radius-xl: 1rem;
+      --pc-radius-full: 9999px;
+      --pc-shadow-sm: 0 1px 2px rgb(0 0 0 / .24);
+      --pc-shadow-md: 0 10px 30px rgb(0 0 0 / .28);
+      --pc-shadow-lg: 0 24px 64px rgb(0 0 0 / .4);
+      --pc-shadow-focus: 0 0 0 3px rgb(134 239 172 / .32);
+      --pc-duration-fast: 120ms;
+      --pc-duration-micro: 160ms;
+      --pc-duration-normal: 200ms;
+      --pc-duration-slow: 320ms;
+      --pc-duration-prominent: 450ms;
+      --pc-duration-ambient: 700ms;
+      --pc-duration-spin: 800ms;
+      --pc-duration-loading: 700ms;
+      --pc-duration-shimmer: 1400ms;
+      --pc-ease-standard: cubic-bezier(.2, 0, 0, 1);
+      --pc-ease-linear: linear;
+      --pc-density-comfortable-gap: 1.5rem;
+      --pc-density-compact-gap: .5rem;
+      --pc-layout-commerce-max: 80rem;
+      --pc-layout-workbench-nav: 12.5rem;
+      --pc-layout-workbench-inspector: 21rem;
+      --pc-layout-workbench-canvas-min: 32rem;
+      --pc-size-workbench-bar: 2.75rem;
+      --sidebar-width: 268px;
+      --topbar-height: 64px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: calc(var(--topbar-height) + 24px); }
+    body {
+      margin: 0;
+      background: var(--pc-canvas);
+      color: var(--pc-text-primary);
+      font-family: "Noto Sans SC", "Microsoft YaHei", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+    button, input, select, textarea { font: inherit; }
+    button, a { -webkit-tap-highlight-color: transparent; }
+    button { color: inherit; }
+    a { color: inherit; text-decoration: none; }
+    img { display: block; max-width: 100%; }
+    code { font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; }
+    ::selection { background: var(--pc-color-brand-500); color: var(--pc-color-dark-950); }
+    :focus-visible { outline: 2px solid var(--pc-color-brand-300); outline-offset: 3px; }
+
+    .skip-link {
+      position: fixed;
+      top: 8px;
+      left: 8px;
+      z-index: 2000;
+      transform: translateY(-160%);
+      padding: 10px 14px;
+      border-radius: var(--pc-radius-md);
+      background: var(--pc-color-brand-500);
+      color: var(--pc-color-dark-950);
+      font-weight: 800;
+    }
+    .skip-link:focus { transform: translateY(0); }
+
+    .topbar {
+      position: fixed;
+      inset: 0 0 auto 0;
+      z-index: 100;
+      height: var(--topbar-height);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--pc-space-4);
+      padding: 0 var(--pc-space-6);
+      border-bottom: 1px solid rgb(51 65 85 / .72);
+      background: rgb(2 6 23 / .88);
+      backdrop-filter: blur(18px);
+    }
+    .wordmark { display: inline-flex; align-items: baseline; gap: 10px; font-weight: 900; letter-spacing: -.04em; }
+    .wordmark strong { color: var(--pc-color-brand-500); }
+    .wordmark small { color: var(--pc-text-muted); font-size: 11px; font-weight: 700; letter-spacing: .12em; }
+    .topbar-meta { display: flex; align-items: center; gap: var(--pc-space-3); color: var(--pc-text-muted); font-size: 12px; }
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 10px;
+      border: 1px solid var(--pc-border-default);
+      border-radius: var(--pc-radius-full);
+      background: var(--pc-surface);
+    }
+    .status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--pc-color-brand-500); box-shadow: 0 0 0 4px rgb(68 214 44 / .12); }
+
+    .sidebar {
+      position: fixed;
+      top: var(--topbar-height);
+      bottom: 0;
+      left: 0;
+      z-index: 50;
+      width: var(--sidebar-width);
+      overflow-y: auto;
+      padding: var(--pc-space-6) var(--pc-space-4) var(--pc-space-10);
+      border-right: 1px solid var(--pc-border-subtle);
+      background: rgb(2 6 23 / .96);
+    }
+    .sidebar-label { margin: 0 10px 10px; color: var(--pc-color-dark-500); font-size: 10px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
+    .side-nav { display: grid; gap: 3px; }
+    .side-nav a {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 38px;
+      padding: 8px 10px;
+      border-radius: var(--pc-radius-md);
+      color: var(--pc-text-muted);
+      font-size: 13px;
+      font-weight: 600;
+      transition: color var(--pc-duration-normal), background var(--pc-duration-normal);
+    }
+    .side-nav a span:last-child { color: var(--pc-color-dark-600); font-family: "SFMono-Regular", Consolas, monospace; font-size: 10px; }
+    .side-nav a:hover, .side-nav a.active { background: var(--pc-surface); color: var(--pc-text-primary); }
+    .side-nav a.active { box-shadow: inset 2px 0 var(--pc-color-brand-500); }
+    .side-note { margin: var(--pc-space-8) 10px 0; padding-top: var(--pc-space-5); border-top: 1px solid var(--pc-border-subtle); color: var(--pc-color-dark-500); font-size: 11px; line-height: 1.7; }
+
+    main { margin-left: var(--sidebar-width); padding-top: var(--topbar-height); }
+    .content { width: min(1400px, calc(100% - 64px)); margin: 0 auto; }
+    .section { padding: 84px 0; border-bottom: 1px solid var(--pc-border-subtle); }
+    .section:last-child { border-bottom: 0; }
+    .section-heading { display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, 430px); gap: var(--pc-space-10); align-items: end; margin-bottom: var(--pc-space-10); }
+    .section-kicker { margin: 0 0 10px; color: var(--pc-color-brand-400); font-family: "SFMono-Regular", Consolas, monospace; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+    h1, h2, h3, h4, p { margin-top: 0; }
+    h1 { max-width: 820px; margin-bottom: var(--pc-space-6); font-size: clamp(46px, 7vw, 88px); line-height: .98; letter-spacing: -.065em; }
+    h2 { margin-bottom: 0; font-size: clamp(30px, 4vw, 48px); line-height: 1.08; letter-spacing: -.045em; }
+    h3 { font-size: 18px; letter-spacing: -.02em; }
+    .section-heading > p, .lead { margin-bottom: 0; color: var(--pc-text-muted); line-height: 1.75; }
+
+    .hero {
+      position: relative;
+      min-height: 720px;
+      display: grid;
+      align-items: center;
+      overflow: hidden;
+      border-bottom: 1px solid var(--pc-border-subtle);
+      background-image: linear-gradient(90deg, #020617 0%, rgb(2 6 23 / .95) 38%, rgb(2 6 23 / .18) 72%, rgb(2 6 23 / .55) 100%), url("assets/pangchong-hero.png");
+      background-position: center, center right;
+      background-size: cover;
+    }
+    .hero::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, transparent 70%, var(--pc-canvas)); }
+    .hero-inner { position: relative; z-index: 1; width: min(1400px, calc(100% - 64px)); margin: 0 auto; padding: 90px 0 110px; }
+    .hero .lead { max-width: 640px; font-size: 18px; }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: var(--pc-space-3); margin-top: var(--pc-space-8); }
+    .hero-facts { display: flex; flex-wrap: wrap; gap: var(--pc-space-8); margin-top: var(--pc-space-16); }
+    .fact { min-width: 130px; }
+    .fact strong { display: block; color: var(--pc-text-primary); font-size: 26px; letter-spacing: -.04em; }
+    .fact span { color: var(--pc-text-muted); font-size: 12px; }
+
+    .button {
+      display: inline-flex;
+      min-width: max-content;
+      height: 40px;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 20px;
+      border: 1px solid transparent;
+      border-radius: var(--pc-radius-md);
+      background: var(--pc-color-brand-500);
+      color: var(--pc-color-dark-950);
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 800;
+      transition: transform var(--pc-duration-fast), background var(--pc-duration-normal), border var(--pc-duration-normal);
+    }
+    .button:hover:not(:disabled) { transform: translateY(-1px); background: var(--pc-color-brand-400); }
+    .button:active:not(:disabled) { transform: translateY(0); background: var(--pc-color-brand-600); }
+    .button.secondary { border-color: var(--pc-border-default); background: var(--pc-elevated); color: var(--pc-text-primary); }
+    .button.secondary:hover:not(:disabled) { border-color: var(--pc-border-strong); background: var(--pc-color-dark-700); }
+    .button.ghost { background: transparent; color: var(--pc-text-secondary); }
+    .button.ghost:hover:not(:disabled) { background: var(--pc-elevated); color: var(--pc-text-primary); }
+    .button.danger { background: var(--pc-color-red-500); color: white; }
+    .button.small { height: 32px; padding: 0 12px; font-size: 12px; }
+    .button.large { height: 48px; padding: 0 24px; font-size: 16px; }
+    .button:disabled { background: var(--pc-color-dark-700); color: var(--pc-text-muted); cursor: not-allowed; opacity: var(--pc-opacity-disabled); }
+
+    .grid { display: grid; gap: var(--pc-space-5); }
+    .grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .grid > *, .panel { min-width: 0; }
+    .panel { padding: var(--pc-space-6); border: 1px solid var(--pc-border-subtle); border-radius: var(--pc-radius-lg); background: var(--pc-surface); box-shadow: var(--pc-shadow-sm); }
+    .panel-title { display: flex; align-items: center; justify-content: space-between; gap: var(--pc-space-3); margin-bottom: var(--pc-space-5); }
+    .panel-title h3 { margin: 0; }
+    .panel-title code { color: var(--pc-color-dark-500); font-size: 11px; }
+
+    .principle { min-height: 188px; display: flex; flex-direction: column; justify-content: space-between; }
+    .principle-index { color: var(--pc-color-brand-500); font-family: "SFMono-Regular", Consolas, monospace; font-size: 12px; }
+    .principle p { margin: 0; color: var(--pc-text-muted); font-size: 14px; line-height: 1.7; }
+
+    .swatches { display: grid; grid-template-columns: repeat(10, minmax(52px, 1fr)); overflow: hidden; border: 1px solid var(--pc-border-subtle); border-radius: var(--pc-radius-lg); }
+    .swatch { min-height: 108px; display: flex; flex-direction: column; justify-content: flex-end; padding: 10px; color: var(--pc-color-dark-950); font-size: 10px; font-weight: 800; }
+    .swatch.dark-label { color: white; }
+    .swatch span { opacity: var(--pc-opacity-muted); font-weight: 600; }
+    .semantic-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--pc-space-3); margin-top: var(--pc-space-5); }
+    .theme-token-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--pc-space-3); }
+    .theme-token { display: flex; align-items: center; gap: 10px; min-height: 58px; padding: 10px 12px; border: 1px solid var(--pc-border-subtle); border-radius: var(--pc-radius-md); background: rgb(15 23 42 / .55); }
+    .theme-token .semantic-color { width: 28px; height: 28px; flex: 0 0 auto; }
+    .theme-token strong, .theme-token code { display: block; }
+    .theme-token strong { font-size: 11px; }
+    .theme-token code { margin-top: 2px; color: var(--pc-text-muted); font-size: 9px; }
+    .semantic-token { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px; border: 1px solid var(--pc-border-subtle); border-radius: var(--pc-radius-md); background: rgb(15 23 42 / .55); }
+    .semantic-color { width: 40px; height: 40px; border: 1px solid rgb(255 255 255 / .16); border-radius: 10px; }
+    .semantic-token strong, .semantic-token code { display: block; }
+    .semantic-token strong { font-size: 12px; }
+    .semantic-token code { margin-top: 3px; color: var(--pc-text-muted); font-size: 10px; }
+    .copy-token { padding: 5px 8px; border: 1px solid var(--pc-border-default); border-radius: var(--pc-radius-sm); background: transparent; color: var(--pc-text-muted); cursor: pointer; font-size: 10px; }
+    .copy-token:hover { color: var(--pc-text-primary); border-color: var(--pc-color-brand-500); }
+
+    .type-specimen { display: grid; grid-template-columns: 100px minmax(0, 1fr) 130px; gap: var(--pc-space-4); align-items: baseline; padding: var(--pc-space-4) 0; border-top: 1px solid var(--pc-border-subtle); }
+    .type-specimen:first-child { border-top: 0; }
+    .type-specimen code, .type-specimen span:last-child { color: var(--pc-text-muted); font-size: 11px; }
+    .type-display { font-size: clamp(48px, 7vw, 92px); font-weight: 900; line-height: 1; letter-spacing: -.06em; }
+    .type-h1 { font-size: 36px; font-weight: 800; line-height: 1.15; letter-spacing: -.04em; }
+    .type-h2 { font-size: 24px; font-weight: 700; line-height: 1.2; letter-spacing: -.025em; }
+    .type-body { color: var(--pc-text-secondary); font-size: 16px; line-height: 1.75; }
+    .type-label { color: var(--pc-text-secondary); font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+    .type-code { color: var(--pc-color-brand-300); font-family: "SFMono-Regular", Consolas, monospace; font-size: 13px; }
+
+    .space-row { display: grid; grid-template-columns: 50px minmax(0, 1fr) 76px; gap: var(--pc-space-4); align-items: center; min-height: 38px; }
+    .space-row code, .space-row span:last-child { color: var(--pc-text-muted); font-size: 11px; }
+    .space-bar { height: 8px; border-radius: var(--pc-radius-full); background: var(--pc-color-brand-500); opacity: var(--pc-opacity-overlay); }
+    .radius-row { display: flex; flex-wrap: wrap; gap: var(--pc-space-4); }
+    .radius-sample { width: 108px; aspect-ratio: 1.2; display: grid; place-items: center; border: 1px solid var(--pc-color-brand-700); background: rgb(20 83 45 / .18); color: var(--pc-text-muted); font-size: 11px; }
+    .shadow-sample { min-height: 90px; display: grid; place-items: center; border: 1px solid var(--pc-border-subtle); border-radius: var(--pc-radius-lg); background: var(--pc-elevated); color: var(--pc-text-muted); font-size: 12px; }
+
+    .component-demo { min-height: 240px; }
+    .component-stage { display: flex; flex-wrap: wrap; align-items: center; gap: var(--pc-space-3); padding: var(--pc-space-6); border: 1px dashed var(--pc-border-default); border-radius: var(--pc-radius-md); background: var(--pc-canvas); }
+    .component-stage + .component-stage { margin-top: var(--pc-space-3); }
+    .step-demo-marker { display: grid; width: 28px; height: 28px; place-items: center; border-radius: 50%; background: var(--pc-elevated); color: var(--pc-text-muted); font-size: 12px; font-weight: 800; }
+    .step-demo-marker.complete, .step-demo-marker.active { background: var(--pc-color-brand-500); color: var(--pc-color-dark-950); }
+    .step-demo-line { width: 28px; height: 2px; background: var(--pc-border-default); }
+    .step-demo-line.complete { background: var(--pc-color-brand-500); }
+    .badge { display: inline-flex; min-height: 24px; align-items: center; padding: 0 9px; border: 1px solid var(--pc-border-default); border-radius: var(--pc-radius-full); background: var(--pc-elevated); color: var(--pc-text-secondary); font-size: 11px; font-weight: 700; }
+    .badge.accent, .badge.success { border-color: var(--pc-color-brand-700); background: rgb(20 83 45 / .42); color: var(--pc-color-brand-300); }
+    .badge.warning { border-color: var(--pc-color-amber-500); background: rgb(120 53 15 / .42); color: var(--pc-color-amber-300); }
+    .badge.danger { border-color: var(--pc-color-red-500); background: rgb(127 29 29 / .42); color: var(--pc-color-red-400); }
+    .badge.info { border-color: var(--pc-color-blue-500); background: rgb(30 58 138 / .42); color: var(--pc-color-blue-300); }
+    .field { display: grid; flex: 1 1 240px; gap: 8px; }
+    .field label { color: var(--pc-text-secondary); font-size: 12px; font-weight: 700; }
+    .control { width: 100%; min-height: 44px; padding: 0 14px; border: 1px solid var(--pc-border-default); border-radius: var(--pc-radius-md); background: var(--pc-elevated); color: var(--pc-text-primary); }
+    textarea.control { min-height: 96px; padding-top: 12px; resize: vertical; }
+    .control::placeholder { color: var(--pc-color-dark-500); }
+    .control:focus { outline: 0; border-color: var(--pc-color-brand-300); box-shadow: var(--pc-shadow-focus); }
+    .field.error .control { border-color: var(--pc-color-red-500); }
+    .field small { color: var(--pc-text-muted); font-size: 11px; }
+    .field.error small { color: var(--pc-color-red-400); }
+    .toggle { position: relative; width: 44px; height: 24px; border: 0; border-radius: var(--pc-radius-full); background: var(--pc-color-brand-500); cursor: pointer; }
+    .toggle::after { content: ""; position: absolute; top: 3px; right: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--pc-color-dark-950); transition: transform var(--pc-duration-normal); }
+    .toggle[aria-checked="false"]::after { transform: translateX(-20px); }
+    .empty-state { min-height: 230px; display: grid; place-items: center; align-content: center; gap: 10px; padding: var(--pc-space-8); border: 1px dashed var(--pc-border-default); border-radius: var(--pc-radius-lg); background: var(--pc-surface); text-align: center; }
+    .empty-state strong { font-size: 18px; }
+    .empty-state p { max-width: 400px; margin: 0; color: var(--pc-text-muted); font-size: 13px; }
+
+    .product-card { overflow: hidden; border: 1px solid var(--pc-border-subtle); border-radius: var(--pc-radius-lg); background: var(--pc-surface); transition: transform var(--pc-duration-normal), border var(--pc-duration-normal), box-shadow var(--pc-duration-normal); }
+    .product-card:hover { transform: translateY(-2px); border-color: var(--pc-color-brand-700); box-shadow: var(--pc-shadow-md); }
+    .product-card-media { aspect-ratio: 16 / 11; overflow: hidden; background: #060a0f; }
+    .product-card-media img { width: 100%; height: 100%; object-fit: cover; }
+    .product-card-body { padding: var(--pc-space-5); }
+    .product-card h3 { margin-bottom: 8px; }
+    .product-card p { margin-bottom: 18px; color: var(--pc-text-muted); font-size: 13px; }
+    .product-card-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .price { color: var(--pc-color-brand-400); font-size: 22px; font-weight: 900; letter-spacing: -.04em; }
+
+    .tabs { display: inline-flex; gap: 3px; padding: 3px; border: 1px solid var(--pc-border-subtle); border-radius: var(--pc-radius-md); background: var(--pc-canvas); }
+    .tab { min-height: 34px; padding: 0 13px; border: 0; border-radius: 6px; background: transparent; color: var(--pc-text-muted); cursor: pointer; font-size: 12px; font-weight: 700; }
+    .tab[aria-selected="true"] { background: var(--pc-elevated); color: var(--pc-text-primary); }
+    .toast-demo { width: min(100%, 360px); display: grid; grid-template-columns: 3px 1fr auto; gap: 12px; align-items: start; padding: 14px; border: 1px solid var(--pc-border-default); border-radius: var(--pc-radius-md); background: var(--pc-elevated); box-shadow: var(--pc-shadow-md); }
+    .toast-bar { align-self: stretch; border-radius: var(--pc-radius-full); background: var(--pc-color-brand-500); }
+    .toast-demo strong, .toast-demo p { margin: 0; font-size: 12px; }
+    .toast-demo p { margin-top: 4px; color: var(--pc-text-muted); }
+    .toast-demo button { border: 0; background: transparent; color: var(--pc-text-muted); cursor: pointer; }
+
+    .data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .data-table th, .data-table td { padding: 12px 14px; border-bottom: 1px solid var(--pc-border-subtle); text-align: left; }
+    .data-table th { color: var(--pc-text-muted); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+    .data-table tr:last-child td { border-bottom: 0; }
+    .data-table code { color: var(--pc-color-brand-300); font-size: 11px; }
+
+    .mode-selector { display: inline-flex; flex-wrap: wrap; gap: 4px; margin-bottom: var(--pc-space-5); padding: 4px; border: 1px solid var(--pc-border-default); border-radius: var(--pc-radius-lg); background: var(--pc-surface); }
+    .mode-button { min-height: 38px; padding: 0 16px; border: 0; border-radius: var(--pc-radius-md); background: transparent; color: var(--pc-text-muted); cursor: pointer; font-size: 12px; font-weight: 800; }
+    .mode-button[aria-selected="true"] { background: var(--pc-elevated); color: var(--pc-text-primary); box-shadow: inset 0 0 0 1px var(--pc-border-default); }
+    .mode-panel[hidden] { display: none; }
+    .mode-caption { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--pc-space-4); margin-bottom: var(--pc-space-4); }
+    .mode-caption h3 { margin: 0; }
+    .mode-caption p { max-width: 720px; margin: 0; color: var(--pc-text-muted); font-size: 12px; line-height: 1.7; }
+
+    .commerce-frame { overflow: hidden; border: 1px solid var(--pc-border-default); border-radius: var(--pc-radius-lg); background: #000; box-shadow: var(--pc-shadow-md); }
+    .commerce-global-nav, .commerce-category-nav { display: flex; align-items: center; gap: var(--pc-space-5); padding-inline: var(--pc-space-6); }
+    .commerce-global-nav { min-height: 52px; justify-content: space-between; border-bottom: 1px solid #202020; }
+    .commerce-brand { color: var(--pc-color-brand-500); font-size: 13px; font-weight: 900; letter-spacing: -.03em; }
+    .commerce-global-links, .commerce-category-nav { scrollbar-width: thin; }
+    .commerce-global-links { display: flex; align-items: center; justify-content: center; gap: clamp(18px, 4vw, 56px); color: #a5a5a5; font-size: 12px; }
+    .commerce-global-links strong { color: #fff; }
+    .commerce-category-nav { min-height: 46px; overflow-x: auto; border-bottom: 1px solid var(--pc-color-brand-700); background: #151515; color: #d6d6d6; font-size: 10px; font-weight: 700; white-space: nowrap; }
+    .commerce-content { width: min(calc(100% - 40px), var(--pc-layout-commerce-max)); margin: 0 auto; padding: 56px 0 52px; }
+    .commerce-section-intro { max-width: 760px; margin: 0 auto 32px; text-align: center; }
+    .commerce-section-intro h3 { margin-bottom: 10px; font-size: clamp(27px, 4vw, 40px); letter-spacing: -.045em; }
+    .commerce-section-intro p { margin: 0; color: #8f8f8f; font-size: 13px; line-height: 1.7; }
+    .commerce-card-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--pc-density-comfortable-gap); }
+    .commerce-media-card { overflow: hidden; border: 1px solid #202020; border-radius: var(--pc-radius-md); background: #111; }
+    .commerce-media-card img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; background: #050505; }
+    .commerce-card-copy { min-height: 154px; padding: 20px; }
+    .commerce-card-copy h4 { margin: 0 0 8px; font-size: 17px; }
+    .commerce-card-copy p { margin: 0 0 18px; color: #8e8e8e; font-size: 12px; line-height: 1.6; }
+    .commerce-card-copy a { color: var(--pc-color-brand-500); font-size: 12px; font-weight: 800; }
+    .commerce-footer { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--pc-space-5); padding: 28px var(--pc-space-6); border-top: 1px solid #202020; background: #111; color: #777; font-size: 10px; }
+    .commerce-footer strong { display: block; margin-bottom: 7px; color: #ddd; font-size: 11px; }
+
+    .workbench-frame { overflow: hidden; border: 1px solid var(--pc-border-default); border-radius: var(--pc-radius-lg); background: #080a0d; box-shadow: var(--pc-shadow-md); }
+    .workbench-toolbar { min-height: var(--pc-size-workbench-bar); display: flex; align-items: center; justify-content: space-between; gap: var(--pc-space-3); padding: 0 12px; border-bottom: 1px solid #25282e; background: #101216; font-size: 11px; }
+    .workbench-title { display: flex; align-items: baseline; gap: 10px; font-weight: 900; }
+    .workbench-title span { color: var(--pc-color-dark-500); font-size: 9px; font-weight: 700; }
+    .workbench-actions { display: flex; gap: 6px; }
+    .workbench-actions button { min-height: 28px; padding: 0 9px; border: 1px solid #2a2d33; border-radius: 5px; background: #17191e; color: #a8abb3; cursor: pointer; font-size: 9px; font-weight: 700; }
+    .metric-strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-bottom: 1px solid #25282e; background: #0d0f12; }
+    .workbench-metric { min-height: 50px; display: grid; align-content: center; gap: 3px; padding: 8px 12px; border-right: 1px solid #25282e; }
+    .workbench-metric:last-child { border-right: 0; }
+    .workbench-metric span { color: #686d77; font-size: 8px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+    .workbench-metric strong { color: #f7f8fa; font-size: 13px; }
+    .workbench-metric .positive { color: var(--pc-color-brand-400); }
+    .workbench-metric .info { color: var(--pc-color-blue-300); }
+    .workbench-metric .warning { color: var(--pc-color-amber-300); }
+    .workbench-body { display: grid; grid-template-columns: var(--pc-layout-workbench-nav) minmax(var(--pc-layout-workbench-canvas-min), 1fr) var(--pc-layout-workbench-inspector); min-height: 470px; }
+    .workbench-nav { padding: 12px 8px; border-right: 1px solid #25282e; background: #0c0e11; }
+    .workbench-nav strong { display: block; padding: 6px 8px 10px; color: #777b84; font-size: 8px; letter-spacing: .08em; text-transform: uppercase; }
+    .workbench-nav button { width: 100%; min-height: 31px; display: flex; align-items: center; justify-content: space-between; padding: 0 8px; border: 0; border-radius: 5px; background: transparent; color: #979ba4; cursor: pointer; font-size: 10px; text-align: left; }
+    .workbench-nav button.active, .workbench-nav button:hover { background: #181b20; color: #fff; }
+    .workbench-nav button.active { box-shadow: inset 2px 0 var(--pc-color-brand-500); }
+    .workbench-canvas { min-width: 0; display: grid; grid-template-rows: minmax(0, 1fr) auto; background: #050609; }
+    .workbench-product-stage { position: relative; min-height: 390px; display: grid; place-items: center; overflow: hidden; }
+    .workbench-product-stage img { position: relative; z-index: 1; width: min(76%, 610px); max-height: 350px; object-fit: contain; filter: saturate(.78) contrast(1.06); }
+    .workbench-canvas-controls { z-index: 2; display: flex; justify-content: center; gap: 4px; padding: 8px; border-top: 1px solid #1b1e24; background: #090b0e; }
+    .workbench-canvas-controls button { min-height: 28px; padding: 0 9px; border: 0; border-radius: 5px; background: transparent; color: #757a85; cursor: pointer; font-size: 9px; }
+    .workbench-canvas-controls button[aria-pressed="true"] { background: #20242a; color: #fff; }
+    .workbench-inspector { min-width: 0; border-left: 1px solid #25282e; background: #0c0e11; }
+    .inspector-tabs { display: flex; border-bottom: 1px solid #25282e; }
+    .inspector-tabs button { flex: 1; min-height: 38px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: #777b84; cursor: pointer; font-size: 10px; font-weight: 800; }
+    .inspector-tabs button[aria-selected="true"] { border-bottom-color: var(--pc-color-brand-500); color: #fff; }
+    .inspector-panel[hidden] { display: none; }
+    .build-summary { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border-bottom: 1px solid #25282e; color: #7d818a; font-size: 9px; }
+    .build-summary strong { color: var(--pc-color-brand-400); font-size: 12px; }
+    .parts-list { display: grid; }
+    .part-row { display: grid; grid-template-columns: 38px minmax(0, 1fr) auto; gap: var(--pc-density-compact-gap); align-items: center; padding: 10px 12px; border-bottom: 1px solid #202329; }
+    .part-row img { width: 38px; height: 38px; object-fit: cover; border-radius: 4px; background: #fff; }
+    .part-row strong, .part-row small { display: block; }
+    .part-row strong { overflow: hidden; color: #e7e9ed; font-size: 10px; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
+    .part-row small { margin-top: 4px; color: #656a74; font-size: 8px; }
+    .part-row b { color: var(--pc-color-brand-400); font-size: 9px; }
+    .price-history { display: grid; gap: 12px; padding: 18px 14px; }
+    .price-history-row { display: grid; grid-template-columns: 54px minmax(0, 1fr) 48px; gap: 8px; align-items: center; color: #777b84; font-size: 9px; }
+    .price-history-bar { height: 6px; overflow: hidden; border-radius: var(--pc-radius-full); background: #23272e; }
+    .price-history-bar span { display: block; height: 100%; border-radius: inherit; background: var(--pc-color-brand-500); }
+    .reference-note { margin-top: var(--pc-space-4); padding: 14px 16px; border-left: 2px solid var(--pc-color-brand-500); background: rgb(15 23 42 / .55); color: var(--pc-text-muted); font-size: 12px; line-height: 1.7; }
+
+    .template-toolbar { position: sticky; top: calc(var(--topbar-height) + 10px); z-index: 30; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--pc-space-3); margin-bottom: var(--pc-space-6); padding: 12px; border: 1px solid var(--pc-border-subtle); border-radius: var(--pc-radius-lg); background: rgb(15 23 42 / .92); backdrop-filter: blur(16px); }
+    .filter-group { display: flex; flex-wrap: wrap; gap: 6px; }
+    .filter-button { min-height: 34px; padding: 0 12px; border: 1px solid transparent; border-radius: var(--pc-radius-md); background: transparent; color: var(--pc-text-muted); cursor: pointer; font-size: 12px; font-weight: 700; }
+    .filter-button:hover, .filter-button.active { border-color: var(--pc-border-default); background: var(--pc-elevated); color: var(--pc-text-primary); }
+    .search { width: min(100%, 280px); min-height: 36px; padding: 0 12px; border: 1px solid var(--pc-border-default); border-radius: var(--pc-radius-md); background: var(--pc-canvas); color: var(--pc-text-primary); font-size: 12px; }
+    .templates { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--pc-space-5); }
+    .template-card { overflow: hidden; border: 1px solid var(--pc-border-subtle); border-radius: var(--pc-radius-lg); background: var(--pc-surface); box-shadow: var(--pc-shadow-sm); transition: border var(--pc-duration-normal), transform var(--pc-duration-normal); }
+    .template-card:hover { transform: translateY(-2px); border-color: var(--pc-color-brand-700); }
+    .template-card[hidden] { display: none; }
+    .template-preview { position: relative; aspect-ratio: 16 / 10; overflow: hidden; border-bottom: 1px solid var(--pc-border-subtle); background: var(--pc-canvas); }
+    .template-preview .mini-shell { position: absolute; inset: 0; display: grid; grid-template-rows: 24px minmax(0, 1fr); }
+    .mini-nav { display: flex; align-items: center; justify-content: space-between; padding: 0 10px; border-bottom: 1px solid var(--pc-border-subtle); background: var(--pc-surface); }
+    .mini-brand { color: var(--pc-color-brand-500); font-size: 6px; font-weight: 900; letter-spacing: .06em; }
+    .mini-links { display: flex; gap: 7px; color: var(--pc-color-dark-500); font-size: 4px; }
+    .mini-main { min-height: 0; padding: 10px; }
+    .mini-title { margin-bottom: 7px; font-size: 9px; font-weight: 800; letter-spacing: -.02em; }
+    .mini-sub { margin-bottom: 8px; color: var(--pc-color-dark-500); font-size: 4px; }
+    .mini-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+    .mini-card { overflow: hidden; border: 1px solid var(--pc-border-subtle); border-radius: 4px; background: var(--pc-surface); }
+    .mini-card-image { height: 35px; background: linear-gradient(135deg, #07100b, #16231b); }
+    .mini-card-image.product { background-image: url("assets/pangchong-product-fallback.png"); background-position: center; background-size: cover; }
+    .mini-card-copy { padding: 5px; }
+    .mini-line { height: 3px; margin-top: 3px; border-radius: 2px; background: var(--pc-color-dark-700); }
+    .mini-line.short { width: 58%; }
+    .mini-line.green { width: 36%; background: var(--pc-color-brand-500); }
+    .mini-button { display: inline-flex; height: 10px; align-items: center; margin-top: 5px; padding: 0 5px; border-radius: 2px; background: var(--pc-color-brand-500); color: var(--pc-canvas); font-size: 3px; font-weight: 900; }
+    .mini-two { display: grid; grid-template-columns: 1.15fr .85fr; gap: 8px; min-height: 100%; }
+    .mini-media { min-height: 100%; border-radius: 5px; background-image: url("assets/pangchong-product-fallback.png"); background-position: center; background-size: cover; }
+    .mini-panel { padding: 7px; border: 1px solid var(--pc-border-subtle); border-radius: 5px; background: var(--pc-surface); }
+    .mini-list { display: grid; gap: 5px; }
+    .mini-row { display: grid; grid-template-columns: 24px 1fr auto; gap: 5px; align-items: center; padding: 5px; border: 1px solid var(--pc-border-subtle); border-radius: 4px; background: var(--pc-surface); }
+    .mini-thumb { width: 24px; height: 20px; border-radius: 3px; background-image: url("assets/pangchong-product-fallback.png"); background-position: center; background-size: cover; }
+    .mini-price { color: var(--pc-color-brand-400); font-size: 4px; font-weight: 800; }
+    .mini-form { display: grid; gap: 5px; }
+    .mini-input { height: 11px; border: 1px solid var(--pc-border-default); border-radius: 3px; background: var(--pc-elevated); }
+    .mini-auth { width: 58%; margin: 15px auto 0; padding: 12px; border: 1px solid var(--pc-border-subtle); border-radius: 6px; background: var(--pc-surface); }
+    .mini-sidebar-layout { display: grid; grid-template-columns: 42px 1fr; min-height: 100%; border: 1px solid var(--pc-border-subtle); border-radius: 5px; overflow: hidden; }
+    .mini-side { padding: 7px 5px; background: var(--pc-surface); }
+    .mini-side .mini-line { margin-top: 6px; }
+    .mini-content { padding: 8px; }
+    .mini-table { width: 100%; border-collapse: collapse; }
+    .mini-table td { height: 13px; border-bottom: 1px solid var(--pc-border-subtle); }
+    .mini-table td:first-child { width: 36%; }
+    .mini-hero { min-height: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: center; }
+    .mini-hero-media { height: 100%; border-radius: 5px; background-image: url("assets/pangchong-hero.png"); background-position: center; background-size: cover; }
+    .mini-stepper { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-bottom: 8px; }
+    .mini-step { height: 3px; border-radius: 2px; background: var(--pc-color-dark-700); }
+    .mini-step.active { background: var(--pc-color-brand-500); }
+    .mini-empty { min-height: 100%; display: grid; place-items: center; align-content: center; gap: 5px; border: 1px dashed var(--pc-border-default); border-radius: 5px; text-align: center; }
+    .mini-empty strong { font-size: 7px; }
+    .template-info { padding: var(--pc-space-5); }
+    .template-topline { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .template-index { color: var(--pc-color-dark-500); font-family: "SFMono-Regular", Consolas, monospace; font-size: 10px; }
+    .template-card h3 { margin-bottom: 6px; }
+    .template-card p { min-height: 42px; margin-bottom: 14px; color: var(--pc-text-muted); font-size: 12px; line-height: 1.65; }
+    .route { display: grid; gap: 4px; padding-top: 12px; border-top: 1px solid var(--pc-border-subtle); color: var(--pc-color-dark-500); font-size: 10px; }
+    .route code { overflow-wrap: anywhere; color: var(--pc-color-brand-300); }
+
+    .mapping-wrap { max-width: 100%; overflow-x: auto; border: 1px solid var(--pc-border-subtle); border-radius: var(--pc-radius-lg); background: var(--pc-surface); }
+    .mapping-table { width: 100%; min-width: 820px; border-collapse: collapse; }
+    .mapping-table th, .mapping-table td { padding: 16px; border-bottom: 1px solid var(--pc-border-subtle); text-align: left; vertical-align: top; }
+    .mapping-table tr:last-child td { border-bottom: 0; }
+    .mapping-table th { color: var(--pc-text-muted); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; }
+    .mapping-table td { color: var(--pc-text-secondary); font-size: 12px; line-height: 1.65; }
+    .mapping-table code { color: var(--pc-color-brand-300); font-size: 11px; }
+    .mapping-table strong { color: var(--pc-text-primary); }
+    .implementation { display: inline-flex; padding: 3px 7px; border: 1px solid var(--pc-color-brand-700); border-radius: var(--pc-radius-full); color: var(--pc-color-brand-300); font-size: 10px; font-weight: 700; }
+    .implementation.planned { border-color: var(--pc-border-default); color: var(--pc-text-muted); }
+
+    .governance-step { display: grid; grid-template-columns: 44px 1fr; gap: var(--pc-space-4); padding: var(--pc-space-5) 0; border-top: 1px solid var(--pc-border-subtle); }
+    .governance-step:first-child { border-top: 0; }
+    .step-number { width: 36px; height: 36px; display: grid; place-items: center; border: 1px solid var(--pc-color-brand-700); border-radius: var(--pc-radius-md); background: rgb(20 83 45 / .18); color: var(--pc-color-brand-300); font-family: "SFMono-Regular", Consolas, monospace; font-size: 11px; }
+    .governance-step h3 { margin-bottom: 5px; }
+    .governance-step p { margin: 0; color: var(--pc-text-muted); font-size: 13px; line-height: 1.7; }
+    .code-block { overflow-x: auto; margin-top: var(--pc-space-5); padding: var(--pc-space-5); border: 1px solid var(--pc-border-subtle); border-radius: var(--pc-radius-md); background: #01040d; color: var(--pc-color-dark-300); font-size: 12px; line-height: 1.8; }
+    .code-block .green { color: var(--pc-color-brand-300); }
+    .code-block .muted { color: var(--pc-color-dark-500); }
+
+    .footer { padding: var(--pc-space-10) 0 var(--pc-space-16); color: var(--pc-text-muted); font-size: 12px; }
+    .footer-inner { display: flex; justify-content: space-between; gap: var(--pc-space-4); }
+    .footer strong { color: var(--pc-text-primary); }
+
+    .modal-backdrop { position: fixed; inset: 0; z-index: 1200; display: none; place-items: center; padding: 20px; background: rgb(2 6 23 / .82); backdrop-filter: blur(8px); }
+    .modal-backdrop.open { display: grid; }
+    .modal { width: min(100%, 440px); padding: var(--pc-space-6); border: 1px solid var(--pc-border-default); border-radius: var(--pc-radius-xl); background: var(--pc-surface); box-shadow: var(--pc-shadow-lg); }
+    .modal h3 { margin-bottom: 8px; }
+    .modal p { color: var(--pc-text-muted); font-size: 13px; line-height: 1.7; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: var(--pc-space-6); }
+
+    @media (max-width: 1180px) {
+      .templates { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .grid.four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .swatches { grid-template-columns: repeat(5, 1fr); }
+      .semantic-grid, .theme-token-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .workbench-body { grid-template-columns: 150px minmax(360px, 1fr) 280px; }
+    }
+    @media (max-width: 1080px) {
+      .workbench-body { grid-template-columns: 1fr; }
+      .workbench-nav { display: flex; gap: 4px; overflow-x: auto; border-right: 0; border-bottom: 1px solid #25282e; }
+      .workbench-nav strong { min-width: max-content; align-content: center; }
+      .workbench-nav button { width: auto; min-width: max-content; }
+      .workbench-inspector { border-top: 1px solid #25282e; border-left: 0; }
+    }
+    @media (max-width: 920px) {
+      :root { --sidebar-width: 0px; }
+      .sidebar { display: none; }
+      .topbar { padding-inline: var(--pc-space-4); }
+      .content, .hero-inner { width: min(100% - 32px, 1400px); }
+      .section-heading { grid-template-columns: 1fr; gap: var(--pc-space-4); }
+      .grid.three { grid-template-columns: 1fr; }
+      .hero { min-height: 660px; background-image: linear-gradient(90deg, #020617 0%, rgb(2 6 23 / .9) 55%, rgb(2 6 23 / .55) 100%), url("assets/pangchong-hero.png"); }
+      .commerce-card-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 680px) {
+      .topbar-meta .desktop-only { display: none; }
+      .section { padding: 64px 0; }
+      .hero { min-height: 620px; background-position: center, 62% center; }
+      .hero-inner { padding-top: 72px; }
+      h1 { font-size: clamp(42px, 15vw, 64px); }
+      .hero-facts { gap: var(--pc-space-5); }
+      .grid.two, .grid.four, .templates, .semantic-grid, .theme-token-grid { grid-template-columns: 1fr; }
+      .template-toolbar { position: static; }
+      .search { width: 100%; }
+      .type-specimen { grid-template-columns: 78px 1fr; }
+      .type-specimen span:last-child { display: none; }
+      .swatches { grid-template-columns: repeat(2, 1fr); }
+      .swatch { min-height: 88px; }
+      .footer-inner { flex-direction: column; }
+      .mode-selector, .mode-button { width: 100%; }
+      .commerce-global-nav { align-items: flex-start; padding-block: 14px; }
+      .commerce-global-links { display: none; }
+      .commerce-content { width: min(100% - 24px, var(--pc-layout-commerce-max)); padding-block: 40px; }
+      .commerce-footer { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .metric-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .workbench-metric:nth-child(2) { border-right: 0; }
+      .workbench-metric:nth-child(-n+2) { border-bottom: 1px solid #25282e; }
+      .workbench-product-stage { min-height: 300px; }
+      .workbench-product-stage img { width: 88%; max-height: 270px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">跳到主要内容</a>
+
+  <header class="topbar">
+    <a class="wordmark" href="#overview" aria-label="返回设计系统概览">
+      <span><strong>PANG</strong>CHONG</span>
+      <small>UI SYSTEM</small>
+    </a>
+    <div class="topbar-meta">
+      <span class="desktop-only">商业化基线 · 2026-09-06</span>
+      <span class="status">v0.9.11 · 当前规范</span>
+    </div>
+  </header>
+
+  <aside class="sidebar" aria-label="设计系统目录">
+    <p class="sidebar-label">Documentation</p>
+    <nav class="side-nav">
+      <a class="active" href="#overview"><span>概览</span><span>01</span></a>
+      <a href="#principles"><span>设计原则</span><span>02</span></a>
+      <a href="#tokens"><span>Design Token</span><span>03</span></a>
+      <a href="#components"><span>基础组件</span><span>04</span></a>
+      <a href="#patterns"><span>业务模式</span><span>05</span></a>
+      <a href="#templates"><span>页面模板</span><span>06</span></a>
+      <a href="#mapping"><span>代码映射</span><span>07</span></a>
+      <a href="#governance"><span>维护规范</span><span>08</span></a>
+    </nav>
+    <p class="side-note">以现有 Vue 3、Tailwind 与 CSS Token 为唯一事实来源。新增页面优先组合已有组件，禁止随意新增颜色、间距与圆角。</p>
+  </aside>
+
+  <main id="main-content">
+    <section class="hero" id="overview" data-section="overview">
+      <div class="hero-inner">
+        <p class="section-kicker">PANGCHONG / DESIGN SYSTEM</p>
+        <h1>高性能硬件，<br>清晰的数字体验。</h1>
+        <p class="lead">胖虫电脑前端 UI 设计系统统一品牌色、排版、交互组件和商城模板，让设计、开发与后期内容修改使用同一套语言。</p>
+        <div class="hero-actions">
+          <a class="button" href="#templates">查看全部模板</a>
+          <a class="button secondary" href="#mapping">查看代码映射</a>
+        </div>
+        <div class="hero-facts" aria-label="设计系统范围">
+          <div class="fact"><strong>19</strong><span>页面模板</span></div>
+              <div class="fact"><strong>35</strong><span>已映射基础组件与业务模式</span></div>
+          <div class="fact"><strong>2</strong><span>界面密度模式</span></div>
+          <div class="fact"><strong>AA</strong><span>可访问性目标</span></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="content">
+      <section class="section" id="principles" data-section="principles">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">02 / Principles</p>
+            <h2>设计原则</h2>
+          </div>
+          <p>用高对比黑色画布表现性能感，以虫翼绿承载关键行动；减少装饰，把配置、价格、状态和下一步操作放在最清楚的位置。</p>
+        </div>
+        <div class="grid four">
+          <article class="panel principle">
+            <span class="principle-index">01 / CLEAR</span>
+            <div><h3>先信息，后装饰</h3><p>商品规格、价格来源、库存与订单状态必须先于氛围效果被看见。</p></div>
+          </article>
+          <article class="panel principle">
+            <span class="principle-index">02 / FOCUSED</span>
+            <div><h3>绿色只指向行动</h3><p>主按钮、链接、选中态和成功反馈使用品牌绿，避免整页泛绿导致层级失效。</p></div>
+          </article>
+          <article class="panel principle">
+            <span class="principle-index">03 / SYSTEMATIC</span>
+            <div><h3>组合，不复制</h3><p>页面优先复用 Token、基础组件与业务模式，不用一次性样式拼装新界面。</p></div>
+          </article>
+          <article class="panel principle">
+            <span class="principle-index">04 / ACCESSIBLE</span>
+            <div><h3>状态不只靠颜色</h3><p>错误、加载、禁用与成功状态同时使用文字、边框和语义标签表达。</p></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="tokens" data-section="tokens">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">03 / Foundations</p>
+            <h2>Design Token</h2>
+          </div>
+          <p>Token 采用“基础值 → 语义值 → 组件变量”三级映射。产品代码只应消费语义变量，避免直接写十六进制颜色。</p>
+        </div>
+
+        <article class="panel">
+          <div class="panel-title"><h3>品牌色 · Brand Green</h3><code>color.brand.*</code></div>
+          <div class="swatches">
+            <div class="swatch" style="background:#f0fdf4">50<span>#f0fdf4</span></div>
+            <div class="swatch" style="background:#dcfce7">100<span>#dcfce7</span></div>
+            <div class="swatch" style="background:#bbf7d0">200<span>#bbf7d0</span></div>
+            <div class="swatch" style="background:#86efac">300<span>#86efac</span></div>
+            <div class="swatch" style="background:#4ade80">400<span>#4ade80</span></div>
+            <div class="swatch" style="background:#44d62c">500<span>#44d62c</span></div>
+            <div class="swatch dark-label" style="background:#2ba81a">600<span>#2ba81a</span></div>
+            <div class="swatch dark-label" style="background:#15803d">700<span>#15803d</span></div>
+            <div class="swatch dark-label" style="background:#166534">800<span>#166534</span></div>
+            <div class="swatch dark-label" style="background:#14532d">900<span>#14532d</span></div>
+          </div>
+        </article>
+
+        <article class="panel" style="margin-top:20px">
+          <div class="panel-title"><h3>中性色 · Dark Scale</h3><code>color.dark.*</code></div>
+          <div class="swatches">
+            <div class="swatch" style="background:#f8fafc">50<span>#f8fafc</span></div>
+            <div class="swatch" style="background:#f1f5f9">100<span>#f1f5f9</span></div>
+            <div class="swatch" style="background:#e2e8f0">200<span>#e2e8f0</span></div>
+            <div class="swatch" style="background:#cbd5e1">300<span>#cbd5e1</span></div>
+            <div class="swatch" style="background:#94a3b8">400<span>#94a3b8</span></div>
+            <div class="swatch dark-label" style="background:#64748b">500<span>#64748b</span></div>
+            <div class="swatch dark-label" style="background:#475569">600<span>#475569</span></div>
+            <div class="swatch dark-label" style="background:#334155">700<span>#334155</span></div>
+            <div class="swatch dark-label" style="background:#1e293b">800<span>#1e293b</span></div>
+            <div class="swatch dark-label" style="background:#0f172a">900<span>#0f172a</span></div>
+          </div>
+        </article>
+
+        <div class="semantic-grid" aria-label="语义颜色">
+          <div class="semantic-token"><span class="semantic-color" style="background:#020617"></span><span><strong>Canvas</strong><code>--pc-canvas</code></span><button class="copy-token" data-copy="--pc-canvas">复制</button></div>
+          <div class="semantic-token"><span class="semantic-color" style="background:#0f172a"></span><span><strong>Surface</strong><code>--pc-surface</code></span><button class="copy-token" data-copy="--pc-surface">复制</button></div>
+          <div class="semantic-token"><span class="semantic-color" style="background:#1e293b"></span><span><strong>Elevated</strong><code>--pc-elevated</code></span><button class="copy-token" data-copy="--pc-elevated">复制</button></div>
+          <div class="semantic-token"><span class="semantic-color" style="background:#44d62c"></span><span><strong>Action Primary</strong><code>--pc-color-semantic-action-primary</code></span><button class="copy-token" data-copy="--pc-color-semantic-action-primary">复制</button></div>
+          <div class="semantic-token"><span class="semantic-color" style="background:#f8fafc"></span><span><strong>Text Primary</strong><code>--pc-text-primary</code></span><button class="copy-token" data-copy="--pc-text-primary">复制</button></div>
+          <div class="semantic-token"><span class="semantic-color" style="background:#334155"></span><span><strong>Border Default</strong><code>--pc-border-default</code></span><button class="copy-token" data-copy="--pc-border-default">复制</button></div>
+        </div>
+
+        <div class="grid two" style="margin-top:20px">
+          <article class="panel">
+            <div class="panel-title"><h3>首页氛围主题</h3><code>color.theme.home.*</code></div>
+            <div class="theme-token-grid">
+              <div class="theme-token"><span class="semantic-color" style="background:var(--pc-color-theme-home-deep)"></span><span><strong>Deep</strong><code>--pc-color-theme-home-deep</code></span></div>
+              <div class="theme-token"><span class="semantic-color" style="background:var(--pc-color-theme-home-stage)"></span><span><strong>Stage</strong><code>--pc-color-theme-home-stage</code></span></div>
+              <div class="theme-token"><span class="semantic-color" style="background:var(--pc-color-theme-home-cyan)"></span><span><strong>Cyan</strong><code>--pc-color-theme-home-cyan</code></span></div>
+            </div>
+          </article>
+          <article class="panel">
+            <div class="panel-title"><h3>门店浅色主题</h3><code>color.theme.store.*</code></div>
+            <div class="theme-token-grid">
+              <div class="theme-token"><span class="semantic-color" style="background:var(--pc-color-theme-store-canvas)"></span><span><strong>Canvas</strong><code>--pc-color-theme-store-canvas</code></span></div>
+              <div class="theme-token"><span class="semantic-color" style="background:var(--pc-color-theme-store-text)"></span><span><strong>Text</strong><code>--pc-color-theme-store-text</code></span></div>
+              <div class="theme-token"><span class="semantic-color" style="background:var(--pc-color-theme-store-action)"></span><span><strong>Action</strong><code>--pc-color-theme-store-action</code></span></div>
+            </div>
+          </article>
+        </div>
+
+        <div class="grid two" style="margin-top:20px">
+          <article class="panel">
+            <div class="panel-title"><h3>字体系统</h3><code>font.*</code></div>
+            <div class="type-specimen"><code>Display</code><span class="type-display">Aa 速度</span><span>clamp(48–92)</span></div>
+            <div class="type-specimen"><code>Heading 1</code><span class="type-h1">高性能装机体验</span><span>36 / 1.15 / 800</span></div>
+            <div class="type-specimen"><code>Heading 2</code><span class="type-h2">选择你的配置</span><span>24 / 1.2 / 700</span></div>
+            <div class="type-specimen"><code>Body</code><span class="type-body">清晰展示参数、价格与服务信息。</span><span>16 / 1.75 / 400</span></div>
+            <div class="type-specimen"><code>Label</code><span class="type-label">订单状态</span><span>12 / 1.5 / 700</span></div>
+            <div class="type-specimen"><code>Mono</code><span class="type-code">RTX-5070-TI</span><span>13 / mono</span></div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-title"><h3>间距系统</h3><code>space.* · 4px base</code></div>
+            <div class="space-row"><code>1</code><span class="space-bar" style="width:4px"></span><span>4px</span></div>
+            <div class="space-row"><code>2</code><span class="space-bar" style="width:8px"></span><span>8px</span></div>
+            <div class="space-row"><code>3</code><span class="space-bar" style="width:12px"></span><span>12px</span></div>
+            <div class="space-row"><code>4</code><span class="space-bar" style="width:16px"></span><span>16px</span></div>
+            <div class="space-row"><code>5</code><span class="space-bar" style="width:20px"></span><span>20px</span></div>
+            <div class="space-row"><code>6</code><span class="space-bar" style="width:24px"></span><span>24px</span></div>
+            <div class="space-row"><code>8</code><span class="space-bar" style="width:32px"></span><span>32px</span></div>
+            <div class="space-row"><code>10</code><span class="space-bar" style="width:40px"></span><span>40px</span></div>
+            <div class="space-row"><code>12</code><span class="space-bar" style="width:48px"></span><span>48px</span></div>
+            <div class="space-row"><code>16</code><span class="space-bar" style="width:64px"></span><span>64px</span></div>
+          </article>
+        </div>
+
+        <div class="grid two" style="margin-top:20px">
+          <article class="panel">
+            <div class="panel-title"><h3>圆角</h3><code>radius.*</code></div>
+            <div class="radius-row">
+              <div class="radius-sample" style="border-radius:4px">sm · 4</div>
+              <div class="radius-sample" style="border-radius:8px">md · 8</div>
+              <div class="radius-sample" style="border-radius:12px">lg · 12</div>
+              <div class="radius-sample" style="border-radius:16px">xl · 16</div>
+              <div class="radius-sample" style="border-radius:999px">full</div>
+            </div>
+          </article>
+          <article class="panel">
+            <div class="panel-title"><h3>阴影与动效</h3><code>shadow.* · motion.*</code></div>
+            <div class="grid three">
+              <div class="shadow-sample" style="box-shadow:var(--pc-shadow-sm)">sm</div>
+              <div class="shadow-sample" style="box-shadow:var(--pc-shadow-md)">md</div>
+              <div class="shadow-sample" style="box-shadow:var(--pc-shadow-lg)">lg</div>
+            </div>
+            <p style="margin:20px 0 0;color:var(--pc-text-muted);font-size:12px">交互：micro 160ms / normal 200ms / slow 320ms / prominent 450ms / ambient 700ms；spin 800ms；loading 700ms；shimmer 1400ms。匀速 spinner 使用 linear，悬浮位移不超过 2px，并遵循 <code>prefers-reduced-motion</code>。</p>
+          </article>
+        </div>
+
+        <article class="panel" style="margin-top:20px">
+          <div class="panel-title"><h3>布局与密度模式</h3><code>layout.* · density.*</code></div>
+          <div class="mapping-wrap">
+            <table class="mapping-table">
+              <thead><tr><th>模式</th><th>适用页面</th><th>核心 Token</th><th>布局规则</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Comfortable Commerce</strong></td><td>首页、商品列表、商品详情、服务中心</td><td><code>--pc-density-comfortable-gap</code><br><code>--pc-layout-commerce-max</code></td><td>双层导航、宽松留白、图片主导、每张卡只保留一个下一步。</td></tr>
+                <tr><td><strong>Compact Workbench</strong></td><td>DIY 装机、配置对比、后台密集任务</td><td><code>--pc-density-compact-gap</code><br><code>--pc-layout-workbench-*</code></td><td>左侧导航、中间工作区、右侧检查器；价格、兼容性、功耗、性能持续可见。</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+
+      <section class="section" id="components" data-section="components">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">04 / Components</p>
+            <h2>基础组件库</h2>
+          </div>
+          <p>核心基础组件、交易状态和高对比度入口已经在 <code>src/design-system/components</code> 实现。页面仍按迁移优先级逐步替换遗留样式，所有新增能力严格使用同一套 Token。</p>
+        </div>
+
+        <div class="grid two">
+          <article class="panel component-demo">
+            <div class="panel-title"><h3>Button</h3><span class="implementation">已实现 · DsButton</span></div>
+            <div class="component-stage">
+              <button class="button">主操作</button>
+              <button class="button secondary">次操作</button>
+              <button class="button ghost">幽灵按钮</button>
+              <button class="button danger">危险操作</button>
+            </div>
+            <div class="component-stage">
+              <button class="button small">Small</button>
+              <button class="button">Medium</button>
+              <button class="button large">Large</button>
+              <button class="button" disabled>Disabled</button>
+            </div>
+          </article>
+
+          <article class="panel component-demo">
+            <div class="panel-title"><h3>Badge</h3><span class="implementation">已实现 · DsBadge</span></div>
+            <div class="component-stage">
+              <span class="badge">默认</span>
+              <span class="badge accent">重点推荐</span>
+              <span class="badge success">已完成</span>
+              <span class="badge warning">待付款</span>
+              <span class="badge danger">已取消</span>
+              <span class="badge info">处理中</span>
+            </div>
+          </article>
+
+          <article class="panel component-demo">
+            <div class="panel-title"><h3>Field</h3><span class="implementation">已实现 · DsField</span></div>
+            <div class="component-stage">
+              <div class="field"><label for="demo-name">收货人</label><input class="control" id="demo-name" placeholder="请输入姓名"><small>与身份证姓名保持一致</small></div>
+              <div class="field error"><label for="demo-phone">手机号码</label><input class="control" id="demo-phone" value="1380000"><small>请输入 11 位手机号码</small></div>
+            </div>
+          </article>
+
+          <article class="panel component-demo">
+            <div class="panel-title"><h3>Card</h3><span class="implementation">已实现 · DsCard</span></div>
+            <div class="product-card">
+              <div class="product-card-media"><img src="assets/pangchong-product-fallback.png" alt="绿色灯效的高性能台式电脑"></div>
+              <div class="product-card-body">
+                <span class="badge accent">高性能推荐</span>
+                <h3 style="margin-top:12px">PANGCHONG 战刃 5070 Ti</h3>
+                <p>电竞与 AI 创作兼顾的高性能整机配置。</p>
+                <div class="product-card-footer"><span class="price">¥12,999</span><button class="button small">查看配置</button></div>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel component-demo">
+            <div class="panel-title"><h3>Empty State</h3><span class="implementation">已实现 · DsEmptyState</span></div>
+            <div class="empty-state"><strong>购物车还是空的</strong><p>从整机商城选择配置，或者进入 DIY 装机创建自己的方案。</p><button class="button small">去选购</button></div>
+          </article>
+
+          <article class="panel component-demo">
+            <div class="panel-title"><h3>Tabs / Segmented</h3><span class="implementation">已实现 · DsTabs</span></div>
+            <div class="component-stage" style="justify-content:space-between">
+              <div class="tabs" role="tablist" aria-label="订单分类">
+                <button class="tab" role="tab" aria-selected="true">全部</button>
+                <button class="tab" role="tab" aria-selected="false">待付款</button>
+                <button class="tab" role="tab" aria-selected="false">已完成</button>
+              </div>
+              <button class="toggle" role="switch" aria-checked="true" aria-label="开启库存提醒"></button>
+            </div>
+          </article>
+
+          <article class="panel component-demo">
+            <div class="panel-title"><h3>Checkbox / Toggle</h3><span class="implementation">已实现 · DsCheckbox / DsToggle</span></div>
+            <div class="component-stage" style="display:grid;gap:12px">
+              <label style="display:flex;align-items:center;gap:10px;min-height:44px;color:var(--pc-text-secondary)"><input type="checkbox" checked aria-label="已选商品"><span style="display:grid;width:20px;height:20px;place-items:center;border:2px solid var(--pc-color-brand-500);border-radius:4px;background:var(--pc-color-brand-500);color:var(--pc-canvas);font-size:12px">✓</span><span>已选商品</span></label>
+              <label style="display:flex;align-items:center;gap:10px;min-height:44px;color:var(--pc-text-secondary)"><input type="checkbox" aria-checked="mixed" aria-label="部分选中" style="accent-color:var(--pc-color-brand-500)"><span>部分选中（mixed）</span></label>
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><span>自动旋转</span><button class="toggle" role="switch" aria-checked="true" aria-label="切换自动旋转"></button></div>
+            </div>
+            <p style="margin:10px 0 0;color:var(--pc-text-muted);font-size:12px">保留原生表单语义；批量选择支持 checked / mixed / unchecked，布尔偏好使用 role=switch。</p>
+          </article>
+
+          <article class="panel component-demo">
+            <div class="panel-title"><h3>3D Configurator</h3><span class="implementation">已实现 · ProductConfiguratorPanel</span></div>
+            <div class="component-stage" style="display:grid;gap:10px">
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"><button class="button secondary" aria-pressed="true" style="min-height:44px">黑色</button><button class="button secondary" aria-pressed="false" style="min-height:44px">银色</button><button class="button secondary" aria-pressed="false" style="min-height:44px">白色</button></div>
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><span style="color:var(--pc-text-muted);font-size:12px">颜色 / 材质 / 视角</span><button class="button small secondary">重置视角</button></div>
+            </div>
+            <p style="margin:10px 0 0;color:var(--pc-text-muted);font-size:12px">业务配置面板只编排事件，状态和颜色消费 semantic Token，并遵守 reduced-motion。</p>
+          </article>
+
+          <article class="panel component-demo">
+            <div class="panel-title"><h3>Toast / Feedback</h3><span class="implementation">已实现 · DsToast</span></div>
+            <div class="component-stage">
+              <div class="toast-demo"><span class="toast-bar"></span><div><strong>已加入购物车</strong><p>PANGCHONG 战刃已加入购物车。</p></div><button aria-label="关闭通知">关闭</button></div>
+            </div>
+          </article>
+
+          <article class="panel component-demo">
+            <div class="panel-title"><h3>Dialog / Modal</h3><span class="implementation">已实现 · DsDialog</span></div>
+            <div class="component-stage"><button class="button secondary" id="open-modal">打开确认弹窗</button><p style="margin:0;color:var(--pc-text-muted);font-size:12px">用于删除地址、取消订单等不可逆操作。</p></div>
+          </article>
+
+          <article class="panel component-demo">
+            <div class="panel-title"><h3>Compatibility Status</h3><span class="implementation">已实现 · DsCompatibilityStatus</span></div>
+            <div class="component-stage" role="alert" style="display:block;border:1px solid var(--pc-color-semantic-border-warning);background:var(--pc-color-semantic-background-warning);border-radius:var(--pc-radius-md)">
+              <strong style="color:var(--pc-color-semantic-text-primary)">存在兼容风险</strong>
+              <p style="margin:6px 0 0;color:var(--pc-color-semantic-text-secondary);font-size:12px">电源余量不足，建议更换 850W 电源。</p>
+            </div>
+          </article>
+
+          <article class="panel component-demo">
+            <div class="panel-title"><h3>Cart Line Item</h3><span class="implementation">已实现 · DsCartLineItem</span></div>
+            <div class="component-stage" style="display:grid;grid-template-columns:auto 64px 1fr;gap:12px;align-items:center">
+              <input type="checkbox" checked aria-label="选择 PANGCHONG 战刃">
+              <div style="width:64px;height:64px;border-radius:var(--pc-radius-md);background:var(--pc-elevated)"></div>
+              <div><strong>PANGCHONG 战刃 5070 Ti</strong><p style="margin:4px 0 0;color:var(--pc-text-muted);font-size:12px">仅剩 3 件 · ¥12,999</p></div>
+            </div>
+            <p style="margin:10px 0 0;color:var(--pc-text-muted);font-size:12px">结算页通过 <code>interactive=false · compact</code> 复用只读预览。</p>
+          </article>
+
+          <article class="panel component-demo">
+            <div class="panel-title"><h3>Contrast Toggle</h3><span class="implementation">已实现 · DsContrastToggle</span></div>
+            <div class="component-stage"><button class="button secondary" aria-pressed="false">Aa&nbsp; 开启高对比度</button><p style="margin:0;color:var(--pc-text-muted);font-size:12px">偏好写入本地存储，并覆盖迁移中的 Tailwind 页面。</p></div>
+          </article>
+
+          <article class="panel component-demo">
+            <div class="panel-title"><h3>Step Indicator</h3><span class="implementation">已实现 · DsStepIndicator</span></div>
+            <div class="component-stage" style="display:flex;align-items:center;justify-content:center;gap:8px">
+              <span class="step-demo-marker complete">✓</span><span class="step-demo-line complete"></span>
+              <span class="step-demo-marker active">2</span><span class="step-demo-line"></span>
+              <span class="step-demo-marker">3</span><span class="step-demo-line"></span>
+              <span class="step-demo-marker">4</span>
+            </div>
+            <p style="margin:10px 0 0;color:var(--pc-text-muted);font-size:12px">未来步骤锁定；当前步骤使用 <code>aria-current=step</code>。</p>
+          </article>
+
+          <article class="panel component-demo">
+            <div class="panel-title"><h3>Order Summary</h3><span class="implementation">已实现 · DsOrderSummary</span></div>
+            <div class="component-stage" style="display:grid;gap:8px">
+              <div style="display:flex;justify-content:space-between;color:var(--pc-text-muted);font-size:12px"><span>商品金额</span><strong style="color:var(--pc-text-primary)">¥15,998</strong></div>
+              <div style="display:flex;justify-content:space-between;color:var(--pc-text-muted);font-size:12px"><span>运费</span><strong style="color:var(--pc-text-primary)">¥20</strong></div>
+              <div style="display:flex;justify-content:space-between;border-top:1px solid var(--pc-border-default);padding-top:10px;font-weight:800"><span>应付金额</span><strong style="color:var(--pc-color-brand-500)">¥16,018</strong></div>
+            </div>
+          </article>
+
+          <article class="panel component-demo">
+            <div class="panel-title"><h3>DIY Part Picker</h3><span class="implementation">已实现 · DsDiyPartPicker</span></div>
+            <div class="component-stage" style="display:grid;grid-template-columns:64px 1fr;gap:12px;align-items:start">
+              <div style="width:64px;height:64px;border-radius:var(--pc-radius-md);background:var(--pc-elevated);position:relative"><span style="position:absolute;right:4px;top:4px;display:grid;width:20px;height:20px;place-items:center;border-radius:50%;background:var(--pc-color-brand-500);color:var(--pc-canvas);font-size:11px;font-weight:800">✓</span></div>
+              <div><strong>Ryzen 9 9950X</strong><p style="margin:4px 0;color:var(--pc-text-muted);font-size:12px">AM5 · ¥3,999 · 已选择</p><span style="color:var(--pc-color-semantic-text-warning);font-size:11px">与当前主板插槽不同</span></div>
+            </div>
+            <p style="margin:10px 0 0;color:var(--pc-text-muted);font-size:12px">整卡支持 Enter/Space，选择态、规格、价格依据和兼容性建议保持同一语境。</p>
+          </article>
+
+          <article class="panel component-demo">
+            <div class="panel-title"><h3>Order Success / Recovery</h3><span class="implementation">已实现 · DsOrderSuccess</span></div>
+            <div class="component-stage" style="display:grid;gap:8px;text-align:center">
+              <span style="margin:auto;display:grid;width:40px;height:40px;place-items:center;border-radius:50%;background:var(--pc-color-semantic-background-accent);color:var(--pc-color-semantic-text-inverse);font-weight:800">✓</span>
+              <strong>订单已创建</strong><span style="color:var(--pc-text-muted);font-size:12px">支付失败时保留错误、重试、查看订单和继续购物。</span>
+            </div>
+          </article>
+
+          <article class="panel component-demo">
+            <div class="panel-title"><h3>Pagination</h3><span class="implementation">已实现 · DsPagination</span></div>
+            <div class="component-stage" style="display:flex;align-items:center;justify-content:center;gap:6px">
+              <button class="button secondary" aria-label="上一页" disabled>‹</button>
+              <button class="button primary" aria-current="page" style="min-width:36px;padding-inline:10px">1</button>
+              <button class="button secondary" style="min-width:36px;padding-inline:10px">2</button>
+              <span style="color:var(--pc-text-muted)">…</span>
+              <button class="button secondary" style="min-width:36px;padding-inline:10px">12</button>
+              <button class="button secondary" aria-label="下一页">›</button>
+            </div>
+            <p style="margin:10px 0 0;color:var(--pc-text-muted);font-size:12px">页码、省略号、当前页和边界禁用态由同一契约管理，移动端保留 44px 触控目标。</p>
+          </article>
+
+          <article class="panel component-demo">
+            <div class="panel-title"><h3>Order Timeline</h3><span class="implementation">已实现 · DsOrderTimeline</span></div>
+            <div class="component-stage" style="display:grid;gap:12px">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><div><small style="color:var(--pc-text-muted);font-size:10px;letter-spacing:.08em;text-transform:uppercase">履约状态</small><strong style="display:block;margin-top:3px">订单进度</strong></div><span class="badge info">已发货</span></div>
+              <ol style="display:grid;gap:0;margin:0;padding:0;list-style:none">
+                <li style="display:grid;grid-template-columns:28px 1fr;gap:10px;min-height:52px"><span style="display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--pc-color-brand-500);color:var(--pc-canvas);font-size:11px;font-weight:800">✓</span><div><strong style="font-size:12px">订单已提交</strong><time style="display:block;color:var(--pc-text-muted);font-size:10px">2026年8月14日 09:00</time></div></li>
+                <li style="display:grid;grid-template-columns:28px 1fr;gap:10px;min-height:52px"><span style="display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--pc-color-brand-500);color:var(--pc-canvas);font-size:11px;font-weight:800">✓</span><div><strong style="font-size:12px">支付成功</strong><time style="display:block;color:var(--pc-text-muted);font-size:10px">2026年8月14日 09:02</time></div></li>
+                <li aria-current="step" style="display:grid;grid-template-columns:28px 1fr;gap:10px;min-height:52px"><span style="display:grid;place-items:center;width:24px;height:24px;border:2px solid var(--pc-color-brand-300);border-radius:50%;background:var(--pc-elevated);color:var(--pc-color-brand-300);font-size:11px;font-weight:800">3</span><div><strong style="font-size:12px">商品已发货</strong><p style="margin:2px 0 0;color:var(--pc-text-muted);font-size:10px">顺丰 · SF123</p></div></li>
+                <li style="display:grid;grid-template-columns:28px 1fr;gap:10px"><span style="display:grid;place-items:center;width:24px;height:24px;border:1px solid var(--pc-border-default);border-radius:50%;color:var(--pc-text-muted);font-size:11px;font-weight:800">4</span><div><strong style="font-size:12px;color:var(--pc-text-muted)">订单已完成</strong></div></li>
+              </ol>
+            </div>
+            <p style="margin:10px 0 0;color:var(--pc-text-muted);font-size:12px">当前节点使用 <code>aria-current=step</code>；取消与退款走终止分支，不虚构未返回的时间。</p>
+          </article>
+
+          <article class="panel component-demo">
+            <div class="panel-title"><h3>Data Table</h3><span class="implementation">已实现 · DsDataTable</span></div>
+            <div class="component-stage" style="display:block;padding:0;overflow:hidden">
+              <div role="region" aria-label="后台订单列表" tabindex="0" style="overflow:auto;outline-offset:-2px">
+                <table style="width:100%;min-width:520px;border-collapse:collapse;font-size:12px"><thead><tr style="color:var(--pc-text-muted);text-align:left;border-bottom:1px solid var(--pc-border-default)"><th style="padding:10px 12px">订单号</th><th style="padding:10px 12px">状态</th><th style="padding:10px 12px;text-align:right">金额</th></tr></thead><tbody><tr style="border-bottom:1px solid var(--pc-border-subtle)"><td style="padding:10px 12px;font-family:monospace">PC-ADMIN-001</td><td style="padding:10px 12px"><span class="badge info">待发货</span></td><td style="padding:10px 12px;text-align:right">¥12,999</td></tr></tbody></table>
+              </div>
+            </div>
+            <p style="margin:10px 0 0;color:var(--pc-text-muted);font-size:12px">表格区域有可访问名称和键盘焦点；移动端只在表格容器内横向滚动，不制造页面级溢出。</p>
+          </article>
+
+          <article class="panel component-demo">
+            <div class="panel-title"><h3>GlobalNav / CategoryNav</h3><span class="implementation">已实现 · DsCommerceNav</span></div>
+            <div class="component-stage" style="display:block;padding:0;overflow:hidden">
+              <div class="commerce-global-nav"><span class="commerce-brand">PANGCHONG</span><div class="commerce-global-links"><strong>电脑</strong><span>装机</span><span>服务</span><span>门店</span></div><span style="color:var(--pc-text-muted);font-size:10px">搜索</span></div>
+              <div class="commerce-category-nav"><span>游戏整机</span><span>设计工作站</span><span>显卡</span><span>显示器</span><span>外设</span><span>软件与服务</span></div>
+            </div>
+          </article>
+
+          <article class="panel component-demo">
+            <div class="panel-title"><h3>Choice Card</h3><span class="implementation">已实现 · DsChoiceCard</span></div>
+            <div class="component-stage" style="display:grid;gap:8px">
+              <fieldset style="display:grid;gap:8px;margin:0;padding:0;border:0">
+                <legend style="margin-bottom:2px;color:var(--pc-text-muted);font-size:10px">配送方式</legend>
+                <label style="display:flex;gap:10px;align-items:flex-start;padding:12px;border:1px solid var(--pc-color-brand-500);border-radius:10px;background:rgb(82 255 34 / .06);cursor:pointer">
+                  <input type="radio" name="demo-delivery" checked style="margin-top:3px;accent-color:var(--pc-color-brand-500)" />
+                  <span style="display:grid;gap:2px"><strong style="font-size:12px">标准配送</strong><span style="color:var(--pc-text-muted);font-size:10px">3-5个工作日送达</span></span>
+                </label>
+                <label style="display:flex;gap:10px;align-items:flex-start;padding:12px;border:1px solid var(--pc-border-default);border-radius:10px;cursor:pointer">
+                  <input type="radio" name="demo-delivery" style="margin-top:3px;accent-color:var(--pc-color-brand-500)" />
+                  <span style="display:grid;gap:2px"><strong style="font-size:12px">快递配送</strong><span style="color:var(--pc-text-muted);font-size:10px">1-3个工作日送达</span></span>
+                </label>
+              </fieldset>
+            </div>
+            <p style="margin:10px 0 0;color:var(--pc-text-muted);font-size:12px">整卡可点击；保留原生 radio、fieldset/legend、选中和焦点语义。</p>
+          </article>
+
+          <article class="panel component-demo">
+            <div class="panel-title"><h3>Build Metrics</h3><span class="implementation">已实现 · DsBuildSummary</span></div>
+            <div class="metric-strip" style="border:1px solid var(--pc-border-subtle);border-radius:var(--pc-radius-md);overflow:hidden">
+              <div class="workbench-metric"><span>总价</span><strong class="positive">¥12,999</strong></div>
+              <div class="workbench-metric"><span>兼容性</span><strong class="info">全部兼容</strong></div>
+              <div class="workbench-metric"><span>预计功耗</span><strong class="warning">548 W</strong></div>
+              <div class="workbench-metric"><span>性能评分</span><strong>27,560</strong></div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="patterns" data-section="patterns">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">05 / Patterns</p>
+            <h2>商城与工作台模式</h2>
+          </div>
+          <p>从品牌商城与 3D 配置器抽象两种界面密度。它们共享品牌 Token、状态组件与内容规范，但用不同的信息架构服务“浏览选购”和“深度配置”。</p>
+        </div>
+
+        <div class="mode-selector" role="tablist" aria-label="参考模式切换">
+          <button class="mode-button" id="commerce-mode-tab" role="tab" aria-selected="true" aria-controls="commerce-mode" data-mode-target="commerce-mode">品牌商城 · Comfortable</button>
+          <button class="mode-button" id="workbench-mode-tab" role="tab" aria-selected="false" aria-controls="workbench-mode" data-mode-target="workbench-mode">配置器工作台 · Compact</button>
+        </div>
+
+        <section class="mode-panel" id="commerce-mode" role="tabpanel" aria-labelledby="commerce-mode-tab">
+          <div class="mode-caption">
+            <h3>模板 A · Dark Gaming Commerce</h3>
+            <p>适合首页、商品分类与服务中心：两层导航固定分类心智，内容区以大图、短文案和单一绿色链接推进浏览。</p>
+          </div>
+          <div class="commerce-frame">
+            <div class="commerce-global-nav">
+              <span class="commerce-brand">PANGCHONG</span>
+              <div class="commerce-global-links"><strong>电脑</strong><span>装机</span><span>外设</span><span>服务</span><span>门店</span></div>
+              <span style="color:#7d7d7d;font-size:10px">搜索</span>
+            </div>
+            <nav class="commerce-category-nav" aria-label="商城分类"><span>游戏整机</span><span>设计工作站</span><span>笔记本电脑</span><span>显卡</span><span>显示器</span><span>键鼠外设</span><span>软件与服务</span></nav>
+            <div class="commerce-content">
+              <div class="commerce-section-intro"><h3>为每一种性能需求而设计</h3><p>从即买即用的高性能整机，到可逐项定制的 DIY 方案，用清晰的分类和一致的行动语言帮助用户快速进入正确路径。</p></div>
+              <div class="commerce-card-grid">
+                <article class="commerce-media-card"><img src="assets/pangchong-hero.png" alt="PANGCHONG 高性能整机展示"><div class="commerce-card-copy"><h4>高性能整机</h4><p>为游戏、直播与日常创作准备的成熟配置。</p><a href="#templates">了解系列 &gt;</a></div></article>
+                <article class="commerce-media-card"><img src="assets/pangchong-product-fallback.png" alt="PANGCHONG 台式电脑产品"><div class="commerce-card-copy"><h4>DIY 装机</h4><p>逐项选择硬件，持续查看兼容性、功耗与预算。</p><a href="#workbench-mode" data-open-workbench>开始配置 &gt;</a></div></article>
+                <article class="commerce-media-card"><img src="assets/pangchong-hero.png" alt="带有绿色灯效的电脑工作区"><div class="commerce-card-copy"><h4>服务与支持</h4><p>装机、保修、升级与线下门店服务集中呈现。</p><a href="#templates">查看服务 &gt;</a></div></article>
+              </div>
+            </div>
+            <footer class="commerce-footer"><div><strong>选购</strong>整机 · 配件 · 外设</div><div><strong>探索</strong>DIY · 方案 · 门店</div><div><strong>支持</strong>保修 · 订单 · 售后</div><div><strong>品牌</strong>关于我们 · 联系方式</div></footer>
+          </div>
+        </section>
+
+        <section class="mode-panel" id="workbench-mode" role="tabpanel" aria-labelledby="workbench-mode-tab" hidden>
+          <div class="mode-caption">
+            <h3>模板 B · PC Builder Workbench</h3>
+            <p>适合 DIY 与硬件对比：把导航、工作区、配置检查器和关键指标压进同一视图，减少配置过程中的来回跳转。</p>
+          </div>
+          <div class="workbench-frame">
+            <div class="workbench-toolbar"><div class="workbench-title">PANGCHONG BUILDER <span>方案：创作旗舰</span></div><div class="workbench-actions"><button type="button">保存方案</button><button type="button">分享</button></div></div>
+            <div class="metric-strip" aria-label="配置摘要">
+              <div class="workbench-metric"><span>总价</span><strong class="positive">¥12,999</strong></div>
+              <div class="workbench-metric"><span>兼容性</span><strong class="info">全部兼容</strong></div>
+              <div class="workbench-metric"><span>预计功耗</span><strong class="warning">548 W</strong></div>
+              <div class="workbench-metric"><span>性能评分</span><strong>27,560</strong></div>
+            </div>
+            <div class="workbench-body">
+              <nav class="workbench-nav" aria-label="配置器工具"><strong>构建工具</strong><button class="active" type="button">3D 工作区 <span>01</span></button><button type="button">硬件清单 <span>08</span></button><button type="button">兼容检查 <span>通过</span></button><button type="button">价格对比 <span>历史</span></button><button type="button">散热模拟 <span>2 项</span></button><button type="button">灯效预览 <span>RGB</span></button></nav>
+              <div class="workbench-canvas">
+                <div class="workbench-product-stage"><img src="assets/pangchong-product-fallback.png" alt="当前 DIY 方案的台式电脑预览"></div>
+                <div class="workbench-canvas-controls" aria-label="预览模式"><button type="button" aria-pressed="true">整机</button><button type="button" aria-pressed="false">内部</button><button type="button" aria-pressed="false">散热</button><button type="button" aria-pressed="false">灯效</button></div>
+              </div>
+              <aside class="workbench-inspector" aria-label="配置检查器">
+                <div class="inspector-tabs" role="tablist" aria-label="检查器内容"><button type="button" role="tab" aria-selected="true" data-inspector-target="parts-panel">硬件清单</button><button type="button" role="tab" aria-selected="false" data-inspector-target="price-panel">价格历史</button></div>
+                <div class="inspector-panel" id="parts-panel"><div class="build-summary"><span>已选 8 / 9 项</span><strong>可下单</strong></div><div class="parts-list">
+                  <div class="part-row"><img src="assets/pangchong-product-fallback.png" alt="机箱缩略图"><span><strong>PANGCHONG Airflow 黑色机箱</strong><small>机箱 · 库存充足</small></span><b>¥699</b></div>
+                  <div class="part-row"><img src="assets/pangchong-product-fallback.png" alt="处理器缩略图"><span><strong>AMD Ryzen 7 9700X</strong><small>处理器 · 兼容</small></span><b>¥2,299</b></div>
+                  <div class="part-row"><img src="assets/pangchong-product-fallback.png" alt="显卡缩略图"><span><strong>GeForce RTX 5070 Ti 16GB</strong><small>显卡 · 兼容</small></span><b>¥6,499</b></div>
+                  <div class="part-row"><img src="assets/pangchong-product-fallback.png" alt="内存缩略图"><span><strong>DDR5 6000 32GB</strong><small>内存 · 双通道</small></span><b>¥899</b></div>
+                  <div class="part-row"><img src="assets/pangchong-product-fallback.png" alt="固态硬盘缩略图"><span><strong>2TB PCIe 4.0 SSD</strong><small>存储 · 兼容</small></span><b>¥999</b></div>
+                </div></div>
+                <div class="inspector-panel" id="price-panel" hidden><div class="build-summary"><span>近 30 天整机价格</span><strong>-4.8%</strong></div><div class="price-history"><div class="price-history-row"><span>四周前</span><div class="price-history-bar"><span style="width:94%"></span></div><b>¥13,649</b></div><div class="price-history-row"><span>三周前</span><div class="price-history-bar"><span style="width:88%"></span></div><b>¥13,399</b></div><div class="price-history-row"><span>两周前</span><div class="price-history-bar"><span style="width:82%"></span></div><b>¥13,199</b></div><div class="price-history-row"><span>当前</span><div class="price-history-bar"><span style="width:76%"></span></div><b>¥12,999</b></div></div></div>
+              </aside>
+            </div>
+          </div>
+        </section>
+
+        <p class="reference-note">提炼边界：借鉴的是信息架构、密度和反馈机制，不复制参考网站的商标、图像、产品命名与品牌文案；PANGCHONG 仍以自己的 Token 和业务内容为唯一事实来源。</p>
+
+        <div class="grid two" style="margin-top:20px">
+          <article class="panel">
+            <div class="panel-title"><h3>商品筛选条</h3><code>Products.vue</code></div>
+            <div class="component-stage">
+              <select class="control" aria-label="商品分类" style="flex:1;min-width:140px"><option>全部分类</option><option>游戏整机</option><option>设计工作站</option></select>
+              <select class="control" aria-label="排序方式" style="flex:1;min-width:140px"><option>综合排序</option><option>价格从低到高</option></select>
+              <input class="control" aria-label="搜索商品" style="flex:2;min-width:220px" placeholder="搜索型号或配置">
+              <button class="button">筛选</button>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-title"><h3>订单状态</h3><code>Orders.vue · admin/Orders.vue</code></div>
+            <div class="component-stage">
+              <span class="badge warning">待付款</span><span class="badge info">装机中</span><span class="badge accent">待收货</span><span class="badge success">已完成</span><span class="badge danger">已取消</span>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-title"><h3>结算摘要</h3><code>Cart.vue · Checkout.vue</code></div>
+            <div class="component-stage" style="display:block">
+              <table class="data-table">
+                <tbody><tr><td>商品小计</td><td style="text-align:right">¥12,999</td></tr><tr><td>装机服务</td><td style="text-align:right">¥199</td></tr><tr><td>运费</td><td style="text-align:right;color:var(--pc-color-brand-300)">免费</td></tr><tr><td><strong>应付总额</strong></td><td style="text-align:right" class="price">¥13,198</td></tr></tbody>
+              </table>
+              <button class="button" style="width:100%;margin-top:16px">提交订单</button>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-title"><h3>表单分组</h3><code>AddressForm.vue</code></div>
+            <div class="component-stage">
+              <div class="field"><label for="receiver">收货人</label><input id="receiver" class="control" placeholder="姓名"></div>
+              <div class="field"><label for="mobile">联系电话</label><input id="mobile" class="control" placeholder="手机号码"></div>
+              <div class="field" style="flex-basis:100%"><label for="address">详细地址</label><textarea id="address" class="control" placeholder="街道、门牌号、小区和楼栋"></textarea></div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="templates" data-section="templates">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">06 / Templates</p>
+            <h2>全部页面模板</h2>
+          </div>
+          <p>覆盖当前路由中的 19 个独立页面视图。<code>/customize</code> 是 DIY 重定向，<code>/sandbox/orders/:id</code> 复用订单详情，因此不重复计数。</p>
+        </div>
+
+        <div class="template-toolbar">
+          <div class="filter-group" aria-label="模板分类筛选">
+            <button class="filter-button active" data-filter="all">全部 19</button>
+            <button class="filter-button" data-filter="commerce">商城</button>
+            <button class="filter-button" data-filter="account">账户</button>
+            <button class="filter-button" data-filter="service">服务</button>
+            <button class="filter-button" data-filter="admin">后台</button>
+            <button class="filter-button" data-filter="system">系统</button>
+          </div>
+          <input class="search" id="template-search" type="search" placeholder="搜索模板、路由或源文件" aria-label="搜索页面模板">
+        </div>
+
+        <div class="templates" id="template-grid">
+          <article class="template-card" data-category="commerce" data-search="首页 home home.vue 热门商品 diy 服务">
+            <div class="template-preview"><div class="mini-shell"><div class="mini-nav"><span class="mini-brand">PANGCHONG</span><span class="mini-links">商城 · DIY · 服务</span></div><div class="mini-main"><div class="mini-hero"><div><div class="mini-title">为性能而生</div><div class="mini-sub">高性能整机与专业装机服务</div><span class="mini-button">立即选购</span></div><div class="mini-hero-media"></div></div></div></div></div>
+            <div class="template-info"><div class="template-topline"><h3>首页</h3><span class="template-index">01</span></div><p>采用 Comfortable 商城模式：双层导航、大图分类、单一行动链接与服务导流。</p><div class="route"><code>/</code><span>views/Home.vue</span></div></div>
+          </article>
+
+          <article class="template-card" data-category="commerce" data-search="商品列表 catalog products products.vue 筛选 排序">
+            <div class="template-preview"><div class="mini-shell"><div class="mini-nav"><span class="mini-brand">PANGCHONG</span><span class="mini-links">全部商品 · 购物车</span></div><div class="mini-main"><div class="mini-title">全部商品</div><div class="mini-sub">筛选 · 排序 · 搜索</div><div class="mini-grid"><div class="mini-card"><div class="mini-card-image product"></div><div class="mini-card-copy"><div class="mini-line"></div><div class="mini-line green"></div></div></div><div class="mini-card"><div class="mini-card-image product"></div><div class="mini-card-copy"><div class="mini-line"></div><div class="mini-line green"></div></div></div><div class="mini-card"><div class="mini-card-image product"></div><div class="mini-card-copy"><div class="mini-line"></div><div class="mini-line green"></div></div></div></div></div></div></div>
+            <div class="template-info"><div class="template-topline"><h3>商品列表</h3><span class="template-index">02</span></div><p>沿用 Comfortable 商城密度，组合分类导航、筛选、搜索、排序与状态反馈。</p><div class="route"><code>/products</code><span>views/Products.vue</span></div></div>
+          </article>
+
+          <article class="template-card" data-category="commerce" data-search="商品详情 product detail productdetail.vue 规格 价格">
+            <div class="template-preview"><div class="mini-shell"><div class="mini-nav"><span class="mini-brand">PANGCHONG</span><span class="mini-links">商品详情</span></div><div class="mini-main"><div class="mini-two"><div class="mini-media"></div><div class="mini-panel"><div class="mini-title">战刃 5070 Ti</div><div class="mini-line"></div><div class="mini-line short"></div><div class="mini-line green"></div><span class="mini-button">加入购物车</span></div></div></div></div></div>
+            <div class="template-info"><div class="template-topline"><h3>商品详情</h3><span class="template-index">03</span></div><p>产品图、规格、价格来源、库存、数量与购买主操作。</p><div class="route"><code>/products/:slug</code><span>views/ProductDetail.vue</span></div></div>
+          </article>
+
+          <article class="template-card" data-category="commerce" data-search="购物车 cart cart.vue 商品 数量">
+            <div class="template-preview"><div class="mini-shell"><div class="mini-nav"><span class="mini-brand">PANGCHONG</span><span class="mini-links">购物车</span></div><div class="mini-main"><div class="mini-title">购物车</div><div class="mini-two"><div class="mini-list"><div class="mini-row"><span class="mini-thumb"></span><span><span class="mini-line"></span><span class="mini-line short"></span></span><span class="mini-price">¥12,999</span></div><div class="mini-row"><span class="mini-thumb"></span><span><span class="mini-line"></span><span class="mini-line short"></span></span><span class="mini-price">¥699</span></div></div><div class="mini-panel"><div class="mini-line"></div><div class="mini-line"></div><div class="mini-line green"></div><span class="mini-button">去结算</span></div></div></div></div></div>
+            <div class="template-info"><div class="template-topline"><h3>购物车</h3><span class="template-index">04</span></div><p>购物项、数量调整、删除、费用汇总和结算入口。</p><div class="route"><code>/cart</code><span>views/Cart.vue</span></div></div>
+          </article>
+
+          <article class="template-card" data-category="commerce" data-search="结算 checkout checkout.vue 地址 支付 订单">
+            <div class="template-preview"><div class="mini-shell"><div class="mini-nav"><span class="mini-brand">PANGCHONG</span><span class="mini-links">确认订单</span></div><div class="mini-main"><div class="mini-stepper"><span class="mini-step active"></span><span class="mini-step active"></span><span class="mini-step"></span><span class="mini-step"></span></div><div class="mini-two"><div class="mini-panel"><div class="mini-form"><span class="mini-input"></span><span class="mini-input"></span><span class="mini-input"></span></div></div><div class="mini-panel"><div class="mini-line"></div><div class="mini-line"></div><div class="mini-line green"></div><span class="mini-button">提交订单</span></div></div></div></div></div>
+            <div class="template-info"><div class="template-topline"><h3>确认订单</h3><span class="template-index">05</span></div><p>收货地址、配送方式、订单摘要、支付方式与提交反馈。</p><div class="route"><code>/checkout</code><span>views/Checkout.vue</span></div></div>
+          </article>
+
+          <article class="template-card" data-category="account" data-search="订单列表 orders orders.vue 状态 订单">
+            <div class="template-preview"><div class="mini-shell"><div class="mini-nav"><span class="mini-brand">PANGCHONG</span><span class="mini-links">我的订单</span></div><div class="mini-main"><div class="mini-title">我的订单</div><div class="mini-list"><div class="mini-row"><span class="mini-thumb"></span><span><span class="mini-line"></span><span class="mini-line short"></span></span><span class="mini-price">待付款</span></div><div class="mini-row"><span class="mini-thumb"></span><span><span class="mini-line"></span><span class="mini-line short"></span></span><span class="mini-price">已完成</span></div></div></div></div></div>
+            <div class="template-info"><div class="template-topline"><h3>我的订单</h3><span class="template-index">06</span></div><p>订单分组、状态筛选、商品摘要、付款与详情操作。</p><div class="route"><code>/orders</code><span>views/Orders.vue</span></div></div>
+          </article>
+
+          <article class="template-card" data-category="account" data-search="订单详情 order detail orderdetail.vue 物流 支付 diy">
+            <div class="template-preview"><div class="mini-shell"><div class="mini-nav"><span class="mini-brand">PANGCHONG</span><span class="mini-links">订单详情</span></div><div class="mini-main"><div class="mini-stepper"><span class="mini-step active"></span><span class="mini-step active"></span><span class="mini-step active"></span><span class="mini-step"></span></div><div class="mini-two"><div class="mini-list"><div class="mini-row"><span class="mini-thumb"></span><span><span class="mini-line"></span><span class="mini-line short"></span></span><span class="mini-price">1 件</span></div></div><div class="mini-panel"><div class="mini-line"></div><div class="mini-line"></div><div class="mini-line green"></div></div></div></div></div></div>
+            <div class="template-info"><div class="template-topline"><h3>订单详情</h3><span class="template-index">07</span></div><p>订单进度、商品配置、DIY 快照、支付与物流信息。</p><div class="route"><code>/orders/:id</code><span>views/OrderDetail.vue</span></div></div>
+          </article>
+
+          <article class="template-card" data-category="account" data-search="个人资料 profile user profile.vue 账户">
+            <div class="template-preview"><div class="mini-shell"><div class="mini-nav"><span class="mini-brand">PANGCHONG</span><span class="mini-links">个人中心</span></div><div class="mini-main"><div class="mini-sidebar-layout"><div class="mini-side"><div class="mini-line green"></div><div class="mini-line"></div><div class="mini-line"></div></div><div class="mini-content"><div class="mini-title">个人信息</div><div class="mini-form"><span class="mini-input"></span><span class="mini-input"></span><span class="mini-input"></span><span class="mini-button">保存</span></div></div></div></div></div></div>
+            <div class="template-info"><div class="template-topline"><h3>个人资料</h3><span class="template-index">08</span></div><p>用户中心壳层下的昵称、邮箱、手机号与资料更新表单。</p><div class="route"><code>/user/profile</code><span>views/user/Profile.vue</span></div></div>
+          </article>
+
+          <article class="template-card" data-category="account" data-search="收货地址 address addresses.vue 用户">
+            <div class="template-preview"><div class="mini-shell"><div class="mini-nav"><span class="mini-brand">PANGCHONG</span><span class="mini-links">地址管理</span></div><div class="mini-main"><div class="mini-sidebar-layout"><div class="mini-side"><div class="mini-line"></div><div class="mini-line green"></div><div class="mini-line"></div></div><div class="mini-content"><div class="mini-title">收货地址</div><div class="mini-grid"><div class="mini-panel"><div class="mini-line"></div><div class="mini-line short"></div></div><div class="mini-panel"><div class="mini-line"></div><div class="mini-line short"></div></div></div><span class="mini-button">新增地址</span></div></div></div></div></div>
+            <div class="template-info"><div class="template-topline"><h3>地址管理</h3><span class="template-index">09</span></div><p>地址卡片、新增/编辑表单、默认地址与删除确认。</p><div class="route"><code>/user/addresses</code><span>views/user/Addresses.vue</span></div></div>
+          </article>
+
+          <article class="template-card" data-category="account" data-search="登录 login login.vue auth 账户">
+            <div class="template-preview"><div class="mini-shell"><div class="mini-nav"><span class="mini-brand">PANGCHONG</span><span class="mini-links">登录</span></div><div class="mini-main"><div class="mini-auth"><div class="mini-title">欢迎回来</div><div class="mini-form"><span class="mini-input"></span><span class="mini-input"></span><span class="mini-button">登录</span></div></div></div></div></div>
+            <div class="template-info"><div class="template-topline"><h3>登录</h3><span class="template-index">10</span></div><p>身份验证、字段错误、提交加载和注册入口。</p><div class="route"><code>/login</code><span>views/Login.vue</span></div></div>
+          </article>
+
+          <article class="template-card" data-category="account" data-search="注册 register register.vue auth 账户">
+            <div class="template-preview"><div class="mini-shell"><div class="mini-nav"><span class="mini-brand">PANGCHONG</span><span class="mini-links">注册</span></div><div class="mini-main"><div class="mini-auth"><div class="mini-title">创建账户</div><div class="mini-form"><span class="mini-input"></span><span class="mini-input"></span><span class="mini-input"></span><span class="mini-button">注册</span></div></div></div></div></div>
+            <div class="template-info"><div class="template-topline"><h3>注册</h3><span class="template-index">11</span></div><p>账户创建、密码确认、协议勾选与登录回流。</p><div class="route"><code>/register</code><span>views/Register.vue</span></div></div>
+          </article>
+
+          <article class="template-card" data-category="commerce" data-search="diy 装机 配置器 diy.vue 3d">
+            <div class="template-preview"><div class="mini-shell"><div class="mini-nav"><span class="mini-brand">PANGCHONG</span><span class="mini-links">DIY 装机</span></div><div class="mini-main"><div class="mini-two" style="grid-template-columns:1fr 1fr"><div class="mini-media"></div><div class="mini-panel"><div class="mini-title">选择硬件</div><div class="mini-list"><div class="mini-row"><span></span><span class="mini-line"></span><span class="mini-price">CPU</span></div><div class="mini-row"><span></span><span class="mini-line"></span><span class="mini-price">GPU</span></div><div class="mini-row"><span></span><span class="mini-line"></span><span class="mini-price">RAM</span></div></div></div></div></div></div></div>
+            <div class="template-info"><div class="template-topline"><h3>DIY 装机</h3><span class="template-index">12</span></div><p>采用 Compact 工作台模式：3D 预览、硬件检查器、兼容性、功耗与价格历史同屏。</p><div class="route"><code>/diy</code><span>views/DIY.vue</span></div></div>
+          </article>
+
+          <article class="template-card" data-category="service" data-search="门店 store store.vue 武汉 线下 地图">
+            <div class="template-preview"><div class="mini-shell"><div class="mini-nav"><span class="mini-brand">PANGCHONG</span><span class="mini-links">武汉线下门店</span></div><div class="mini-main"><div class="mini-two"><div class="mini-panel" style="background:linear-gradient(135deg,#172033,#0b1222)"><div class="mini-line green"></div><div class="mini-line"></div><div class="mini-line"></div></div><div><div class="mini-title">到店体验</div><div class="mini-sub">地址 · 营业时间 · 联系方式</div><span class="mini-button">预约到店</span></div></div></div></div></div>
+            <div class="template-info"><div class="template-topline"><h3>线下门店</h3><span class="template-index">13</span></div><p>武汉门店地址、营业时间、交通提示、预约与联系信息。</p><div class="route"><code>/store</code><span>views/Store.vue</span></div></div>
+          </article>
+
+          <article class="template-card" data-category="service" data-search="服务中心 services services.vue 售后 保修 协议">
+            <div class="template-preview"><div class="mini-shell"><div class="mini-nav"><span class="mini-brand">PANGCHONG</span><span class="mini-links">服务中心</span></div><div class="mini-main"><div class="mini-title">全周期技术支持</div><div class="mini-grid"><div class="mini-panel"><div class="mini-line green"></div><div class="mini-line"></div><div class="mini-line short"></div></div><div class="mini-panel"><div class="mini-line green"></div><div class="mini-line"></div><div class="mini-line short"></div></div><div class="mini-panel"><div class="mini-line green"></div><div class="mini-line"></div><div class="mini-line short"></div></div></div></div></div></div>
+            <div class="template-info"><div class="template-topline"><h3>服务中心</h3><span class="template-index">14</span></div><p>保修、退换、装机服务、隐私与用户协议的内容入口。</p><div class="route"><code>/services</code><span>views/Services.vue</span></div></div>
+          </article>
+
+          <article class="template-card" data-category="admin" data-search="后台仪表盘 admin dashboard dashboard.vue 数据 概览">
+            <div class="template-preview"><div class="mini-shell"><div class="mini-nav"><span class="mini-brand">ADMIN</span><span class="mini-links">运营后台</span></div><div class="mini-main"><div class="mini-sidebar-layout"><div class="mini-side"><div class="mini-line green"></div><div class="mini-line"></div><div class="mini-line"></div><div class="mini-line"></div></div><div class="mini-content"><div class="mini-title">数据概览</div><div class="mini-grid"><div class="mini-panel"><div class="mini-line green"></div><div class="mini-line"></div></div><div class="mini-panel"><div class="mini-line green"></div><div class="mini-line"></div></div><div class="mini-panel"><div class="mini-line green"></div><div class="mini-line"></div></div></div><table class="mini-table"><tr><td></td><td></td></tr><tr><td></td><td></td></tr><tr><td></td><td></td></tr></table></div></div></div></div></div>
+            <div class="template-info"><div class="template-topline"><h3>后台仪表盘</h3><span class="template-index">15</span></div><p>经营指标、订单趋势、库存预警与最近业务动态。</p><div class="route"><code>/admin/dashboard</code><span>views/admin/Dashboard.vue</span></div></div>
+          </article>
+
+          <article class="template-card" data-category="admin" data-search="后台订单 admin orders admin/orders.vue 管理 表格">
+            <div class="template-preview"><div class="mini-shell"><div class="mini-nav"><span class="mini-brand">ADMIN</span><span class="mini-links">订单管理</span></div><div class="mini-main"><div class="mini-sidebar-layout"><div class="mini-side"><div class="mini-line"></div><div class="mini-line green"></div><div class="mini-line"></div></div><div class="mini-content"><div class="mini-title">订单管理</div><table class="mini-table"><tr><td></td><td></td></tr><tr><td></td><td></td></tr><tr><td></td><td></td></tr><tr><td></td><td></td></tr><tr><td></td><td></td></tr></table></div></div></div></div></div>
+            <div class="template-info"><div class="template-topline"><h3>后台订单</h3><span class="template-index">16</span></div><p>订单检索、状态筛选、详情查看和履约状态更新。</p><div class="route"><code>/admin/orders</code><span>views/admin/Orders.vue</span></div></div>
+          </article>
+
+          <article class="template-card" data-category="admin" data-search="后台商品 admin products admin/products.vue 管理 表格">
+            <div class="template-preview"><div class="mini-shell"><div class="mini-nav"><span class="mini-brand">ADMIN</span><span class="mini-links">商品管理</span></div><div class="mini-main"><div class="mini-sidebar-layout"><div class="mini-side"><div class="mini-line"></div><div class="mini-line"></div><div class="mini-line green"></div></div><div class="mini-content"><div class="mini-title">商品管理</div><div class="mini-list"><div class="mini-row"><span class="mini-thumb"></span><span class="mini-line"></span><span class="mini-price">编辑</span></div><div class="mini-row"><span class="mini-thumb"></span><span class="mini-line"></span><span class="mini-price">编辑</span></div><div class="mini-row"><span class="mini-thumb"></span><span class="mini-line"></span><span class="mini-price">编辑</span></div></div></div></div></div></div></div>
+            <div class="template-info"><div class="template-topline"><h3>后台商品</h3><span class="template-index">17</span></div><p>商品新增、编辑、上下架、库存与推荐状态管理。</p><div class="route"><code>/admin/products</code><span>views/admin/Products.vue</span></div></div>
+          </article>
+
+          <article class="template-card" data-category="admin" data-search="后台用户 admin users admin/users.vue 管理 表格">
+            <div class="template-preview"><div class="mini-shell"><div class="mini-nav"><span class="mini-brand">ADMIN</span><span class="mini-links">用户管理</span></div><div class="mini-main"><div class="mini-sidebar-layout"><div class="mini-side"><div class="mini-line"></div><div class="mini-line"></div><div class="mini-line"></div><div class="mini-line green"></div></div><div class="mini-content"><div class="mini-title">用户管理</div><table class="mini-table"><tr><td></td><td></td></tr><tr><td></td><td></td></tr><tr><td></td><td></td></tr><tr><td></td><td></td></tr><tr><td></td><td></td></tr></table></div></div></div></div></div>
+            <div class="template-info"><div class="template-topline"><h3>后台用户</h3><span class="template-index">18</span></div><p>用户检索、角色识别、账户状态与行为概览。</p><div class="route"><code>/admin/users</code><span>views/admin/Users.vue</span></div></div>
+          </article>
+
+          <article class="template-card" data-category="system" data-search="404 not found notfound.vue 页面不存在 异常">
+            <div class="template-preview"><div class="mini-shell"><div class="mini-nav"><span class="mini-brand">PANGCHONG</span><span class="mini-links">404</span></div><div class="mini-main"><div class="mini-empty"><strong>页面不见了</strong><span class="mini-sub">检查地址或返回首页</span><span class="mini-button">返回首页</span></div></div></div></div>
+            <div class="template-info"><div class="template-topline"><h3>404 异常页</h3><span class="template-index">19</span></div><p>无效路由的明确解释、返回首页和继续浏览商品的恢复路径。</p><div class="route"><code>/:pathMatch(.*)*</code><span>views/NotFound.vue</span></div></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="mapping" data-section="mapping">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">07 / Design to Code</p>
+            <h2>代码与设计系统映射</h2>
+          </div>
+          <p>设计稿命名、CSS 变量、Vue 组件和页面文件保持一一对应。修改源 Token 后通过构建脚本同步生成 CSS 与 Tailwind 主题。</p>
+        </div>
+
+        <div class="mapping-wrap">
+          <table class="mapping-table">
+            <thead><tr><th>设计层</th><th>设计命名</th><th>代码落点</th><th>使用规则</th><th>状态</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Token Source</strong></td><td><code>color / color.theme / space / radius / font / shadow / motion</code></td><td><code>src/design-system/tokens/pangchong.tokens.json</code></td><td>唯一事实来源，禁止在多个文件重复维护数值；首页与门店主题使用命名 Token。</td><td><span class="implementation">已实现</span></td></tr>
+              <tr><td><strong>CSS Variables</strong></td><td><code>--pc-color-* / --pc-space-* / --pc-radius-*</code></td><td><code>src/design-system/tokens/tokens.css</code></td><td>Vue 组件样式消费语义变量，不直接写 Hex。</td><td><span class="implementation">已实现</span></td></tr>
+              <tr><td><strong>Tailwind Theme</strong></td><td><code>primary / dark / spacing / radius</code></td><td><code>src/design-system/tokens/tailwind-theme.js</code></td><td>页面布局与遗留类名通过 Tailwind 主题共享 Token。</td><td><span class="implementation">已实现</span></td></tr>
+              <tr><td><strong>Button</strong></td><td><code>Primary / Secondary / Ghost / Danger</code></td><td><code>components/DsButton.vue</code></td><td>页面主操作每个视区原则上不超过一个。</td><td><span class="implementation">已实现</span></td></tr>
+              <tr><td><strong>Badge</strong></td><td><code>Neutral / Accent / Success / Warning / Danger / Info</code></td><td><code>components/DsBadge.vue</code></td><td>用于短状态，不用于长文本或可点击操作。</td><td><span class="implementation">已实现</span></td></tr>
+              <tr><td><strong>Card</strong></td><td><code>Static / Interactive · Padding sm/md/lg</code></td><td><code>components/DsCard.vue</code></td><td>开放布局优先，只有独立对象才使用卡片容器。</td><td><span class="implementation">已实现</span></td></tr>
+              <tr><td><strong>Field</strong></td><td><code>Default / Required / Error / Disabled</code></td><td><code>components/DsField.vue</code></td><td>标签常驻；错误信息与字段通过 aria-describedby 关联。</td><td><span class="implementation">已实现</span></td></tr>
+              <tr><td><strong>Menu</strong></td><td><code>Closed / Open / Keyboard navigation</code></td><td><code>components/DsMenu.vue</code></td><td>触发器关系、首项焦点、Arrow/Home/End、Escape 回焦和外部点击关闭统一。</td><td><span class="implementation">已实现</span></td></tr>
+              <tr><td><strong>Empty State</strong></td><td><code>Title / Description / Action</code></td><td><code>components/DsEmptyState.vue</code></td><td>解释为什么为空，并提供一个恢复操作。</td><td><span class="implementation">已实现</span></td></tr>
+              <tr><td><strong>Async State</strong></td><td><code>Loading / Success / Empty / Error / Partial</code></td><td><code>components/DsAsyncState.vue</code></td><td>请求失败不伪装为空态，错误必须给出恢复动作。</td><td><span class="implementation">已实现</span></td></tr>
+              <tr><td><strong>Toast</strong></td><td><code>Info / Success / Warning / Danger</code></td><td><code>components/DsToast.vue</code></td><td>只反馈已发生的结果，不承载错误恢复。</td><td><span class="implementation">已实现</span></td></tr>
+              <tr><td><strong>Cart Line Item</strong></td><td><code>Selection / Stock / Quantity / Remove / Preview</code></td><td><code>components/DsCartLineItem.vue</code></td><td>购物车使用编辑态；结算预览使用 <code>interactive=false, compact</code>，保持事实语义一致。</td><td><span class="implementation">已实现</span></td></tr>
+              <tr><td><strong>Step Indicator</strong></td><td><code>Active / Complete / Locked</code></td><td><code>components/DsStepIndicator.vue</code></td><td>只允许回看已完成步骤；当前步骤暴露 <code>aria-current=step</code>，未来步骤不可跳过。</td><td><span class="implementation">已实现</span></td></tr>
+              <tr><td><strong>Order Summary</strong></td><td><code>Items / Shipping / Discount / Total</code></td><td><code>components/DsOrderSummary.vue</code></td><td>侧栏与订单确认共用同一套商品、库存、价格和金额事实。</td><td><span class="implementation">已实现</span></td></tr>
+              <tr><td><strong>Price Summary</strong></td><td><code>Subtotal / Shipping / Discount / Total</code></td><td><code>components/DsPriceSummary.vue</code></td><td>购物车与订单摘要共享价格明细；可隐藏重复的主总价。</td><td><span class="implementation">已实现</span></td></tr>
+              <tr><td><strong>DIY Part Picker</strong></td><td><code>Default / Selected / Warn</code></td><td><code>components/DsDiyPartPicker.vue</code></td><td>整卡可键盘选择，同时呈现规格、价格依据与兼容性建议。</td><td><span class="implementation">已实现</span></td></tr>
+              <tr><td><strong>Order Success</strong></td><td><code>Ready / Paying / Payment Error</code></td><td><code>components/DsOrderSuccess.vue</code></td><td>订单创建成功与支付失败在同一恢复路径中处理。</td><td><span class="implementation">已实现</span></td></tr>
+              <tr><td><strong>Pagination</strong></td><td><code>First / Middle / Last</code></td><td><code>components/DsPagination.vue</code></td><td>列表页码、前后页边界、键盘焦点和 aria-current 统一。</td><td><span class="implementation">已实现</span></td></tr>
+              <tr><td><strong>Order Timeline</strong></td><td><code>Pending / Paid / Shipped / Completed / Cancelled / Refunded</code></td><td><code>components/DsOrderTimeline.vue</code></td><td>订单履约节点、时间证据、当前步骤和终止分支统一。</td><td><span class="implementation">已实现</span></td></tr>
+              <tr><td><strong>Data Table</strong></td><td><code>Region / Keyboard scroll / Responsive boundary</code></td><td><code>components/DsDataTable.vue</code></td><td>后台订单、商品、用户和仪表盘数据使用可聚焦滚动容器，组合异步态和分页。</td><td><span class="implementation">已实现</span></td></tr>
+              <tr><td><strong>Choice Card</strong></td><td><code>Radio / Checkbox / Selected / Disabled</code></td><td><code>components/DsChoiceCard.vue</code></td><td>结算地址、配送和支付选项整卡可点，保留原生表单与键盘焦点语义。</td><td><span class="implementation">已实现</span></td></tr>
+              <tr><td><strong>Compatibility Status</strong></td><td><code>OK / Pending / Warning / Danger</code></td><td><code>components/DsCompatibilityStatus.vue</code></td><td>风险同时使用文字、边框和语义状态表达。</td><td><span class="implementation">已实现</span></td></tr>
+              <tr><td><strong>Contrast Toggle</strong></td><td><code>Default / High Contrast</code></td><td><code>components/DsContrastToggle.vue</code></td><td>偏好持久化，键盘可达，暴露 aria-pressed。</td><td><span class="implementation">已实现</span></td></tr>
+              <tr><td><strong>Commerce Navigation</strong></td><td><code>GlobalNav / CategoryNav</code></td><td><code>components/commerce/DsCommerceNav.vue</code></td><td>一级导航表达品牌任务，二级导航只承载商品分类；移动端横向滚动。</td><td><span class="implementation">已实现 · DsCommerceNav</span></td></tr>
+              <tr><td><strong>Media Category Card</strong></td><td><code>Image / Title / Description / Link</code></td><td><code>components/commerce/DsMediaCategoryCard.vue</code></td><td>图片占主导，每张卡只出现一个文字链接，默认使用 Comfortable 密度。</td><td><span class="implementation">已实现 · DsMediaCategoryCard</span></td></tr>
+              <tr><td><strong>Workbench Shell</strong></td><td><code>Nav / Canvas / Inspector</code></td><td><code>components/workbench/DsWorkbenchShell.vue</code></td><td>三栏比例统一由 layout Token 控制；移动端按导航、画布、检查器顺序堆叠。</td><td><span class="implementation">已实现 · DsWorkbenchShell</span></td></tr>
+              <tr><td><strong>Build Summary</strong></td><td><code>Price / Compatibility / Power / Performance</code></td><td><code>components/workbench/DsBuildSummary.vue</code></td><td>配置过程全程可见；语义颜色必须同时配合文字标签。</td><td><span class="implementation">已实现 · DsBuildSummary</span></td></tr>
+              <tr><td><strong>Parts Inspector</strong></td><td><code>Parts / Price History</code></td><td><code>components/workbench/DsPartsInspector.vue</code></td><td>硬件行保持紧凑密度，标题截断但详情可通过后续交互完整访问。</td><td><span class="implementation">已实现 · DsPartsInspector</span></td></tr>
+              <tr><td><strong>Template</strong></td><td><code>Commerce / Account / Service / Admin / System</code></td><td><code>src/views/**/*.vue</code></td><td>模板只组合组件和业务模式，不创建新基础样式。</td><td><span class="implementation">19 个视图</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <pre class="code-block"><span class="muted">// 1. 修改 Token 源文件</span>
+<span class="green">src/design-system/tokens/pangchong.tokens.json</span>
+
+<span class="muted">// 2. 生成 CSS Variables 与 Tailwind Theme</span>
+npm run design:tokens
+
+<span class="muted">// 3. 在 Vue 页面中复用组件</span>
+import { DsButton, DsCard, DsBadge } from '@/design-system'
+import { DsCommerceNav, DsWorkbenchShell } from '@/design-system/patterns'
+
+<span class="muted">// 4. 提交前校验</span>
+npm run design:tokens:check &amp;&amp; npm run check</pre>
+      </section>
+
+      <section class="section" id="governance" data-section="governance">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">08 / Governance</p>
+            <h2>维护与 AI 巡检规范</h2>
+          </div>
+          <p>设计系统不是一次性作业。每次功能迭代先检查复用，每月用 AI 做跨页面视觉巡检，再由负责人确认修复优先级。</p>
+        </div>
+
+        <div class="grid two">
+          <article class="panel">
+            <div class="panel-title"><h3>变更流程</h3><code>每次迭代</code></div>
+            <div class="governance-step"><span class="step-number">01</span><div><h3>先查复用</h3><p>在 Token、基础组件和业务模式中查找已有能力；确认缺口后才新增。</p></div></div>
+            <div class="governance-step"><span class="step-number">02</span><div><h3>修改源头</h3><p>颜色与尺寸修改 Token，交互修改共享组件，页面文件只负责业务组合。</p></div></div>
+            <div class="governance-step"><span class="step-number">03</span><div><h3>覆盖状态</h3><p>同时补齐默认、悬浮、聚焦、加载、错误、禁用、空状态和移动端。</p></div></div>
+            <div class="governance-step"><span class="step-number">04</span><div><h3>验证再发布</h3><p>执行 Token 校验、组件测试、构建与桌面/移动端视觉回归。</p></div></div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-title"><h3>AI UI 体验巡检</h3><code>每月一次</code></div>
+            <div class="governance-step"><span class="step-number">A</span><div><h3>截图基线</h3><p>按 1440px、1024px、390px 三个宽度抓取 19 个模板，并覆盖 Comfortable 与 Compact 两种模式。</p></div></div>
+            <div class="governance-step"><span class="step-number">B</span><div><h3>视觉一致性</h3><p>让 AI 检查颜色越界、密度模式误用、三栏比例漂移、字号断层与状态组件表现。</p></div></div>
+            <div class="governance-step"><span class="step-number">C</span><div><h3>体验与文案</h3><p>检查空状态、错误提示、加载反馈、操作命名和移动端主要任务路径。</p></div></div>
+            <div class="governance-step"><span class="step-number">D</span><div><h3>形成维护单</h3><p>按 P0 阻断、P1 易用性、P2 一致性、P3 美化分级，并记录修复截图。</p></div></div>
+          </article>
+        </div>
+
+        <div class="panel" style="margin-top:20px">
+          <div class="panel-title"><h3>前端文案提取</h3><code>scripts/ui-copy.mjs</code></div>
+          <p style="color:var(--pc-text-muted);font-size:13px;line-height:1.75">项目已提供文案提取、检查与回填流程。后期修改页面文本时，先提取为可审阅清单，再批量修改并执行 dry-run，减少散落在 Vue 文件中的遗漏。</p>
+          <pre class="code-block">npm run copy:extract
+npm run copy:check
+npm run copy:apply</pre>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <div class="footer-inner"><span><strong>PANGCHONG UI Design System</strong> · 胖虫电脑前端设计规范</span><span>Source of truth: pangchong.tokens.json · Vue 3</span></div>
+      </footer>
+    </div>
+  </main>
+
+  <div class="modal-backdrop" id="demo-modal" role="presentation">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <h3 id="modal-title">确认取消订单？</h3>
+      <p>取消后当前订单将停止处理。如果商品已经进入装机阶段，请先联系客户服务。</p>
+      <div class="modal-actions"><button class="button ghost" data-close-modal>返回</button><button class="button danger" data-close-modal>确认取消</button></div>
+    </section>
+  </div>
+
+  <script>
+    (function () {
+      document.querySelectorAll('.template-preview').forEach(function (preview) {
+        preview.setAttribute('aria-hidden', 'true');
+      });
+
+      var sections = Array.prototype.slice.call(document.querySelectorAll('[data-section]'));
+      var navLinks = Array.prototype.slice.call(document.querySelectorAll('.side-nav a'));
+      var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          navLinks.forEach(function (link) {
+            link.classList.toggle('active', link.getAttribute('href') === '#' + entry.target.id);
+          });
+        });
+      }, { rootMargin: '-25% 0px -65% 0px', threshold: 0 });
+      sections.forEach(function (section) { observer.observe(section); });
+
+      var modeButtons = Array.prototype.slice.call(document.querySelectorAll('[data-mode-target]'));
+      var modePanels = Array.prototype.slice.call(document.querySelectorAll('.mode-panel'));
+      function showMode(targetId) {
+        modeButtons.forEach(function (button) {
+          var selected = button.dataset.modeTarget === targetId;
+          button.setAttribute('aria-selected', String(selected));
+          button.tabIndex = selected ? 0 : -1;
+        });
+        modePanels.forEach(function (panel) { panel.hidden = panel.id !== targetId; });
+      }
+      modeButtons.forEach(function (button) {
+        button.addEventListener('click', function () { showMode(button.dataset.modeTarget); });
+      });
+      showMode(window.location.hash === '#workbench-mode' ? 'workbench-mode' : 'commerce-mode');
+      document.querySelectorAll('[data-open-workbench]').forEach(function (link) {
+        link.addEventListener('click', function (event) {
+          event.preventDefault();
+          showMode('workbench-mode');
+          document.getElementById('workbench-mode').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      });
+
+      document.querySelectorAll('.workbench-nav button').forEach(function (button) {
+        button.addEventListener('click', function () {
+          button.parentElement.querySelectorAll('button').forEach(function (item) { item.classList.toggle('active', item === button); });
+        });
+      });
+      document.querySelectorAll('.workbench-canvas-controls button').forEach(function (button) {
+        button.addEventListener('click', function () {
+          button.parentElement.querySelectorAll('button').forEach(function (item) { item.setAttribute('aria-pressed', String(item === button)); });
+        });
+      });
+      document.querySelectorAll('[data-inspector-target]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          button.parentElement.querySelectorAll('button').forEach(function (item) { item.setAttribute('aria-selected', String(item === button)); });
+          button.closest('.workbench-inspector').querySelectorAll('.inspector-panel').forEach(function (panel) { panel.hidden = panel.id !== button.dataset.inspectorTarget; });
+        });
+      });
+
+      var activeFilter = 'all';
+      var filterButtons = Array.prototype.slice.call(document.querySelectorAll('[data-filter]'));
+      var cards = Array.prototype.slice.call(document.querySelectorAll('.template-card'));
+      var search = document.getElementById('template-search');
+
+      function updateTemplates() {
+        var query = search.value.trim().toLowerCase();
+        cards.forEach(function (card) {
+          var categoryMatch = activeFilter === 'all' || card.dataset.category === activeFilter;
+          var searchMatch = !query || card.dataset.search.toLowerCase().indexOf(query) !== -1 || card.textContent.toLowerCase().indexOf(query) !== -1;
+          card.hidden = !(categoryMatch && searchMatch);
+        });
+      }
+
+      filterButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+          activeFilter = button.dataset.filter;
+          filterButtons.forEach(function (item) { item.classList.toggle('active', item === button); });
+          updateTemplates();
+        });
+      });
+      search.addEventListener('input', updateTemplates);
+
+      document.querySelectorAll('.copy-token').forEach(function (button) {
+        button.addEventListener('click', function () {
+          var value = button.dataset.copy;
+          if (navigator.clipboard) navigator.clipboard.writeText(value);
+          var oldText = button.textContent;
+          button.textContent = '已复制';
+          window.setTimeout(function () { button.textContent = oldText; }, 1200);
+        });
+      });
+
+      document.querySelectorAll('.tab').forEach(function (tab) {
+        tab.addEventListener('click', function () {
+          tab.parentElement.querySelectorAll('.tab').forEach(function (item) { item.setAttribute('aria-selected', String(item === tab)); });
+        });
+      });
+
+      document.querySelectorAll('.toggle').forEach(function (toggle) {
+        toggle.addEventListener('click', function () {
+          var next = toggle.getAttribute('aria-checked') !== 'true';
+          toggle.setAttribute('aria-checked', String(next));
+          toggle.style.background = next ? 'var(--pc-color-brand-500)' : 'var(--pc-color-dark-700)';
+          toggle.style.opacity = next ? '1' : 'var(--pc-opacity-muted)';
+        });
+      });
+
+      var modal = document.getElementById('demo-modal');
+      var openModal = document.getElementById('open-modal');
+      var lastFocused = null;
+      function closeModal() {
+        modal.classList.remove('open');
+        if (lastFocused) lastFocused.focus();
+      }
+      openModal.addEventListener('click', function () {
+        lastFocused = document.activeElement;
+        modal.classList.add('open');
+        modal.querySelector('button').focus();
+      });
+      modal.addEventListener('click', function (event) { if (event.target === modal) closeModal(); });
+      modal.querySelectorAll('[data-close-modal]').forEach(function (button) { button.addEventListener('click', closeModal); });
+      document.addEventListener('keydown', function (event) { if (event.key === 'Escape' && modal.classList.contains('open')) closeModal(); });
+    }());
+  </script>
+</body>
+</html>

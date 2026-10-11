@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 from urllib.parse import urlparse
 
 from ..core.database import get_db
+from ..core.config import settings
 from ..core.security import get_current_user, get_current_admin
 from ..models.product import Product, Category, PriceHistory
 from ..schemas.product import (
@@ -24,6 +25,17 @@ from ..schemas.product import (
 )
 
 router = APIRouter(prefix="/products", tags=["商品"])
+
+
+@router.get("/commerce-settings")
+async def get_commerce_settings():
+    """Publish the checkout rules used by server-owned order pricing."""
+    return {
+        "shipping_fee": settings.SHIPPING_FEE,
+        "free_shipping_threshold": settings.FREE_SHIPPING_THRESHOLD,
+        "currency": "CNY",
+        "payment_mode": "sandbox" if settings.ALIPAY_SANDBOX else "alipay",
+    }
 
 
 def _validate_asset_provenance(

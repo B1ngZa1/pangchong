@@ -4,7 +4,7 @@
 
 ```powershell
 cd ecommerce/backend
-python scripts/import_price_verification.py ../../docs/data/price-verification.csv
+python -m app.cli.import_price_verification ../../docs/data/price-verification.csv
 ```
 
 导入器只写价格历史和来源元数据，不会擅自修改商城售价；重复的来源 URL 与核价时间会被跳过。

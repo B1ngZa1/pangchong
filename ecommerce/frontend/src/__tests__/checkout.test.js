@@ -5,6 +5,7 @@ import { nextTick } from 'vue'
 import Checkout from '@/views/Checkout.vue'
 import { authApi, cartApi, orderApi } from '@/api'
 import { useCartStore } from '@/store/cart'
+import { useUserStore } from '@/store/user'
 
 const { routerPush } = vi.hoisted(() => ({
   routerPush: vi.fn(),
@@ -101,12 +102,16 @@ function diyCustomItem() {
     },
     snapshot: {
       type: 'diy_pc',
+      configuration_id: 'diy-pc',
+      version: 1,
       parts: [
-        { key: 'cpu', label: '处理器 CPU', product_id: 'cpu-1', brand: 'AMD', name: 'Ryzen 9' },
-        { key: 'gpu', label: '显卡 GPU', product_id: 'gpu-1', brand: 'NVIDIA', name: 'RTX 5090' },
+        { key: 'cpu', label: '处理器 CPU', product_id: 'aaaaaaaa-1111-1111-1111-111111111111', brand: 'AMD', name: 'Ryzen 9' },
+        { key: 'gpu', label: '显卡 GPU', product_id: 'bbbbbbbb-2222-2222-2222-222222222222', brand: 'NVIDIA', name: 'RTX 5090' },
       ],
       appearance: {
+        variant_id: 'green',
         variant_name: '虫翼绿',
+        material_id: 'gloss',
         material_name: '高亮涂层',
       },
     },
@@ -151,15 +156,13 @@ function backendApiCartItem(item, id = '88888888-8888-8888-8888-888888888888') {
 }
 
 describe('Checkout', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks()
     vi.unstubAllGlobals()
     vi.stubGlobal('alert', vi.fn())
     document.body.innerHTML = ''
     localStorage.clear()
-    localStorage.setItem('token', 'test-access-token')
     setActivePinia(createPinia())
-
     authApi.getProfile.mockResolvedValue({ id: 'user-1', username: 'buyer' })
     authApi.getAddresses.mockResolvedValue([address])
     cartApi.getCart.mockResolvedValue({ items: [] })
@@ -167,11 +170,15 @@ describe('Checkout', () => {
       id: '44444444-4444-4444-4444-444444444444',
       order_no: 'PC202606150001',
     })
+
   })
 
   it('submits selected backend cart item ids with DIY custom items and only removes the local custom row', async () => {
     const pinia = createPinia()
     setActivePinia(pinia)
+    const userStore = useUserStore()
+    userStore.token = 'test-access-token'
+    userStore.addresses = [address]
 
     const cart = useCartStore()
     const selectedBackendItem = backendCartItem()
@@ -182,6 +189,7 @@ describe('Checkout', () => {
       selected: false,
     })
     const selectedDiyItem = diyCustomItem()
+    selectedDiyItem.price = 0.01
 
     cart.items = [selectedBackendItem, unselectedBackendItem, selectedDiyItem]
     localStorage.setItem('pangchong_local_cart', JSON.stringify([selectedDiyItem]))
@@ -217,16 +225,28 @@ describe('Checkout', () => {
       cart_item_ids: [selectedBackendItem.id],
       custom_items: [
         {
-          product_name: selectedDiyItem.name,
-          product_image: null,
-          product_specs: {
-            ...selectedDiyItem.specs,
-            _snapshot: selectedDiyItem.snapshot,
+          configuration: {
+            configuration_id: 'diy-pc',
+            version: 1,
+            variant_id: 'green',
+            material_id: 'gloss',
+            parts: [
+              {
+                slot_id: 'cpu',
+                product_id: 'aaaaaaaa-1111-1111-1111-111111111111',
+                quantity: 1,
+              },
+              {
+                slot_id: 'gpu',
+                product_id: 'bbbbbbbb-2222-2222-2222-222222222222',
+                quantity: 1,
+              },
+            ],
           },
-          price: selectedDiyItem.price,
           quantity: selectedDiyItem.quantity,
         },
       ],
+      idempotency_key: expect.any(String),
     })
     expect(removeLocalItemsSpy).toHaveBeenCalledWith([selectedDiyItem.id])
     expect(fetchCartSpy).toHaveBeenCalledTimes(1)
@@ -240,6 +260,9 @@ describe('Checkout', () => {
   it('promotes a selected local product and submits it through the stock-backed cart path', async () => {
     const pinia = createPinia()
     setActivePinia(pinia)
+    const userStore = useUserStore()
+    userStore.token = 'test-access-token'
+    userStore.addresses = [address]
 
     const cart = useCartStore()
     const localProduct = localProductItem()
@@ -277,6 +300,7 @@ describe('Checkout', () => {
       remark: null,
       cart_item_ids: null,
       custom_items: [],
+      idempotency_key: expect.any(String),
     })
     expect(JSON.parse(localStorage.getItem('pangchong_local_cart') || '[]')).toEqual([])
   })

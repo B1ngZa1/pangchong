@@ -1,82 +1,122 @@
+# Production Compose is intentionally fail-closed. It never mounts the demo seed.
+# APP_ENV is pinned here so a .env file cannot bypass production validation.
+x-production-environment: &production-environment
+  APP_ENV: production
+  DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://${POSTGRES_USER:-pangchong}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/${POSTGRES_DB:-pangchong_ecommerce}}
+  REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD is required}@redis:6379/0
+  SECRET_KEY: ${SECRET_KEY:?SECRET_KEY is required}
+  DEBUG: ${DEBUG:-false}
+  RELOAD: ${RELOAD:-false}
+  WEB_CONCURRENCY: ${WEB_CONCURRENCY:-2}
+  AUTH_COOKIE_SECURE: ${AUTH_COOKIE_SECURE:-true}
+  AUTH_COOKIE_SAMESITE: ${AUTH_COOKIE_SAMESITE:-lax}
+  ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:?ALLOWED_ORIGINS is required}
+  ALIPAY_APP_ID: ${ALIPAY_APP_ID:?ALIPAY_APP_ID is required}
+  ALIPAY_PRIVATE_KEY: ${ALIPAY_PRIVATE_KEY:?ALIPAY_PRIVATE_KEY is required}
+  ALIPAY_PUBLIC_KEY: ${ALIPAY_PUBLIC_KEY:?ALIPAY_PUBLIC_KEY is required}
+  ALIPAY_SANDBOX: ${ALIPAY_SANDBOX:-false}
+  ALIPAY_NOTIFY_URL: ${ALIPAY_NOTIFY_URL:?ALIPAY_NOTIFY_URL is required}
+  ALIPAY_RETURN_URL: ${ALIPAY_RETURN_URL:-}
+  ALIPAY_SELLER_ID: ${ALIPAY_SELLER_ID:-}
+  SMTP_USER: ${SMTP_USER:-}
+  SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+  ASSET_STORAGE_BACKEND: ${ASSET_STORAGE_BACKEND:-local}
+  SUPABASE_URL: ${SUPABASE_URL:-}
+  SUPABASE_SECRET_KEY: ${SUPABASE_SECRET_KEY:-}
+  SUPABASE_IMAGE_BUCKET: ${SUPABASE_IMAGE_BUCKET:-catalog-images}
+  SUPABASE_MODEL_BUCKET: ${SUPABASE_MODEL_BUCKET:-catalog-models}
+  MAX_REQUEST_SIZE: ${MAX_REQUEST_SIZE:-23068672}
+
 services:
-  # PostgreSQL 数据库
+  # This gate completes before PostgreSQL or Redis can start, so weak credentials
+  # cannot initialize even an otherwise isolated production data volume.
+  preflight:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: "no"
+    environment: *production-environment
+    command: ["python", "-m", "app.start", "--check"]
+
   postgres:
     image: postgres:16-alpine
-    container_name: pangchong-postgres
     restart: unless-stopped
-    env_file:
-      - .env
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-pangchong_ecommerce}
       POSTGRES_USER: ${POSTGRES_USER:-pangchong}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    volumes:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+    # !override also removes a demo seed inherited if somebody layers the local
+    # Compose file before this production file (requires Docker Compose >= 2.24.4).
+    # Alembic is the production schema source of truth; do not mount init SQL.
+    volumes: !override
       - postgres_data:/var/lib/postgresql/data
-      - ./database/init.sql:/docker-entrypoint-initdb.d/01-init.sql
-      - ./database/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
-      - ./database/components.sql:/docker-entrypoint-initdb.d/03-components.sql
+    depends_on:
+      preflight:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pangchong} -d ${POSTGRES_DB:-pangchong_ecommerce}"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # Redis 缓存
   redis:
     image: redis:7-alpine
-    container_name: pangchong-redis
     restart: unless-stopped
-    env_file:
-      - .env
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
     volumes:
       - redis_data:/data
+    depends_on:
+      preflight:
+        condition: service_completed_successfully
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "--raw", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:?REDIS_PASSWORD is required}", "--raw", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # 后端 API 服务
+  migrate:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: "no"
+    environment: *production-environment
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      preflight:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: pangchong-backend
     restart: unless-stopped
-    env_file:
-      - .env
-    environment:
-      - DATABASE_URL=${DATABASE_URL:-postgresql+asyncpg://${POSTGRES_USER:-pangchong}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-pangchong_ecommerce}}
-      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
-      - SECRET_KEY=${SECRET_KEY}
-      - DEBUG=false
-      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-["http://localhost"]}
-      - ASSET_STORAGE_BACKEND=${ASSET_STORAGE_BACKEND:-local}
-      - SUPABASE_URL=${SUPABASE_URL:-}
-      - SUPABASE_SECRET_KEY=${SUPABASE_SECRET_KEY:-}
-      - SUPABASE_IMAGE_BUCKET=${SUPABASE_IMAGE_BUCKET:-catalog-images}
-      - SUPABASE_MODEL_BUCKET=${SUPABASE_MODEL_BUCKET:-catalog-models}
-    volumes:
+    environment: *production-environment
+    volumes: !override
       - ./backend/uploads:/app/uploads
     depends_on:
-      postgres:
-        condition: service_healthy
+      preflight:
+        condition: service_completed_successfully
+      migrate:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
 
-  # 前端应用（生产模式）
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile.prod
-    container_name: pangchong-frontend
     restart: unless-stopped
 
-  # Nginx 反向代理
   nginx:
     image: nginx:alpine
-    container_name: pangchong-nginx
     restart: unless-stopped
     ports:
       - "80:80"
